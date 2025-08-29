@@ -1,0 +1,851 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Smart-Immo | Listing
+{% endblock %}
+{% block description %}
+    Découvrez une variété d'hébergements adaptés à vos besoins et préférences.
+{% endblock %}
+{% block style %}
+    <link href="{{ asset('assets/admin/css/dasboard.css') }}" rel="stylesheet">
+    <style>
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-item {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+
+        .animate-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+            animation: fadeSlideIn 0.6s ease-out forwards;
+        }
+    </style>
+
+    <style>
+        /* ====== AirBnB-style Search (short & long stay) ====== */
+        .search-hero {
+            background: linear-gradient(135deg,#fff1f2 0%,#ffe5e9 50%,#ffdce1 100%);
+            border: 1px solid #ffe0e4;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(220,53,69,.08);
+        }
+        .search-hero .hero-logo {
+            width: 64px; height: 64px; border-radius: 18px;
+            background: #fff; display:flex; align-items:center; justify-content:center;
+            box-shadow: 0 6px 16px rgba(220,53,69,.15);
+        }
+        .hero-chip {
+            display:inline-flex; align-items:center; gap:.35rem;
+            padding:.4rem .7rem; font-size:.8rem; font-weight:600;
+            color:#b02a37; background:#fff; border:1px solid rgba(220,53,69,.25); border-radius:999px;
+        }
+
+        /* Sidebar & filter card */
+        .sticky-sidebar .sticky { position: sticky; top: 88px; }
+        .filter-card {
+            border: 1px solid #f1f3f5; background: #fff; border-radius: 1rem;
+            box-shadow: 0 10px 28px rgba(16,24,40,.06);
+        }
+        .filter-title {
+            display:inline-block; padding:.4rem .7rem; border-radius:.75rem;
+            background:#fff5f6; color:#b02a37; font-weight:700; letter-spacing:.02em;
+        }
+        .form-date{ background:#fff; transition:box-shadow .2s ease, border-color .2s ease; }
+        .form-date:focus-within{ box-shadow:0 0 0 .25rem rgba(220,53,69,.15); border-color:#ffc2cb; }
+        .form-floating > .form-select,
+        .form-floating > .form-control { box-shadow:none!important; }
+        .fs-14{ font-size:.875rem; }
+
+        /* Mobile sticky */
+        .mobile-sticky {
+            position: sticky; top: 0; z-index: 1010;
+            background: #fff; border-bottom: 1px solid #f1f3f5;
+            box-shadow: 0 6px 16px rgba(16,24,40,.04);
+        }
+
+        /* Buttons */
+        .btn-apply{ background:#198754; border-color:#198754; }
+        .btn-apply:hover{ filter:brightness(.95); }
+        .btn-reset{ background:#dc3545; border-color:#dc3545; }
+        .btn-reset:hover{ filter:brightness(.95); }
+
+        /* Modal polish */
+        .modal-header{ border-bottom:1px solid #f1f3f5; }
+        .modal-content{ border-radius:1rem; box-shadow:0 18px 40px rgba(16,24,40,.14); }
+    </style>
+
+    <style>
+        /* ===== Listing (Card & List) ===== */
+        :root{ --brand:#dc3545; --brand-dark:#b02a37; --ink:#0f172a; --muted:#6c757d; --line:#f1f3f5; }
+        .lp-card{
+            background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden;
+            transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+        .lp-card:hover{ transform:translateY(-3px); box-shadow:0 10px 28px rgba(220,53,69,.14); border-color:#ffe0e4; }
+        .lp-media{ position:relative; }
+        .lp-media .ratio{ --bs-aspect-ratio:56.25%; }
+        .lp-media img{ object-fit:cover; }
+        .lp-chip{
+            position:absolute; z-index:2; padding:.35rem .6rem; border-radius:999px;
+            font-size:.72rem; font-weight:700; backdrop-filter:saturate(140%) blur(6px);
+            display:inline-flex; align-items:center; gap:.35rem;
+        }
+        .lp-chip.status{ right:.5rem; top:.5rem; background:#fff; border:1px solid rgba(220,53,69,.25); color:var(--brand-dark); }
+        .lp-chip.type{ left:.5rem; bottom:.5rem; background:rgba(220,53,69,.08); color:var(--brand-dark); }
+        .lp-body{ padding: .75rem .9rem 1rem .9rem; }
+        .lp-title{ color:var(--brand); font-weight:800; letter-spacing:.02em; text-transform:uppercase; margin:0; }
+        .lp-meta{ border-top:1px dashed var(--line); border-bottom:1px dashed var(--line); padding:.5rem .25rem; margin-top:.5rem; }
+        .lp-meta .place{ display:flex; align-items:center; gap:.4rem; color:var(--ink); font-weight:700; }
+        .lp-meta small{ color:var(--muted); text-transform:uppercase; }
+        .lp-price{ display:flex; align-items:baseline; justify-content:space-between; padding:.55rem .25rem; }
+        .lp-price .num{ font-weight:800; font-size:1.05rem; }
+        .lp-price .per{ color:var(--muted); font-size:.78rem; }
+        .lp-spec{ display:flex; flex-wrap:wrap; gap:.6rem; justify-content:center; color:var(--muted); font-size:.85rem; padding:.6rem .25rem 0; }
+        .lp-spec i{ margin-right:.25rem; }
+
+        /* ===== List layout ===== */
+        .lp-list{
+            background:#fff; border:1px solid var(--line); border-radius:14px; padding:.6rem; transition:box-shadow .18s ease, transform .18s ease;
+        }
+        .lp-list:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(16,24,40,.10); }
+        .lp-list-img{ width: 28%; min-width:120px; }
+        .lp-list-body{ width:72%; padding-left:.6rem; }
+        .lp-list-title{ text-transform:uppercase; font-weight:800; margin:0; color:var(--ink); }
+        .lp-list-desc{ color:var(--muted); font-size:.9rem; margin:.15rem 0 .6rem; }
+        .lp-dot{ margin:0 .45rem; font-size:.45rem; color:#cbd5e1; }
+    </style>
+
+
+{% endblock %}
+
+{% block body %}
+
+
+
+    <div class="search-body container-fluid position-relative">
+        <div class="row">
+            <div class="col-lg-12">
+                <!-- ===== Mobile ===== -->
+                <div class="d-block d-md-none vh-100 overflow-auto" id="mobile-scroll-area">
+                    <!-- Mobile header -->
+                    <div class="d-flex justify-content-center align-items-center p-3 pt-4">
+                        <img src="{{ asset('assets/img/dashboard-updates.svg') }}" class="img-fluid" width="22%" alt="">
+                        <div class="ms-3">
+                            <h1 class="fw-bold mb-0">Location à court et longs séjours</h1>
+                            <p class="text-secondary small mb-0">Des hébergements adaptés à vos besoins.</p>
+                        </div>
+                    </div>
+
+                    <!-- Sticky filter button -->
+                    <div class="mobile-sticky p-2 mt-2">
+                        <button type="button" class="btn btn-outline-danger w-100 rounded-3"
+                                data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="mdi mdi-filter-outline me-1"></i> Ajouter vos filtres
+                        </button>
+                    </div>
+
+                    <!-- Listings -->
+                    <div class="container mt-3" id="listing-table-mobile">
+                        {% include 'air_bnb/_listing_list.html.twig' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Desktop ===== -->
+        <div class="row">
+            <div class="col-lg-12 col-12 p-3 p-lg-4">
+                <!-- Desktop hero -->
+                <div class="d-none d-md-flex align-items-center justify-content-between search-hero p-3 p-lg-4 mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="hero-logo">
+                            <img src="{{ asset('assets/img/dashboard-updates.svg') }}" class="img-fluid" alt="Smart-Immo">
+                        </div>
+                        <div class="text-danger-emphasis">
+                            <h1 class="h4 h3-lg fw-bold mb-1">Location à court et longs séjours</h1>
+                            <p class="mb-0 text-dark opacity-75">Découvrez une variété d'hébergements adaptés à vos besoins et préférences.</p>
+                        </div>
+                    </div>
+                    <div class="d-none d-lg-flex align-items-center gap-2">
+                        <span class="hero-chip"><i class="mdi mdi-calendar-clock-outline"></i> Réservation flexible</span>
+                        <span class="hero-chip"><i class="mdi mdi-shield-check-outline"></i> Paiements sécurisés</span>
+                        <span class="hero-chip"><i class="mdi mdi-whatsapp"></i> Alertes WhatsApp</span>
+                    </div>
+                </div>
+
+                <div class="row position-relative">
+                    <div class="col-md-1"></div>
+                    <!-- Sidebar filters -->
+                    <div class="col-md-3">
+                        <div class="sticky-sidebar d-none d-md-block ">
+                            <div class="sticky">
+                                <form id="desktop-search-form" onsubmit="return false;">
+                                    <div class="filter-card p-4 border border-danger">
+                                        <span class="filter-title">Ajoutez vos filtres</span>
+
+                                        <div class="mt-3 mb-2" id="listing-count">
+                                            {% include 'listing/_count_listing.html.twig' %}
+                                        </div>
+
+                                        <h6 class="fw-bold mb-2 mt-3">Choisir vos dates</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="form-date border rounded-3 p-2">
+                                                    <span class="text-muted small d-block ms-1 mb-1">Arrivée</span>
+                                                    <input type="text" class="border-0 p-0 form-control bg-white fw-bold fs-14 check-in"
+                                                           id="checkIn" name="checkIn" placeholder="jj/mm/aaaa" data-input>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-date border rounded-3 p-2">
+                                                    <span class="text-muted small d-block ms-1 mb-1">Départ</span>
+                                                    <input type="text" class="border-0 p-0 form-control bg-white fw-bold fs-14 check-out"
+                                                           id="checkOut" name="checkOut" placeholder="jj/mm/aaaa" data-input>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="fw-bold mb-2">Type de propriété</h6>
+                                        <div class="mb-3">
+                                            {% set selectedType = type ?? '' %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" id="AllTypes" name="type" value="" {% if selectedType == '' %}checked{% endif %}>
+                                                <label class="form-check-label" for="AllTypes">Tous</label>
+                                            </div>
+                                            {% set types = ['Appartement','Maison','Villa','Studio'] %}
+                                            {% for t in types %}
+                                                {% set id = t|replace({' ': ''}) %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" id="{{ id }}" name="type" value="{{ t }}" {% if selectedType == t %}checked{% endif %}>
+                                                    <label class="form-check-label" for="{{ id }}">{{ t }}</label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="filter-form-group">
+                                            <!-- City -->
+                                            <div class="form-floating mb-2 border rounded-3 p-1">
+                                                <select class="form-select border-0 fw-bold mt-2 city-select" name="city" onchange="findCommune(this)" required>
+                                                    <option disabled selected value="">-- Choisissez une ville --</option>
+                                                    {% for city_list in cities %}
+                                                        <option value="{{ city_list.name }}" {% if city == city_list.name %} selected {% endif %}>{{ city_list.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <label class="px-2">Choisissez la ville</label>
+                                            </div>
+
+                                            <!-- Commune -->
+                                            <div class="form-floating mb-3 border rounded-3 p-1">
+                                                <select class="form-select border-0 fw-bold mt-2 commune-select" name="commune">
+                                                    <option value="All">-- Tous --</option>
+                                                    {% for commune_ in communes %}
+                                                        <option value="{{ commune_.name }}" {% if commune_.name == commune %} selected {% endif %}>{{ commune_.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <label class="px-2">Choisissez la commune</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <!-- Min -->
+                                            <div class="col-md mb-1">
+                                                <div class="form-floating d-flex align-items-end px-3 border rounded-3">
+                                                    <input type="number" class="form-control border-0 px-0" id="minBudget" name="minBudget" min="0" value="{{ min }}">
+                                                    <span class="my-auto mdi mdi-cash-usd fs-6"></span>
+                                                    <label for="minBudget" class="text-muted px-3 mt-1 small">Budget minimum</label>
+                                                </div>
+                                            </div>
+                                            <!-- Max -->
+                                            <div class="col-md mb-1">
+                                                <div class="form-floating d-flex align-items-end px-3 border rounded-3">
+                                                    <input type="number" class="form-control border-0 px-0" id="maxBudget" name="maxBudget" min="0" value="{{ max }}">
+                                                    <span class="my-auto mdi mdi-cash-usd fs-6"></span>
+                                                    <label for="maxBudget" class="text-muted px-3 mt-1 small">Budget maximum</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="fw-bold mb-2">Équipements</h6>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" id="furniture" name="furniture">
+                                                    <label class="form-check-label text-muted fw-light d-flex" for="furniture">Meublés</label>
+                                                </div>
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" id="guard" name="guard">
+                                                    <label class="form-check-label text-muted fw-light d-flex" for="guard">Agents de sécurité</label>
+                                                </div>
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" id="garden" name="garden">
+                                                    <label class="form-check-label text-muted fw-light d-flex" for="garden">Jardin</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="wifi" name="wifi">
+                                                    <label class="form-check-label text-muted fw-light d-flex" for="wifi">Wi-fi</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" id="climatisation" name="climatisation">
+                                                    <label class="form-check-label text-muted fw-light d-flex" for="climatisation">Climatisation</label>
+                                                </div>
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" id="roofspace" name="roofspace">
+                                                    <label class="form-check-label text-muted fw-light d-flex" for="roofspace">Terrasse toiture</label>
+                                                </div>
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" id="exteriortoilet" name="exteriortoilet">
+                                                    <label class="form-check-label text-muted fw-light d-flex" for="exteriortoilet">Toilette extérieur</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="parking" name="parking">
+                                                    <label class="form-check-label text-muted fw-light d-flex" for="parking">Parking</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between mt-3">
+                                            <button type="button" class="btn btn-reset btn-sm rounded-3 text-white"
+                                                    onclick="resetFilters('mobile-search-form')">
+                                                Réinitialiser
+                                            </button>
+                                            <button type="button" class="btn btn-apply btn-sm rounded-3 text-white"
+                                                    onclick="doSearchListing('desktop-search-form')">
+                                                Appliquer les filtres
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div class="col-md-7">
+                        <div class="container d-none d-md-block" id="listing-table-desktop">
+                            {% include 'air_bnb/_listing_list.html.twig' %}
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Mobile Filter Modal ===== -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="filterModalLabel">Filtres de recherche</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="mobile-search-form" onsubmit="return doSearchListing('mobile-search-form');">
+                        <div class="container-fluid p-1">
+                            <span class="filter-title">Ajoutez vos filtres</span>
+
+                            <h6 class="fw-bold mb-2 mt-3">Choisir vos dates</h6>
+                            <div class="row mb-3">
+                                <div class="col-6 mb-2">
+                                    <div class="form-date border rounded-3 p-2">
+                                        <span class="text-muted small d-block ms-1 mb-1">Arrivée</span>
+                                        <input type="text" class="border-0 p-0 form-control bg-white fw-bold fs-14 check-in"
+                                               id="checkIn" name="checkIn" placeholder="jj/mm/aaaa" data-input>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <div class="form-date border rounded-3 p-2">
+                                        <span class="text-muted small d-block ms-1 mb-1">Départ</span>
+                                        <input type="text" class="border-0 p-0 form-control bg-white fw-bold fs-14 check-out"
+                                               id="checkOut" name="checkOut" placeholder="jj/mm/aaaa" data-input>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold mb-2">Type de propriété</h6>
+                            <div class="mb-3">
+                                {% set selectedType = type ?? '' %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="AllTypes_m" name="type" value="" {% if selectedType == '' %}checked{% endif %}>
+                                    <label class="form-check-label" for="AllTypes_m">Tous</label>
+                                </div>
+                                {% set types = ['Appartement','Maison','Villa','Studio'] %}
+                                {% for t in types %}
+                                    {% set id = t|replace({' ': ''}) ~ '_m' %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="{{ id }}" name="type" value="{{ t }}" {% if selectedType == t %}checked{% endif %}>
+                                        <label class="form-check-label" for="{{ id }}">{{ t }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- City / Commune -->
+                            <div class="form-floating mb-2 border rounded-3 p-1">
+                                <select class="form-select border-0 fw-bold mt-2 city-select" name="city" onchange="findCommune(this)" required>
+                                    <option disabled selected value="">-- Choisissez une ville --</option>
+                                    {% for city_list in cities %}
+                                        <option value="{{ city_list.name }}" {% if city == city_list.name %} selected {% endif %}>{{ city_list.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label class="px-2">Choisissez la ville</label>
+                            </div>
+                            <div class="form-floating mb-3 border rounded-3 p-1">
+                                <select class="form-select border-0 fw-bold mt-2 commune-select" name="commune">
+                                    <option value="All">-- Tous --</option>
+                                    {% if communes %}
+                                        {% for commune_ in communes %}
+                                            <option value="{{ commune_.name }}" {% if commune_.name == commune %} selected {% endif %}>{{ commune_.name }}</option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                                <label class="px-2">Choisissez la commune</label>
+                            </div>
+
+                            <!-- Budget -->
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <div class="form-floating d-flex align-items-end px-3 border rounded-3">
+                                        <input type="number" class="form-control border-0 px-0" id="minBudget_m" name="minBudget" min="0" value="{{ min }}">
+                                        <span class="my-auto mdi mdi-cash-usd fs-6"></span>
+                                        <label for="minBudget_m" class="text-muted px-3 mt-1 small">Budget minimum</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-floating d-flex align-items-end px-3 border rounded-3">
+                                        <input type="number" class="form-control border-0 px-0" id="maxBudget_m" name="maxBudget" min="0" value="{{ max }}">
+                                        <span class="my-auto mdi mdi-cash-usd fs-6"></span>
+                                        <label for="maxBudget_m" class="text-muted px-3 mt-1 small">Budget maximum</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Equipements -->
+                            <h6 class="fw-bold mb-2">Équipements</h6>
+                            <div class="row">
+                                {% set equipements = {
+                                    'furniture':'Meublés','guard':'Agents de sécurité','garden':'Jardin','wifi':'Wi-fi',
+                                    'climatisation':'Climatisation','roofspace':'Terrasse toiture','exteriortoilet':'Toilette extérieur','parking':'Parking'
+                                } %}
+                                {% for id, label in equipements|slice(0,4) %}
+                                    <div class="col-6 mb-1">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="{{ id }}_m" name="{{ id }}">
+                                            <label class="form-check-label text-muted fw-light d-flex" for="{{ id }}_m">{{ label }}</label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                {% for id, label in equipements|slice(4,4) %}
+                                    <div class="col-6 mb-1">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="{{ id }}2_m" name="{{ id }}">
+                                            <label class="form-check-label text-muted fw-light d-flex" for="{{ id }}2_m">{{ label }}</label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-sm btn-reset text-white" onclick="resetFilters('mobile-search-form')">
+                        Réinitialiser
+                    </button>
+                    <button type="button" class="btn btn-sm btn-apply text-white" onclick="doSearchListing('mobile-search-form')">
+                        Appliquer les filtres
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    {#    <div class="search-body container-fluid position-relative">#}
+{#        <div class="row">#}
+{#            <div class="col-lg-12">#}
+{#                <div class="d-block d-md-none vh-100 overflow-auto" id="mobile-scroll-area">#}
+{#                    <div class="d-flex justify-content-center p-2">#}
+{#                        <img src="{{ asset('assets/img/dashboard-updates.svg') }}" class="img-fluid" width="25%" alt="#">#}
+{#                        <div>#}
+{#                            <h1 class="fw-bold mb-0 ms-3 mt-4">Location à court et longs séjours</h1>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                    <!-- Sticky toggle button -->#}
+{#                    <div class="d-block d-md-none sticky-top bg-white border-bottom p-2 mt-3">#}
+{#                        <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#filterModal">#}
+{#                            <i class="mdi mdi-filter-outline"></i> Ajouter vos filtres#}
+{#                        </button>#}
+{#                    </div>#}
+{#                    <!-- Listings -->#}
+{#                    <div class="container mt-2" id="listing-table-mobile">#}
+{#                        {% include 'air_bnb/_listing_list.html.twig' %}#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+
+{#        #}{# Modal for Desktop Screen #}
+{#        <div class="row">#}
+{#            <div class="col-lg-12 col-12 p-3 p-lg-4">#}
+{#                <div class="srch_item bg-white d-flex align-items-center mb-3 d-none d-md-block">#}
+{#                    <div class="receivers d-flex p-2">#}
+{#                        <img src="{{ asset('assets/img/dashboard-updates.svg') }}" class="img-fluid" width="12%" alt="#">#}
+{#                        <div class="mt-3 ">#}
+{#                            <h1 class="fw-bold mb-0 ms-3 mt-4">Location à court et longs séjours</h1>#}
+{#                            <p class="py-2 ms-3 text-secondary" style="font-size: 15px">Découvrez une variété d'hébergements adaptés à vos besoins et préférences.</p>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="row position-relative">#}
+{#                    <div class="col-md-1"></div>#}
+{#                    <div class="col-md-3">#}
+{#                        <div class="sticky-sidebar d-none d-md-block">#}
+{#                            <div class="sticky">#}
+{#                                <form id="desktop-search-form" onsubmit="return false;">#}
+{#                                    <div class="p-0 border-bottom bg-white mb-2 d-none d-md-block">#}
+{#                                        <div class="container-fluid border border-2 border-dark rounded-5 p-4">#}
+{#                                            <p class="bg-light text-dark  fw-normal rounded-3 filter-box mb-2 fw-bold text-uppercase">Ajoutez vos filtres</p>#}
+{#                                            <div>#}
+{#                                                <div id="listing-count">#}
+{#                                                    {% include 'listing/_count_listing.html.twig' %}#}
+{#                                                </div>#}
+{#                                                <h6 class="fw-bold mb-2">Choisir vos dates</h6>#}
+{#                                                <div class="row mb-3">#}
+{#                                                    <div class="col-md-6">#}
+{#                                                        <div class="form-date border rounded-9 p-1">#}
+{#                                                            <p class="mb-1 text-muted small ms-2">Date d'arrivée</p>#}
+{#                                                            <div class="ms-2">#}
+{#                                                                <input type="text" class="border-0 p-0 form-control rounded-9 bg-white fw-bold fs-14 check-in"#}
+{#                                                                       id="checkIn" name="checkIn" placeholder="jj/mm/aaaa" data-input>#}
+{#                                                            </div>#}
+{#                                                        </div>#}
+{#                                                    </div>#}
+{#                                                    <div class="col-md-6">#}
+{#                                                        <div class="form-date border rounded-9 p-1">#}
+{#                                                            <p class="mb-1 text-muted small ms-2">Date de départ</p>#}
+{#                                                            <div class="ms-2">#}
+{#                                                                <input type="text" class="border-0 p-0 form-control rounded-9 bg-white fw-bold fs-14 check-out"#}
+{#                                                                       id="checkOut" name="checkOut" placeholder="jj/mm/aaaa" data-input>#}
+{#                                                            </div>#}
+{#                                                        </div>#}
+{#                                                    </div>#}
+{#                                                </div>#}
+{#                                                <h6 class="fw-bold mb-3">Type de propriété</h6>#}
+{#                                                <div class="mb-2">#}
+{#                                                    {% set selectedType = type ?? '' %}#}
+
+{#                                                    <div class="form-check">#}
+{#                                                        <input class="form-check-input" type="radio" id="AllTypes" name="type" value="" {% if selectedType == '' %}checked{% endif %}>#}
+{#                                                        <label class="form-check-label" for="AllTypes">Tous</label>#}
+{#                                                    </div>#}
+
+{#                                                    {% set types = ['Appartement', 'Maison', 'Villa', 'Studio'] %}#}
+{#                                                    {% for t in types %}#}
+{#                                                        {% set id = t|replace({' ': ''}) %}#}
+{#                                                        <div class="form-check">#}
+{#                                                            <input class="form-check-input" type="radio" id="{{ id }}" name="type" value="{{ t }}" {% if selectedType == t %}checked{% endif %}>#}
+{#                                                            <label class="form-check-label" for="{{ id }}">{{ t }}</label>#}
+{#                                                        </div>#}
+{#                                                    {% endfor %}#}
+{#                                                </div>#}
+{#                                                <div class="filter-form-group">#}
+{#                                                    <!-- City -->#}
+{#                                                    <div class="form-floating mb-2 border border-1 p-1 rounded-9">#}
+{#                                                        <select class="form-select border-0 fw-bold mt-2 city-select" name="city" onchange="findCommune(this)" required>#}
+{#                                                            <option disabled selected value="">-- Choisissez une ville --</option>#}
+{#                                                            {% for city_list in cities %}#}
+{#                                                                <option value="{{ city_list.name }}" {% if city == city_list.name %} selected {% endif %}>{{ city_list.name }}</option>#}
+{#                                                            {% endfor %}#}
+{#                                                        </select>#}
+{#                                                        <label class="px-2">Choisissez la ville</label>#}
+{#                                                    </div>#}
+
+{#                                                    <!-- Commune -->#}
+{#                                                    <div class="form-floating mb-3 border border-1 p-1 rounded-9">#}
+{#                                                        <select class="form-select border-0 fw-bold mt-2 commune-select" name="commune">#}
+{#                                                            <option value="All">-- Tous --</option>#}
+{#                                                            {% for commune_ in communes %}#}
+{#                                                                <option value="{{ commune_.name }}" {% if commune_.name == commune %} selected {% endif %}>{{ commune_.name }}</option>#}
+{#                                                            {% endfor %}#}
+{#                                                        </select>#}
+{#                                                        <label class="px-2">Choisissez la commune</label>#}
+{#                                                    </div>#}
+{#                                                </div>#}
+{#                                                <div class="row mb-3">#}
+{#                                                    <!-- Minimum Budget -->#}
+{#                                                    <div class="col-md mb-1">#}
+{#                                                        <div class="form-floating d-flex align-items-end px-3 border rounded-3">#}
+{#                                                            <input type="number"#}
+{#                                                                   class="form-control border-0 px-0"#}
+{#                                                                   id="minBudget"#}
+{#                                                                   name="minBudget"#}
+{#                                                                   min="0"#}
+{#                                                                   placeholder="Min"#}
+{#                                                                   value="{{ min }}">#}
+{#                                                            <span class="my-auto mdi mdi-cash-usd fs-6"></span>#}
+{#                                                            <label for="minBudget" class="text-muted px-3 mt-1 small">Budget Minimum</label>#}
+{#                                                        </div>#}
+{#                                                    </div>#}
+
+{#                                                    <!-- Maximum Budget -->#}
+{#                                                    <div class="col-md mb-1">#}
+{#                                                        <div class="form-floating d-flex align-items-end px-3 border rounded-3">#}
+{#                                                            <input type="number"#}
+{#                                                                   class="form-control border-0 px-0"#}
+{#                                                                   id="maxBudget"#}
+{#                                                                   name="maxBudget"#}
+{#                                                                   min="0"#}
+{#                                                                   placeholder="Max"#}
+{#                                                                   value="{{ max }}">#}
+{#                                                            <span class="my-auto mdi mdi-cash-usd fs-6"></span>#}
+{#                                                            <label for="maxBudget" class="text-muted px-3 mt-1 small">Budget Maximum</label>#}
+{#                                                        </div>#}
+{#                                                    </div>#}
+{#                                                </div>#}
+
+
+{#                                                <h6 class="fw-bold mb-3">Équipements</h6>#}
+{#                                                <div class="row">#}
+{#                                                    <div class="col-sm-6">#}
+{#                                                        <div class="form-check">#}
+{#                                                            <input class="form-check-input" type="checkbox" id="furniture" name="furniture">#}
+{#                                                            <label class="form-check-label text-muted fw-light d-flex" for="furniture">#}
+{#                                                                Meublés#}
+{#                                                            </label>#}
+{#                                                        </div>#}
+{#                                                        <div class="form-check">#}
+{#                                                            <input class="form-check-input" type="checkbox" id="guard" name="guard">#}
+{#                                                            <label class="form-check-label text-muted fw-light d-flex" for="guard">#}
+{#                                                                Agents de sécurité#}
+{#                                                            </label>#}
+{#                                                        </div>#}
+{#                                                        <div class="form-check">#}
+{#                                                            <input class="form-check-input" type="checkbox" id="garden" name="garden">#}
+{#                                                            <label class="form-check-label text-muted fw-light d-flex" for="garden">#}
+{#                                                                Jardin#}
+{#                                                            </label>#}
+{#                                                        </div>#}
+{#                                                        <div class="form-check">#}
+{#                                                            <input class="form-check-input" type="checkbox" id="wifi" name="wifi">#}
+{#                                                            <label class="form-check-label text-muted fw-light d-flex" for="wifi">#}
+{#                                                                Wi-fi#}
+{#                                                            </label>#}
+{#                                                        </div>#}
+{#                                                    </div>#}
+{#                                                    <div class="col-sm-6">#}
+{#                                                        <div class="form-check">#}
+{#                                                            <input class="form-check-input" type="checkbox" id="climatisation" name="climatisation">#}
+{#                                                            <label class="form-check-label text-muted fw-light d-flex" for="climatisation">#}
+{#                                                                Climatisation#}
+{#                                                            </label>#}
+{#                                                        </div>#}
+{#                                                        <div class="form-check">#}
+{#                                                            <input class="form-check-input" type="checkbox" id="roofspace" name="roofspace">#}
+{#                                                            <label class="form-check-label text-muted fw-light d-flex" for="roofspace">#}
+{#                                                                Terrasse toiture#}
+{#                                                            </label>#}
+{#                                                        </div>#}
+{#                                                        <div class="form-check">#}
+{#                                                            <input class="form-check-input" type="checkbox" id="exteriortoilet" name="exteriortoilet">#}
+{#                                                            <label class="form-check-label text-muted fw-light d-flex" for="exteriortoilet">#}
+{#                                                                Toilette exterieur#}
+{#                                                            </label>#}
+{#                                                        </div>#}
+{#                                                        <div class="form-check">#}
+{#                                                            <input class="form-check-input" type="checkbox" id="parking" name="parking">#}
+{#                                                            <label class="form-check-label text-muted fw-light d-flex" for="parking">#}
+{#                                                                Parking#}
+{#                                                            </label>#}
+{#                                                        </div>#}
+{#                                                    </div>#}
+{#                                                </div>#}
+{#                                            </div>#}
+{#                                            <div class="d-flex justify-content-between mt-3">#}
+{#                                                <div class="mt-2">#}
+{#                                                    <button onclick="resetFilters('mobile-search-form')" class="btn btn-danger btn-sm rounded-9 text-white w-100">Réinitialiser les filtres</button>#}
+{#                                                </div>#}
+
+{#                                                <div class="mt-2">#}
+{#                                                    <button type="button" onclick="doSearchListing('desktop-search-form')" class="btn btn-success btn-sm rounded-9 text-white w-100">Appliquer les filtres</button>#}
+{#                                                </div>#}
+{#                                            </div>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                </form>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                    <div class="col-md-7">#}
+{#                        <div class="container d-none d-md-block" id="listing-table-desktop">#}
+{#                            {% include 'air_bnb/_listing_list.html.twig' %}#}
+{#                        </div>#}
+{#                    </div>#}
+{#                    <div class="col-md-1"></div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+
+{#    #}{# Modal for Mobile Screen #}
+{#    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">#}
+{#        <div class="modal-dialog modal-dialog-scrollable">#}
+{#            <div class="modal-content">#}
+{#                <div class="modal-header">#}
+{#                    <h5 class="modal-title" id="filterModalLabel">Filtres de recherche</h5>#}
+{#                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>#}
+{#                </div>#}
+{#                <div class="modal-body">#}
+{#                    <form id="mobile-search-form" onsubmit="return doSearchListing('mobile-search-form');">#}
+{#                        <!-- Your filter fields here -->#}
+{#                        <div class="filter-form-group container-fluid p-1">#}
+{#                            <p class="bg-light text-dark fw-normal rounded-3 filter-box mb-2 fw-bold text-uppercase">Ajoutez vos filtres</p>#}
+{#                            <h6 class="fw-bold mb-2">Choisir vos dates</h6>#}
+{#                            <div class="row mb-3">#}
+{#                                <div class="col-md-6 mb-2">#}
+{#                                    <div class="form-date border rounded-9 p-1">#}
+{#                                        <p class="mb-1 text-muted small ms-2">Date d'arrivée</p>#}
+{#                                        <div class="ms-2">#}
+{#                                            <input type="text" class="border-0 p-0 form-control rounded-9 bg-white fw-bold fs-14 check-in"#}
+{#                                                   id="checkIn" name="checkIn" placeholder="jj/mm/aaaa" data-input>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                                <div class="col-md-6 mb-2">#}
+{#                                    <div class="form-date border rounded-9 p-1">#}
+{#                                        <p class="mb-1 text-muted small ms-2">Date de départ</p>#}
+{#                                        <div class="ms-2">#}
+{#                                            <input type="text" class="border-0 p-0 form-control rounded-9 bg-white fw-bold fs-14 check-out"#}
+{#                                                   id="checkOut" name="checkOut" placeholder="jj/mm/aaaa" data-input>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <!-- Property types -->#}
+{#                            <h6 class="fw-bold mb-3">Type de propriété</h6>#}
+{#                            <div class="mb-2">#}
+{#                                {% set selectedType = type ?? '' %}#}
+
+{#                                <div class="form-check">#}
+{#                                    <input class="form-check-input" type="radio" id="AllTypes" name="type" value="" {% if selectedType == '' %}checked{% endif %}>#}
+{#                                    <label class="form-check-label" for="AllTypes">Tous</label>#}
+{#                                </div>#}
+
+{#                                {% set types = ['Appartement', 'Maison', 'Villa', 'Studio'] %}#}
+{#                                {% for t in types %}#}
+{#                                    {% set id = t|replace({' ': ''}) %}#}
+{#                                    <div class="form-check">#}
+{#                                        <input class="form-check-input" type="radio" id="{{ id }}" name="type" value="{{ t }}" {% if selectedType == t %}checked{% endif %}>#}
+{#                                        <label class="form-check-label" for="{{ id }}">{{ t }}</label>#}
+{#                                    </div>#}
+{#                                {% endfor %}#}
+{#                            </div>#}
+{#                            <!-- City -->#}
+{#                            <div class="form-floating mb-2 border border-1 p-1 rounded-9">#}
+{#                                <select class="form-select border-0 fw-bold mt-2 city-select" name="city" onchange="findCommune(this)" required>#}
+{#                                    <option disabled selected value="">-- Choisissez une ville --</option>#}
+{#                                    {% for city_list in cities %}#}
+{#                                        <option value="{{ city_list.name }}" {% if city == city_list.name %} selected {% endif %}>{{ city_list.name }}</option>#}
+{#                                    {% endfor %}#}
+{#                                </select>#}
+{#                                <label class="px-2">Choisissez la ville</label>#}
+{#                            </div>#}
+
+{#                            <!-- Commune -->#}
+{#                            <div class="form-floating mb-3 border border-1 p-1 rounded-9">#}
+{#                                <select class="form-select border-0 fw-bold mt-2 commune-select" name="commune">#}
+{#                                    <option value="All">-- Tous --</option>#}
+{#                                    {% if communes %}#}
+{#                                        {% for commune_ in communes %}#}
+{#                                            <option value="{{ commune_.name }}" {% if commune_.name == commune %} selected {% endif %}>{{ commune_.name }}</option>#}
+{#                                        {% endfor %}#}
+{#                                    {% endif %}#}
+{#                                </select>#}
+{#                                <label class="px-2">Choisissez la commune</label>#}
+{#                            </div>#}
+{#                            <!-- Budget -->#}
+{#                            <div class="row mb-3">#}
+{#                                <div class="col-md mb-1">#}
+{#                                    <div class="form-floating d-flex align-items-end px-3 border rounded-3">#}
+{#                                        <input type="number" class="form-control border-0 px-0" id="minBudget" name="minBudget" min="0" value="{{ min }}">#}
+{#                                        <span class="my-auto mdi mdi-cash-usd fs-6"></span>#}
+{#                                        <label for="minBudget" class="text-muted px-3 mt-1 small">Budget Minimum</label>#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                                <div class="col-md mb-1">#}
+{#                                    <div class="form-floating d-flex align-items-end px-3 border rounded-3">#}
+{#                                        <input type="number" class="form-control border-0 px-0" id="maxBudget" name="maxBudget" min="0" value="{{ max }}">#}
+{#                                        <span class="my-auto mdi mdi-cash-usd fs-6"></span>#}
+{#                                        <label for="maxBudget" class="text-muted px-3 mt-1 small">Budget Maximum</label>#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+
+{#                            <!-- Equipments -->#}
+{#                            <h6 class="fw-bold mb-3">Équipements</h6>#}
+{#                            <div class="row">#}
+{#                                {% set equipements = {#}
+{#                                    'furniture': 'Meublés',#}
+{#                                    'guard': 'Agents de sécurité',#}
+{#                                    'garden': 'Jardin',#}
+{#                                    'wifi': 'Wi-fi',#}
+{#                                    'climatisation': 'Climatisation',#}
+{#                                    'roofspace': 'Terrasse toiture',#}
+{#                                    'exteriortoilet': 'Toilette exterieur',#}
+{#                                    'parking': 'Parking'#}
+{#                                } %}#}
+{#                                {% for id, label in equipements|slice(0, 4) %}#}
+{#                                    <div class="col-sm-6">#}
+{#                                        <div class="form-check">#}
+{#                                            <input class="form-check-input" type="checkbox" id="{{ id }}" name="{{ id }}">#}
+{#                                            <label class="form-check-label text-muted fw-light d-flex" for="{{ id }}">{{ label }}</label>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                {% endfor %}#}
+{#                                {% for id, label in equipements|slice(4, 4) %}#}
+{#                                    <div class="col-sm-6">#}
+{#                                        <div class="form-check">#}
+{#                                            <input class="form-check-input" type="checkbox" id="{{ id }}" name="{{ id }}">#}
+{#                                            <label class="form-check-label text-muted fw-light d-flex" for="{{ id }}">{{ label }}</label>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                {% endfor %}#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </form>#}
+{#                </div>#}
+{#                <div class="modal-footer">#}
+{#                    <div class="d-flex">#}
+{#                        <div class="float-start">#}
+{#                            <button type="button" class="btn btn-sm btn-danger me-3" onclick="resetFilters('mobile-search-form')">Réinitialiser les filtres</button>#}
+{#                        </div>#}
+{#                        <div class="float-end">#}
+{#                            <button type="button" class="btn btn-sm btn-primary" onclick="doSearchListing('mobile-search-form')">Appliquer les filtres</button>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+    <script>
+        const listingPaths = {
+            searchUrl: "{{ path('air_bnb_search') }}",
+            countUrl: "{{ path('app_listing_get_listing_count') }}",
+            communeUrl: "{{ path('app_listing_filter_communes') }}"
+        };
+    </script>
+    <script src="{{ asset('assets/js/listing.js') }}"></script>
+{% endblock %}

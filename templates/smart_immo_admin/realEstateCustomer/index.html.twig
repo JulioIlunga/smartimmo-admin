@@ -1,0 +1,110 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Liste des Clients | Smart-Immo{% endblock %}
+
+{% block bodyContent %}
+    {# ✅ Flash messages stylés #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible fade show mt-3 shadow-sm border-0"
+                 style="border-left:5px solid #dc3545;">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="container py-5">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0 text-dark">
+                Clients enregistrés
+                <span class="badge bg-danger fs-6">{{ count }}</span>
+            </h2>
+            {% if app.request.get('q') %}
+                <a href="{{ path('app_smart_immo_admin_real_estate_customer') }}"
+                   class="btn btn-outline-dark">
+                    <i class="mdi mdi-close-circle me-1"></i> Réinitialiser
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- 🔎 Barre de recherche -->
+        <form method="get" class="row g-2 mb-4 align-items-end">
+            <div class="col-md-5">
+                <input type="text" id="search" name="q" value="{{ app.request.get('q') }}"
+                       class="form-control form-control-lg border-danger"
+                       placeholder="Rechercher par nom ou numéro...">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-danger w-100 btn-lg">
+                    <i class="mdi mdi-magnify me-1"></i> Rechercher
+                </button>
+            </div>
+        </form>
+
+        {% if customers is not empty %}
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Liste des Clients</h5>
+{#                    <span class="badge bg-light text-danger">{{ customers|length }} Clients</span>#}
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+
+                        <table class="table table-striped table-hover align-middle mb-0">
+                            <thead class="bg-light text-uppercase small text-dark border-bottom border-danger">
+                            <tr>
+                                <th>#</th>
+                                <th>Prénom</th>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Date d'inscription</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for customer in customers %}
+                                <tr>
+                                    <td class="fw-bold text-muted">{{ loop.index }}</td>
+                                    <td class="fw-medium">{{ customer.firstname }}</td>
+                                    <td class="fw-medium">{{ customer.name }}</td>
+                                    <td><i class="mdi mdi-email text-danger me-1"></i> {{ customer.email }}</td>
+                                    <td><i class="mdi mdi-phone text-dark me-1"></i> {{ customer.phone ?? '—' }}</td>
+                                    <td>{{ customer.createdAt ? customer.createdAt|date('d/m/Y') : '—' }}</td>
+
+                                    {# Bouton action unique #}
+                                    <td class="text-center">
+                                        {% if customer.isActive %}
+                                            <a href="{{ path('app_smart_immo_real_estate_block_customer', {id: customer.id}) }}"
+                                               class="btn btn-sm btn-outline-danger rounded-pill">
+                                                <i class="mdi mdi-lock"></i>
+                                                <span class="d-none d-md-inline"> Bloquer</span>
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ path('app_smart_immo_real_estate_unblock_customer', {id: customer.id}) }}"
+                                               class="btn btn-sm btn-success rounded-pill">
+                                                <i class="mdi mdi-lock-open"></i>
+                                                <span class="d-none d-md-inline"> Débloquer</span>
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-light border border-danger d-flex align-items-center mt-4" role="alert">
+                <i class="mdi mdi-alert-circle-outline text-danger me-2 fs-4"></i>
+                <div>
+                    Aucun client trouvé.
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+{% endblock %}

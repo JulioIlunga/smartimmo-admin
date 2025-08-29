@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Smart-Immo | Error 403
+{% endblock %}
+
+{% block body %}
+    <div class="container py-5 mt-3">
+        <div class="listing-items py-5">
+            <div class="d-flex align-items-center justify-content-center">
+                <div class="listing text-center col-md-6">
+                <span class="display-1 fw-bold">
+                    403
+                </span>
+                    <br>
+                    <span class="display-6">
+                    Oops ! Page introuvable
+                </span>
+                    <br>
+                    <span class="h3">
+                    Désolé, nous n’avons pas trouvé la page que vous recherchez.
+                </span>
+                    <br>
+                    <a href="{{ path('app_listing') }}" class="btn btn-danger btn-dashboard rounded-9 mt-lg-5 mb-lg-5">Cliquez pour découvrir les meilleures offres immobilières</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

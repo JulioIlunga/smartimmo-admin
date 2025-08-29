@@ -1,0 +1,73 @@
+<td class="fw-bold text-dark">
+    <i class="mdi mdi-map-marker text-dark me-1"></i>{{ preference.province }}
+    <br>
+    {% if preference.status %}
+        <span class="badge bg-success shadow-sm rounded-5 mb-1"><i class="mdi mdi-check-circle-outline me-1"></i>Alerte activée</span>
+    {% endif %}
+</td>
+
+<td class="text-muted">
+    <i class="mdi mdi-city-variant-outline me-1"></i>{{ preference.commune }}
+</td>
+
+<td class="fw-semibold">
+    <i class="mdi mdi-cash-multiple me-1 text-success"></i>
+    {{ preference.minPrice|number_format(0, ',', '.') }} - {{ preference.maxPrice|number_format(0, ',', '.') }}
+    <span class="text-secondary small">USD</span>
+</td>
+<td>
+    <span class="badge bg-light text-dark border px-3 py-2 shadow-sm">
+        <i class="mdi mdi-home-outline me-1"></i>{{ preference.propertyType }}
+    </span>
+</td>
+<td>
+    <span class="badge bg-info text-white px-3 py-2 shadow-sm">
+        <i class="mdi mdi-bed-outline me-1"></i>{{ preference.bedrooms }}
+    </span>
+</td>
+<td>
+    <span class="badge bg-info text-white px-3 py-2 shadow-sm">
+        <i class="mdi mdi-shower me-1"></i>{{ preference.bathrooms }}
+    </span>
+</td>
+
+<td>
+    {% if preference.transactionType == 'rent' %}
+        <span class="badge bg-secondary px-3 py-2 shadow-sm">
+            <i class="mdi mdi-key me-1"></i> Location
+        </span>
+    {% elseif preference.transactionType == 'buy' %}
+        <span class="badge bg-dark text-white px-3 py-2 shadow-sm">
+            <i class="mdi mdi-cash me-1"></i> Achat
+        </span>
+    {% else %}
+        <span class="badge bg-light px-3 py-2 shadow-sm">-</span>
+    {% endif %}
+</td>
+
+<td>
+    <div class="d-flex gap-2 justify-content-end">
+        {% if not preference.status %}
+            <button
+                class="btn btn-outline-success btn-sm rounded-pill"
+                onclick="PaymentHelper.pay({
+                        createUrl: '{{ path('app_payement_for_preference') }}',
+                        payload: { preference_id: {{ preference.id }} },   // or your membership entity id
+                        button: this,
+                        timerSeconds: 300, // 5 minutes
+                        manualCheckUrl: (code) => `/transaction/check/manually/status/${code}`, // optional
+                        autoStatusUrl:   (code) => `/transaction/payment/status/${code}`,       // must return {status:'true'|'false'}
+                        successRedirect: '/agent/work/space',
+                        idleHtml: 'Choisir ce plan',
+                        loadingHtml: '<span class=&quot;spinner-border spinner-border-sm&quot; role=&quot;status&quot; aria-hidden=&quot;true&quot;></span>'
+                        })">
+                <i class="mdi mdi-reload me-1"></i>Activer l'alerte
+            </button>
+        {% endif %}
+        <button class="btn btn-outline-danger btn-sm rounded-pill shadow-sm"
+                title="Supprimer"
+                onclick="deletePreference('{{ preference.id }}', this)">
+            <i class="mdi mdi-delete-outline me-1"></i> Supprimer
+        </button>
+    </div>
+</td>

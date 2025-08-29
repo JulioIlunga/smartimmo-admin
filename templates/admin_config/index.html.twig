@@ -1,0 +1,92 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Smart-Immo | Administration{% endblock %}
+
+{% block bodyHeader %}
+    <div class="py-1 border-bottom">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h4 class="mb-md-0 fw-bold">Administration</h4>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block bodyContent %}
+    {% include 'agent_work_space/partials/_flag.html.twig' %}
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Configuration Générale</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="accordionConfig">
+                        <!-- Paramètres des prix -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingPrix">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePrix" aria-expanded="true" aria-controls="collapsePrix">
+                                    <div class="d-flex align-items-center">
+                                        <i class="mdi mdi-database-settings me-2 text-success"></i>
+                                        <span>Paramètres</span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapsePrix" class="accordion-collapse collapse show" aria-labelledby="headingPrix" data-bs-parent="#accordionConfig">
+                                <div class="accordion-body">
+                                    <form action="{{ path('app_admin_config') }}" method="post">
+                                        <!-- Prix des alertes de recommandation -->
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold">Prix des alertes de recommandation</label>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="input-group">
+                                                        <input type="text" name="preferencePrice" class="form-control" value="{{ config.preferencePrice|number_format(2, ',', '.') }}" min="0">
+                                                        <span class="input-group-text">USD</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="lookingForAgent" class="form-label fw-bold">Lien pour property owner service </label>
+                                            <div class="row g-3">
+                                                <div class="col-md-12">
+                                                    <div class="input-group">
+                                                        <input type="text" id="lookingForAgent" name="lookingForAgent" class="form-control" value="{{ configLookingAgent.lookingForAgentUrl }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {# <!-- Pourcentage de commission -->
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold">Commission pour les reservations (%)</label>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" value="0" min="0" max="100">
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                    <small class="text-muted">Commission pour les reservations</small>
+                                                </div>
+                                            </div>
+                                        </div> #}
+                                        <!-- Boutons d'action -->
+                                        <div class="d-flex justify-content-end gap-2 mt-4">
+                                            <button type="button" class="btn btn-secondary">
+                                                <i class="mdi mdi-refresh" ></i> Réinitialiser
+                                            </button>
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="mdi mdi-content-save"></i> Enregistrer
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

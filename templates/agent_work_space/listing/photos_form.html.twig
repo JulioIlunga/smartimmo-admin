@@ -1,0 +1,18 @@
+{{ form_start(formImage,  {'attr': {'novalidate': 'novalidate'}}) }}
+<div class="row">
+    <div class="col-md-6">
+        {{ form_row(formImage.name) }}
+    </div>
+    <div class="col-md-6">
+        <span>Cliquez pour sauvegarder image</span>
+        {{ form_row(formImage.Enregistrer) }}
+    </div>
+</div>
+{{ form_end(formImage) }}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="mb-1" id="avatarSpot">
+            <img src="" alt="" class="img-fluid mx-auto d-block"  id="avatarPreviewE" >
+        </div>
+    </div>
+</div>

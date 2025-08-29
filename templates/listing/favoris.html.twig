@@ -1,0 +1,27 @@
+{% if is_granted('IS_AUTHENTICATED') %}
+<div class="badge position-absolute bg-white rounded-3 badge_rating p-2">
+{#<a href="#" onclick="return saveFavoris({{ property.id }})" id="onClick">#}
+    {% set name = 'false' %}
+    {% for favoris in property.favoris %}
+        {% if favoris.property.id == property.id %}
+            {% if favoris.isSaved %}
+                {% set name = 'true' %}
+            {% else %}
+                {% set name = 'false' %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+    {% if name == 'true' %}
+        <span class="text-danger mdi mdi-heart fs-5"></span>
+    {% else %}
+        <span class="text-danger mdi mdi-heart-outline fs-6"></span>
+    {% endif %}
+</div>
+{#</a>#}
+{#{% else %}#}
+{#    <a href="#" onclick="return saveFavoris('{{ property.id }}')">#}
+{#        <span class="text-danger mdi mdi-heart-outline fs-6"></span>#}
+{#    </a>#}
+{% endif %}
+
+

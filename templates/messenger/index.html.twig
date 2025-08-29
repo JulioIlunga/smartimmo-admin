@@ -1,0 +1,299 @@
+{% extends 'base.html.twig' %}
+{% block title %}Smart-Immo | Messenger{% endblock %}
+
+{% block style %}
+    <link href="{{ asset('assets/admin/css/dasboard.css') }}" rel="stylesheet">
+    <style>
+        :root{
+            --brand:#dc3545;         /* base red */
+            --brand-600:#b02a37;
+            --ink:#1f2937;
+            --muted:#6b7280;
+            --line:#eef2f7;
+        }
+        .account-sidebar{
+            position: sticky; top: 1.25rem;
+            border:1px solid rgba(2,6,23,.06); border-radius:1rem; overflow:hidden;
+            box-shadow:0 14px 36px rgba(220,53,69,.08); background:#fff;
+        }
+        .account-cover{
+            height:96px;
+            background:linear-gradient(135deg, rgba(220,53,69,.15), rgba(220,53,69,.05));
+        }
+        .account-profile{
+            margin-top:-42px; text-align:center; padding:0 1.25rem 1.25rem;
+        }
+        .account-avatar{
+            width:84px;height:84px;border-radius:50%;overflow:hidden;
+            box-shadow:0 8px 24px rgba(0,0,0,.12); border:3px solid #fff; background:#f8fafc;
+        }
+        .account-name{color:var(--ink)}
+        .account-phone{color:var(--muted)}
+        .menu-label{
+            font-size:.75rem; letter-spacing:.04em; text-transform:uppercase;
+            color:var(--muted); margin: .25rem 1.25rem .5rem;
+        }
+        .side-nav{list-style:none; padding:.25rem  .75rem 1rem; margin:0;}
+        .side-link{
+            display:flex; align-items:center; gap:.5rem;
+            padding:.65rem .85rem; margin:.25rem 0; border-radius:.8rem;
+            color:var(--muted); text-decoration:none; border:1px solid transparent;
+            transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+        }
+        .side-link i, .side-link .mdi{font-size:1.05rem}
+        .side-link:hover{ background:#fff; border-color:var(--line); color:var(--ink); transform:translateY(-1px)}
+        .side-link.is-active{
+            background:linear-gradient(180deg, rgba(220,53,69,.10), rgba(220,53,69,.06));
+            border-color:rgba(220,53,69,.25); color:var(--brand-600);
+        }
+        .btn-dashboard{
+            background:var(--brand); color:#fff; border:none; padding:.6rem 1rem;
+            border-radius:999px; font-weight:600;
+        }
+        .btn-dashboard:hover{background:var(--brand-600); color:#fff}
+    </style>
+    <style>
+        /* ===== Messages module ===== */
+        .message-card {
+            border: 1px solid #eef1f4;
+            box-shadow: 0 6px 18px rgba(16,18,22,.06);
+        }
+
+        .message-toggle .btn {
+            border-radius: 999px; /* pill look */
+        }
+
+        .message-list .list-group-item {
+            border: 1px solid #eef1f4 !important;
+            border-radius: 0.85rem !important;
+            transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
+            background: #fff;
+        }
+
+        .message-list .list-group-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(16,18,22,.08);
+            border-color: rgba(220,53,69,.25);
+        }
+
+        .message-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            object-fit: cover;
+            flex: 0 0 auto;
+            box-shadow: 0 4px 12px rgba(16,18,22,.1);
+        }
+
+        .message-chevron {
+            transition: transform .15s ease, color .15s ease;
+        }
+
+        .message-item:hover .message-chevron {
+            transform: translateX(2px);
+            color: #dc3545;
+        }
+
+        /* Clamp 2 lines for the title/description */
+        .text-truncate-2 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* Mobile refinements */
+        @media (max-width: 991.98px) {
+            .message-card .card-header {
+                padding: .75rem 1rem;
+            }
+            .message-list .list-group-item {
+                padding: .9rem 1rem !important;
+                margin-bottom: .6rem !important;
+            }
+            .message-avatar {
+                width: 44px;
+                height: 44px;
+                border-radius: 10px;
+            }
+        }
+
+    </style>
+{% endblock %}
+{% block bodyClass %}
+    class= 'bg-light header-top-br'
+{% endblock %}
+{% block body %}
+
+    <div class="py-5 container">
+        {% include 'agent_work_space/partials/_flag.html.twig' %}
+
+        <div class="row position-relative align-items-start">
+            <!-- Navbar -->
+            <div class="col-lg-3 profile-sidebar-osahan">
+                <aside class="account-sidebar" aria-label="Menu du compte">
+                    <!-- Cover -->
+                    <div class="account-cover"></div>
+
+                    <!-- Profile -->
+                    <div class="account-profile">
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="account-avatar mb-2">
+                                {% if user.picture == null %}
+                                    <img src="{{ asset('assets/img/imageIcon.png') }}" class="w-100 h-100" style="object-fit:cover" alt="Photo de profil">
+                                {% else %}
+                                    <img src="{{ user.picture}}" class="w-100 h-100" style="object-fit:cover" alt="Photo de profil">
+                                {% endif %}
+                            </div>
+                            <h5 class="mb-0 fw-bold account-name">{{ user.firstname }} {{ user.name }}</h5>
+                            <small class="account-phone">{{ user.phonecode }} {{ user.phone }}</small>
+                        </div>
+
+                        {% set roles = app.user.roles %}
+                        {% if roles|length == 3 and 'ROLE_AGENT' in roles and 'ROLE_CUSTOMER' in roles %}
+                            <div class="listing text-center col-md-12 py-2">
+                                <a href="{{ path('app_agent_work_space') }}" class="btn btn-dashboard rounded-9">Espace agent</a>
+                            </div>
+                        {% else %}
+                            <div class="listing text-center col-md-12 py-2">
+                                <a href="{{ path('app_account_switch', { id: user.id}) }}" class="btn btn-dashboard rounded-9">Passer à un compte agent</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Menu -->
+                    <p class="menu-label">Menu principal</p>
+                    <ul class="side-nav">
+                        <li>
+                            <a class="side-link {% if show == 'favoris' %}is-active{% endif %}"
+                               {% if show == 'favoris' %}aria-current="page"{% endif %}
+                               href="{{ path('account.toggle.view', {show: 'favoris'}) }}">
+                                <span class="mdi mdi-chart-box-outline"></span> Mes favoris
+                            </a>
+                        </li>
+                        <li>
+                            <a class="side-link is-active"
+                               {% if show == 'messenger' %}aria-current="page"{% endif %}
+                               href="{{ path('account.toggle.view', {show: 'conversation'}) }}">
+                                <span class="mdi mdi-chat"></span> Mes conversations
+                            </a>
+                        </li>
+                        <li>
+                            <a class="side-link {% if show == 'reservations' %}is-active{% endif %}"
+                               {% if show == 'reservations' %}aria-current="page"{% endif %}
+                               href="{{ path('account.toggle.view', {show: 'reservations'}) }}">
+                                <span class="mdi mdi-calendar-check"></span> Mes réservations
+                            </a>
+                        </li>
+                        <li>
+                            <a class="side-link {% if show == 'profil' %}is-active{% endif %}"
+                               {% if show == 'profil' %}aria-current="page"{% endif %}
+                               href="{{ path('account.toggle.view', {show: 'profil'}) }}">
+                                <span class="mdi mdi-card-account-phone-outline"></span> Mon profil
+                            </a>
+                        </li>
+                        <li>
+                            <a class="side-link" href="{{ path('app_logout') }}">
+                                <span class="mdi mdi-logout"></span> Se déconnecter
+                            </a>
+                        </li>
+                    </ul>
+                </aside>
+            </div>
+
+            <!-- Content -->
+            <div class="col-lg-9 ps-xl-5">
+                <div class="dashboard-content">
+
+                    <div class="card message-card rounded-4 border-0">
+                        <div class="card-header bg-white d-flex align-items-center flex-wrap gap-2">
+                            <h6 class="mb-0 fw-bold">Tous les messages</h6>
+
+                            <div class="ms-auto">
+                                <div class="btn-group btn-group-sm message-toggle" role="group" aria-label="Afficher">
+                                    <a href="{{ path('messenger.toggle.view', {show: 'received'}) }}"
+                                       class="btn {% if show == 'received' %}btn-danger text-white{% else %}btn-outline-secondary{% endif %}">
+                                        Messages reçus
+                                    </a>
+                                    <a href="{{ path('messenger.toggle.view', {show: 'sent'}) }}"
+                                       class="btn {% if show == 'sent' %}btn-danger text-white{% else %}btn-outline-secondary{% endif %}">
+                                        Messages envoyés
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-0">
+                            <div class="p-3 p-md-4">
+
+                                {# Compute collection based on toggle #}
+                                {% set isSent = show == 'sent' %}
+                                {% set items  = isSent ? messengersSent : messengersReceived %}
+
+                                {% if items is not empty %}
+                                    <div class="list-group list-group-flush message-list">
+                                        {% for messenger in items %}
+                                            {% set counterpart = isSent ? messenger.agent : messenger.client %}
+                                            <a href="{{ path('app_messenger_chat', {propertyUuid: messenger.property.UuidProperty, messengerId: messenger.code }) }}"
+                                               class="list-group-item list-group-item-action message-item rounded-3 mb-2 p-3 p-md-3">
+                                                <div class="row align-items-center g-3">
+                                                    <!-- Left: avatar + name + date -->
+                                                    <div class="col-12 col-md-4 d-flex align-items-center">
+                                                        {% set avatar = messenger.property.user.picture ?? asset('assets/img/imageIcon.png') %}
+                                                        <img src="{{ avatar }}" alt="" class="message-avatar me-3">
+                                                        <div class="min-w-0">
+                                                            <p class="mb-0 fw-semibold text-truncate">
+                                                                {{ counterpart.firstname }} {{ counterpart.name }}
+                                                            </p>
+                                                            <p class="mb-0 small text-muted">
+                                                                {{ messenger.createdAt|date('d M Y · H:i') }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Middle: property summary -->
+                                                    <div class="col-8 col-md-6">
+                                                        <div class="min-w-0">
+                                                            <p class="mb-0 text-truncate fw-medium">
+                                                                {{ messenger.property.type }} | {{ messenger.property.currency }} {{ messenger.property.price }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Right: chevron -->
+                                                    <div class="col-4 col-md-2 text-end">
+                                                        <span class="mdi mdi-chevron-right fs-3 text-muted message-chevron"></span>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="py-5 text-center">
+                                        <img src="{{ asset('assets/img/nodata.jpg') }}" alt="" style="max-width:140px" class="opacity-75 mb-3"/>
+                                        <p class="mb-0 text-muted">Aucun message à afficher.</p>
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Jquery js -->
+    <script src="{{ asset('assets/vendor/jquery/jquery.min.js') }}"></script>
+    <!-- Bootstrap Bundle -->
+    <script src="{{ asset('assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- slick Slider JS-->
+    <script type="text/javascript" src="{{ asset('assets/vendor/slick/slick.min.js') }}"></script>
+    <!-- Date Picker -->
+    <script src="{{ asset('assets/vendor/date-picker/date-picker.js') }}"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="{{ asset('assets/js/osahan.js') }}"></script>
+{% endblock %}
+

@@ -1,0 +1,898 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Recommandations personnalisées{% endblock %}
+
+{% block style %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="{{ asset('assets/css/recommandation-style.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    <!-- ============ Alertes & Préférences (friendly) ============ -->
+    <section class="alerts-wow py-4" aria-labelledby="alerts-heading">
+        <div class="blob"></div><div class="blob2"></div>
+
+        <div class="container wow-hero">
+            <div class="row g-4 align-items-center justify-content-between">
+
+                <!-- Texte -->
+                <div class="col-lg-7 reveal">
+                    <div class="wow-badge">
+                        <i class="mdi mdi-bell-ring-outline"></i> Alertes WhatsApp instantanées
+                    </div>
+
+                    <h1 id="alerts-heading" class="wow-title">
+                        Ne cherchez plus. On vous trouve.
+                    </h1>
+
+                    <p class="wow-sub mb-3">
+                        Indiquez vos critères et recevez automatiquement les nouvelles annonces qui vous correspondent.
+                        <strong>Un agent immobilier pourra ensuite vous contacter directement</strong> pour vous accompagner.
+                    </p>
+
+                    <div class="stat-stack mb-3">
+                        <span class="stat-pill"><i class="mdi mdi-account-group-outline"></i> +100 agents partenaires</span>
+                        <span class="stat-pill"><i class="mdi mdi-home-city-outline"></i> +500 biens disponibles</span>
+                        <span class="stat-pill"><i class="mdi mdi-timer-sand"></i> Alertes en temps réel</span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        {% if is_granted('IS_AUTHENTICATED') %}
+                            <button type="button" onclick="showNewPreference()" class="wow-cta">
+                                <i class="mdi mdi-plus"></i> Créer mon alerte
+                            </button>
+                        {% else %}
+                            <button type="button" class="wow-cta" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                <i class="mdi mdi-login"></i> Se connecter pour commencer
+                            </button>
+                        {% endif %}
+
+                        <!-- Promo prix -->
+                        <div class="promo-offer d-inline-block px-4 py-3 rounded-4 shadow-sm text-center">
+                            <div class="old-price d-block text-white" style="font-size: 1.3rem;">
+                                <s>1&nbsp;USD</s>
+                            </div>
+                            <div class="new-price fw-bold text-success" style="font-size: 1.7rem;">
+                                🎉 100% OFF – Gratuit !
+                            </div>
+                            <small class="text-danger fw-semibold" style="font-size: 1rem;">🔥 Offre limitée</small>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Avantages -->
+                <div class="col-lg-5 reveal">
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <div class="benefit h-100">
+                                <i class="ic mdi mdi-calendar-check text-success"></i>
+                                <div class="mt-2">
+                                    <div class="fw-semibold">30 jours d’alertes</div>
+                                    <small class="opacity-85">Soyez sûr de ne rien manquer.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="benefit h-100">
+                                <i class="ic mdi mdi-star-check-outline text-info"></i>
+                                <div class="mt-2">
+                                    <div class="fw-semibold">Accès prioritaire</div>
+                                    <small class="opacity-85">Les meilleures offres en avant-première.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="benefit">
+                                <i class="ic mdi mdi-whatsapp text-success"></i>
+                                <div class="mt-2">
+                                    <div class="fw-semibold">Directement sur WhatsApp</div>
+                                    <small class="opacity-85">Simple, rapide et interactif.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Preferences list -->
+            <div class="row mt-2">
+                <div class="col-12 reveal">
+                    <div class="prefs-card">
+                        <div class="prefs-head">
+                            <i class="mdi mdi-format-list-bulleted-square text-rose"></i>
+                            <strong>Vos alertes enregistrées</strong>
+                        </div>
+                        <div class="prefs-body">
+                            {% set hasPrefs = preferences is defined and preferences|length > 0 %}
+                            {% set isAuth   = is_granted('IS_AUTHENTICATED') %}
+
+                            {% if isAuth and hasPrefs %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-wow align-middle mb-0">
+                                        <thead>
+                                        <tr class="text-center text-uppercase small">
+                                            <th>Ville</th>
+                                            <th>Commune</th>
+                                            <th>Budget</th>
+                                            <th>Type</th>
+                                            <th>Chambres</th>
+                                            <th>Sdb</th>
+                                            <th>Transaction</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for preference in preferences %}
+                                            <tr class="text-center {{ preference.status ? 'row-active' : '' }}">
+                                                {% include 'customer_recommandation/_item.html.twig' with { preference: preference } %}
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="prefs-empty text-center">
+                                    <div class="emoji-burst mx-auto">
+                                        <i class="mdi mdi-bell-plus-outline"></i>
+                                    </div>
+
+                                    <h5 class="fw-bold text-danger mb-3">Aucune alerte enregistrée</h5>
+
+                                    <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
+                                        <span class="tip-chip"><i class="mdi mdi-home-outline me-1"></i> Offres ciblées</span>
+                                        <span class="tip-chip"><i class="mdi mdi-account-tie me-1"></i> Contact direct avec l’agent</span>
+                                        <span class="tip-chip"><i class="mdi mdi-star-outline me-1"></i> Priorité sur les meilleures opportunités</span>
+                                    </div>
+
+                                    {% if isAuth %}
+                                        <button type="button"
+                                                onclick="showNewPreference()"
+                                                class="btn btn-danger rounded-pill px-4 btn-cta-wave">
+                                            <i class="mdi mdi-plus me-1"></i> Ajouter une alerte
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-danger rounded-pill px-4 btn-cta-wave"
+                                                data-bs-toggle="modal" data-bs-target="#loginModal">
+                                            <i class="mdi mdi-login me-1"></i> Se connecter pour créer une alerte
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    {# Your helper (use {{ asset() }} if you move the file) #}
+    <script src="{{ asset('assets/js/payment-helper.js') }}"></script>
+
+    <script>
+        // Reveal on scroll (tiny, dependency-free)
+        (() => {
+            const els = document.querySelectorAll('.alerts-wow .reveal');
+            if (!('IntersectionObserver' in window)) { els.forEach(el => el.classList.add('in')); return; }
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }});
+            }, { threshold:.12, rootMargin:"0px 0px -10% 0px" });
+            els.forEach(el => io.observe(el));
+        })();
+    </script>
+
+    {# Optional tiny JS for the CTA ripple hotspot (safe to omit) #}
+    <script>
+        document.addEventListener('pointermove', e => {
+            const btn = e.target.closest('.btn-cta-wave');
+            if (!btn) return;
+            const r = btn.getBoundingClientRect();
+            btn.style.setProperty('--x', (e.clientX - r.left) + 'px');
+            btn.style.setProperty('--y', (e.clientY - r.top) + 'px');
+        });
+    </script>
+
+    <!-- ===== Tiny, friendly styles (paste once) ===== -->
+
+
+    <!-- Small helper styles -->
+
+    <!-- Toast de succès -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage">
+                    Succès !
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
+            </div>
+        </div>
+    </div>
+        <!-- Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" id="loginModalContent">
+                <div class="modal-header">
+                    <h5 class="modal-title">Se Connecter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Login form will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Persistent modal shell (stays in DOM) -->
+    {# === Modal shell that stays in the DOM === #}
+    <div class="modal fade modal-wizard" id="modalCenter" tabindex="-1" aria-labelledby="modalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="modalCenterTitle">Ajouter une préférence</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+
+                <!-- AJAX-injected content goes here -->
+                <div id="modal-content-ajax" class="position-relative">
+                    <div class="modal-body text-center py-5">
+                        <div class="spinner-border text-danger mb-2" role="status" aria-hidden="true"></div>
+                        <p class="text-muted mb-0">Chargement en cours…</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Call this after you inject the form HTML into the modal
+        function initLeadTimeframeToggle(scopeEl){
+            const scope = scopeEl || document;
+            const tfRadios = scope.querySelectorAll('input[name="lead_timeframe"]');
+            const untilWrap = scope.querySelector('#lead_until_wrap');
+            const tfDate = scope.querySelector('#tf_date');
+
+            function sync() {
+                if (!untilWrap) return;
+                untilWrap.style.display = (tfDate && tfDate.checked) ? '' : 'none';
+            }
+            tfRadios.forEach(r => r.addEventListener('change', sync));
+            sync();
+        }
+        // Example usage after you set modalBody.innerHTML:
+        // initLeadTimeframeToggle(document.getElementById('modal-content-ajax'));
+    </script>
+
+    {# === JS: loader, open modal, wizard binding, submit, delete === #}
+    <script>
+        // A lightweight loader while fetching fragment
+        const modalLoader = `
+    <div class="modal-body text-center py-5">
+      <div class="spinner-border text-danger mb-2" role="status" aria-hidden="true"></div>
+      <p class="text-muted mb-0">Chargement en cours…</p>
+    </div>
+  `;
+
+        // Open modal and load the form fragment
+        async function showNewPreference() {
+            const modalEl   = document.getElementById('modalCenter');
+            const modalBody = document.getElementById('modal-content-ajax');
+            const modal     = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+
+            modalBody.innerHTML = modalLoader;
+
+            try {
+                const url = "{{ path('app_customer_recommandation_new') }}";
+                const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+                if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
+                modalBody.innerHTML = await res.text();
+
+                // Setup wizard + submit handling inside the injected fragment
+                initWizard(modalBody);
+                const form = modalBody.querySelector('#preference-form');
+                if (form) bindPreferenceForm(form, modal, modalBody);
+
+            } catch (err) {
+                modalBody.innerHTML = `
+                    <div class="modal-body">
+                      <div class="alert alert-danger" role="alert">
+                        <i class="mdi mdi-alert-circle-outline me-1"></i>
+                        Impossible de charger le formulaire. ${err.message || 'Réessayez.'}
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal">Fermer</button>
+                      <button type="button" class="btn btn-danger btn-sm" onclick="showNewPreference()">Réessayer</button>
+                    </div>`;
+            }
+
+            modal.show();
+
+            // ⬇️ Add timeframe toggle right here
+            const tfRadios = modalBody.querySelectorAll('input[name="lead_timeframe"]');
+            const untilWrap = modalBody.querySelector('#lead_until_wrap');
+
+            tfRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (untilWrap) {
+                        untilWrap.style.display = modalBody.querySelector('#tf_date')?.checked ? '' : 'none';
+                    }
+                });
+            });
+        }
+
+        // Wizard logic (no scripts inside injected HTML; bind here)
+        function initWizard(scope) {
+            const steps = Array.from(scope.querySelectorAll('.wizard-step'));
+            const progressItems = Array.from(scope.querySelectorAll('.wizard-progress .step'));
+            if (!steps.length) return;
+
+            let current = 0;
+            const show = (idx) => {
+                steps.forEach((s, i) => s.classList.toggle('active', i === idx));
+                progressItems.forEach((p, i) => p.classList.toggle('active', i === idx));
+                current = idx;
+                // Toggle footer buttons
+                const prev = scope.querySelector('[data-wz="prev"]');
+                const next = scope.querySelector('[data-wz="next"]');
+                const submit = scope.querySelector('[data-wz="submit"]');
+                if (prev)   prev.classList.toggle('d-none', idx === 0);
+                if (next)   next.classList.toggle('d-none', idx === steps.length - 1);
+                if (submit) submit.classList.toggle('d-none', idx !== steps.length - 1);
+            };
+
+            scope.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-wz]');
+                if (!btn) return;
+                if (btn.dataset.wz === 'next') {
+                    if (current < steps.length - 1) show(current + 1);
+                } else if (btn.dataset.wz === 'prev') {
+                    if (current > 0) show(current - 1);
+                }
+            });
+
+            show(0);
+        }
+
+        // Submit handling (sweet alert confirm + UI feedback)
+        function bindPreferenceForm(form, modal, modalBody) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const submitBtn = form.querySelector('#submitBtn') || form.querySelector('[type="submit"]');
+                const cancelBtn = form.querySelector('#cancelBtn');
+                const formData  = new FormData(form);
+
+                const confirm = await Swal.fire({
+                    title: "Confirmer l'enregistrement ?",
+                    text: "Vous pourrez plus modifier après la confirmation.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Oui, enregistrer',
+                    cancelButtonText: 'Annuler',
+                    confirmButtonColor: '#dc3545'
+                });
+                if (!confirm.isConfirmed) return;
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.dataset.original = submitBtn.innerHTML;
+                    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
+                }
+                if (cancelBtn) cancelBtn.style.display = 'none';
+
+                try {
+                    const res = await fetch(form.action, { method: 'POST', body: formData });
+                    const html = await res.text();
+
+                    const dom = new DOMParser().parseFromString(html, 'text/html');
+                    const success = dom.querySelector('.alert-success');
+                    const error   = dom.querySelector('.alert-danger, .alert-warning');
+
+                    console.log('error: '+error)
+
+                    if (success) {
+                        modal.hide();
+                        Swal.fire({ icon:'success', title:'Préférence enregistrée', timer:1500, showConfirmButton:false });
+                        setTimeout(() => window.location.reload(), 1200);
+                        return;
+                    }
+
+                    if (error) {
+                        modalBody.innerHTML = html;
+                        initWizard(modalBody);
+                        const newForm = modalBody.querySelector('#preference-form');
+                        if (newForm) bindPreferenceForm(newForm, modal, modalBody);
+                        return;
+                    }
+
+                    // Fallback (no flash found)
+                    modalBody.innerHTML = `
+                          <div class="modal-body">
+                            <div class="alert alert-danger">
+                              <i class="mdi mdi-alert-circle-outline me-1"></i>
+                              La préférence n'a pas été enregistrée. Veuillez réessayer.
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal">Fermer</button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="showNewPreference()">Réessayer</button>
+                          </div>
+                        `;
+                } catch (err) {
+                    modalBody.innerHTML = `
+          <div class="modal-body">
+            <div class="alert alert-danger">
+              <i class="mdi mdi-alert-circle-outline me-1"></i>
+              ${err.message || 'Erreur inattendue.'}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal">Fermer</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="showNewPreference()">Réessayer</button>
+          </div>
+        `;
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = submitBtn.dataset.original || 'Enregistrer';
+                    }
+                    if (cancelBtn) cancelBtn.style.display = '';
+                }
+            });
+        }
+
+        // Optional: delete handler (if you use it on same page)
+        async function deletePreference(id, buttonElement) {
+            const confirm = await Swal.fire({
+                title: 'Êtes-vous sûr ?',
+                text: "Cette action est irréversible.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Oui, supprimer',
+                cancelButtonText: 'Annuler'
+            });
+            if (!confirm.isConfirmed) return;
+
+            try {
+                const res = await fetch(`/customer/recommandation/remove/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) throw new Error('Erreur lors de la suppression');
+
+                const row = buttonElement.closest('tr');
+                if (row) {
+                    row.style.transition = 'opacity .25s, transform .25s';
+                    row.style.opacity = '0'; row.style.transform = 'translateY(-6px)';
+                    setTimeout(() => row.remove(), 250);
+                }
+
+                Swal.fire({ icon:'success', title:'Supprimé', text:'La préférence a été supprimée.', timer:1500, showConfirmButton:false });
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Erreur', text: err.message || 'Impossible de supprimer.' });
+            }
+        }
+    </script>
+
+
+
+
+    {#    <script>#}
+{#        function showNewPreference() {#}
+{#            const modal = new bootstrap.Modal(document.getElementById('modalCenter'));#}
+{#            const modalBody = document.getElementById('modal-content-ajax');#}
+{#            const url = "{{ path('app_customer_recommandation_new') }}";#}
+
+{#            modalBody.innerHTML = modalLoader;#}
+
+{#            fetch(url)#}
+{#                .then(response => response.text())#}
+{#                .then(html => {#}
+{#                    modalBody.innerHTML = html;#}
+{#                    modal.show();#}
+
+{#                    const form = modalBody.querySelector('#preference-form');#}
+{#                    if (form) {#}
+{#                        form.addEventListener('submit', function(e) {#}
+{#                            e.preventDefault();#}
+
+{#                            Swal.fire({#}
+{#                                title: 'Confirmer l\'enregistrement ?',#}
+{#                                text: 'Vous ne pourrez plus modifier ces données.',#}
+{#                                icon: 'warning',#}
+{#                                showCancelButton: true,#}
+{#                                confirmButtonText: 'Oui, enregistrer',#}
+{#                                confirmButtonColor: '#e3342f',#}
+{#                                cancelButtonText: 'Annuler'#}
+{#                            }).then((result) => {#}
+{#                                if (!result.isConfirmed) return;#}
+
+{#                                const submitBtn = document.getElementById('submitBtn');#}
+{#                                const cancelBtn = document.getElementById('cancelBtn');#}
+{#                                const modalBody = document.getElementById('modal-content-ajax');#}
+{#                                submitBtn.disabled = true;#}
+{#                                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';#}
+{#                                cancelBtn.style.display = 'none';#}
+
+{#                                const formData = new FormData(this);#}
+
+{#                                fetch(this.action, {#}
+{#                                    method: 'POST',#}
+{#                                    body: formData#}
+{#                                })#}
+{#                                .then(response => {#}
+{#                                    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);#}
+{#                                    return response.text();#}
+{#                                })#}
+{#                                .then(html => {#}
+{#                                    const parser = new DOMParser();#}
+{#                                    const doc = parser.parseFromString(html, 'text/html');#}
+{#                                    const successMessage = doc.querySelector('.alert-success');#}
+{#                                    const errorMessage = doc.querySelector('.alert-danger, .alert-warning');#}
+
+{#                                    if (successMessage) {#}
+{#                                        modal.hide();#}
+{#                                        const toastElem = document.getElementById('successToast');#}
+{#                                        if (toastElem) {#}
+{#                                            document.getElementById('toastMessage').textContent = successMessage.textContent.trim();#}
+{#                                            new bootstrap.Toast(toastElem).show();#}
+{#                                        } else {#}
+{#                                            alert(successMessage.textContent.trim());#}
+{#                                        }#}
+{#                                        setTimeout(() => window.location.reload(), 3000);#}
+{#                                    } else if (errorMessage) {#}
+{#                                        modalBody.innerHTML = html;#}
+{#                                    } else {#}
+{#                                        submitBtn.disabled = false;#}
+{#                                        submitBtn.innerHTML = 'Enregistrer';#}
+{#                                        cancelBtn.style.display = 'block';#}
+{#                                        modalBody.innerHTML = `#}
+{#                                            <div class="alert alert-danger">#}
+{#                                                <i class="mdi mdi-alert-circle me-2"></i>#}
+{#                                               La préférence n'a pas été enregistrée. Veuillez réessayer. si cela persiste, contactez le support.#}
+{#                                            </div>#}
+{#                                        `;#}
+{#                                    }#}
+{#                                })#}
+{#                                .catch(error => {#}
+{#                                    submitBtn.disabled = false;#}
+{#                                    submitBtn.innerHTML = 'Enregistrer';#}
+{#                                    cancelBtn.style.display = 'block';#}
+{#                                    modalBody.innerHTML = `#}
+{#                                        <div class="alert alert-danger">#}
+{#                                            <i class="mdi mdi-alert-circle me-2"></i>#}
+{#                                            ${error.message}#}
+{#                                        </div>#}
+{#                                    `;#}
+{#                                });#}
+{#                            });#}
+{#                        });#}
+{#                    }#}
+{#                });#}
+{#        }#}
+
+{#        function deletePreference(id, buttonElement) {#}
+{#            Swal.fire({#}
+{#                title: 'Êtes-vous sûr ?',#}
+{#                text: "Cette action est irréversible !",#}
+{#                icon: 'warning',#}
+{#                showCancelButton: true,#}
+{#                confirmButtonColor: '#e3342f',#}
+{#                cancelButtonColor: '#6c757d',#}
+{#                confirmButtonText: 'Oui, supprimer',#}
+{#                cancelButtonText: 'Annuler'#}
+{#            }).then((result) => {#}
+{#                if (result.isConfirmed) {#}
+{#                    fetch(`/customer/recommandation/remove/${id}`, {#}
+{#                        method: 'DELETE',#}
+{#                        headers: {#}
+{#                            'X-Requested-With': 'XMLHttpRequest'#}
+{#                        }#}
+{#                    })#}
+{#                    .then(response => {#}
+{#                        if (!response.ok) {#}
+{#                            throw new Error('Erreur lors de la suppression');#}
+{#                        }#}
+{#                        // Supprimer visuellement la ligne#}
+{#                        const row = buttonElement.closest('tr');#}
+{#                        row.style.transition = 'opacity 0.3s';#}
+{#                        row.style.opacity = '0';#}
+{#                        setTimeout(() => row.remove(), 1000);#}
+
+{#                        Swal.fire({#}
+{#                            icon: 'success',#}
+{#                            title: 'Supprimé',#}
+{#                            text: 'La préférence a été supprimée.',#}
+{#                            timer: 2000,#}
+{#                            showConfirmButton: false#}
+{#                        });#}
+{#                    })#}
+{#                    .catch(error => {#}
+{#                        Swal.fire({#}
+{#                            icon: 'error',#}
+{#                            title: 'Erreur',#}
+{#                            text: error.message#}
+{#                        });#}
+{#                    });#}
+{#                }#}
+{#            });#}
+{#        }#}
+
+{#    </script>#}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const loginModal = document.getElementById('loginModal');
+
+            if (!loginModal) return;
+
+            // Load login form when modal is shown
+            loginModal.addEventListener('show.bs.modal', () => {
+                fetch('/login', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(res => res.text())
+                    .then(html => {
+                        document.querySelector('#loginModal .modal-body').innerHTML = html;
+                    });
+            });
+
+            // Delegate form submission inside modal
+            document.querySelector('#loginModal .modal-body').addEventListener('submit', async function (e) {
+                const form = e.target;
+                if (!form || form.id !== 'ajax-login-form') return;
+                e.preventDefault();
+
+                const errorDiv = document.getElementById('login-error');
+                errorDiv.classList.add('d-none');
+                errorDiv.textContent = '';
+
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+
+                    const contentType = response.headers.get('content-type');
+
+                    if (contentType && contentType.includes('application/json')) {
+                        const result = await response.json();
+                        if (result.success) {
+                            const modalInstance = bootstrap.Modal.getInstance(loginModal);
+                            if (modalInstance) modalInstance.hide();
+                            window.location.href = result.redirect || '/';
+                        } else {
+                            errorDiv.textContent = result.error || 'Erreur de connexion';
+                            errorDiv.classList.remove('d-none');
+                        }
+                    } else {
+                        const html = await response.text();
+                        document.querySelector('#loginModal .modal-body').innerHTML = html;
+                    }
+                } catch (err) {
+                    errorDiv.textContent = 'Erreur réseau';
+                    errorDiv.classList.remove('d-none');
+                }
+            });
+        });
+    </script>
+
+    <script>
+        async function payForPreference(id, buttonElement) {
+           const payButton = document.getElementById("payButton");
+           buttonElement.disabled = true;
+           buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+           const preference_id = id;
+           const amount = {{ amount }};
+
+            const url = "{{ path('app_payement_for_preference') }}";
+
+            const data = {
+                "preference_id": preference_id,
+                "amount": amount,
+            };
+
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest' // Utile pour détecter requête Ajax côté Symfony
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Une erreur est survenue');
+                }
+
+                const result = await response.json();
+
+                if (result.smart_pay_url) {
+                    // Redirection vers la page de paiement
+                    const paymentUrl = result.smart_pay_url
+                    window.open(paymentUrl, '_blank');
+
+                    startPaymentTimer(result.paymentCode,buttonElement);
+
+                } else {
+                    throw new Error('Lien de paiement non trouvé.');
+                }
+            }   catch (error) {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = '<i class="mdi mdi-credit-card-outline"></i>';
+                alert(error.message || 'Une erreur est survenue lors du traitement du paiement.');
+            }
+        }
+
+        function startPaymentTimer(paymentCode,buttonElement) {
+            let timeLeft = 120; // 2 min
+
+            Swal.fire({
+                title: 'En attente du paiement...',
+                html: `<b>Temps restant : 2:00</b>`,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                showCancelButton: true,
+                cancelButtonText: 'Annuler',
+                cancelButtonColor: '#e3342f',
+                didOpen: () => {
+                    const swalHtml = Swal.getHtmlContainer().querySelector('b');
+
+                    const countdownInterval = setInterval(() => {
+                        const minutes = Math.floor(timeLeft / 60);
+                        const seconds = timeLeft % 60;
+                        swalHtml.textContent = `Temps restant : ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                        timeLeft--;
+
+                        if (timeLeft < 0) {
+                            clearInterval(countdownInterval);
+                            clearInterval(checkInterval);
+                            clearInterval(interval);
+
+                            Swal.update({
+                                title: 'Temps expiré ❌',
+                                html: 'Le paiement n\'a pas été reçu à temps. Veuillez réessayer.',
+                                icon: 'error',
+                                showConfirmButton: true
+                            });
+
+                            buttonElement.disabled = false;
+                            buttonElement.innerHTML = '<i class="mdi mdi-credit-card-outline"></i>';
+
+                        }
+                    }, 1000);
+
+                    // Vérif manuelle
+                    const interval = setInterval(async () => {
+                        // console.log("Vérification du statut de la facture Manuelle...");
+
+                        try {
+                            const checkManually = await fetch(`/transaction/preference/check/manually/status/${paymentCode}`, {
+                                    headers: {
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    },
+                            })
+
+                            console.log(checkManually);
+
+                            if (!checkManually.ok) {
+                                console.error('Erreur lors de la vérification de la facture Manuelle');
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('Erreur lors de la vérification du paiement:', error);
+                            clearInterval(interval);
+                        }
+                    }, 9000); // 9 secondes
+
+                    // Vérif automatique du paiement
+                    const checkInterval = setInterval(async () => {
+                        try {
+                            const response = await fetch(`/api/payment/for/preference/status/${paymentCode}`, {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            });
+
+                            if (!response.ok) {
+                                console.error('Erreur de vérification du paiement');
+                                return;
+                            }
+
+                            const result = await response.json();
+                            if (result.status === 'true') {
+                                clearInterval(countdownInterval);
+                                clearInterval(checkInterval);
+                                clearInterval(interval);
+
+                                Swal.update({
+                                    title: 'Paiement confirmé ✅',
+                                    html: 'Redirection en cours...',
+                                    icon: 'success'
+                                });
+
+                                setTimeout(() => {
+                                    window.location.href = `/customer/recommandation/`;
+                                }, 2500);
+                            }
+                        } catch (error) {
+                            console.error('Erreur pendant la vérification du paiement:', error);
+                        }
+                    }, 5000);
+                }
+            });
+        }
+
+    </script>
+    <script>
+        function findProvince(){
+            const provinceDropDown = document.getElementById("province");
+            const country = document.querySelector('#country').value.trim();
+            const url = "{{ path('app_filter_provinces') }}";
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.status === 200) {
+                    provinceDropDown.innerHTML = "<option value='' selected disabled>-- Sélectionnez une province --</option>"
+                    const json = JSON.parse(xhr.responseText);
+                    const provinces = JSON.parse(json.provinces)
+                    if (provinces !== ''){
+                        provinces.forEach((province, index) => {
+                            const opt = document.createElement("option")
+                            opt.innerHTML = province.split("-%@#-")[1]
+                            opt.value = province.split("-%@#-")[0];
+                            if (index === 0) {
+                                opt.selected = true;
+                            }
+                            provinceDropDown.appendChild(opt)
+                        })
+                        findCommune();
+                    }
+                }
+            };
+            const data = JSON.stringify({"country": country});
+            xhr.send(data);
+        }
+
+        function findCommune(){
+            const communeDropDown = document.getElementById("commune");
+            const province = document.querySelector('#province').value.trim();
+            const url = "{{ path('app_filter_communes') }}";
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.status === 200) {
+                    communeDropDown.innerHTML = "<option value='' selected disabled>-- Sélectionnez une commune --</option>"
+                    const json = JSON.parse(xhr.responseText);
+                    const communes = JSON.parse(json.communes)
+                    if (communes !== ''){
+                        communes.forEach((commune, index) => {
+                            const opt = document.createElement("option")
+                            opt.innerHTML = commune.split("-%@#-")[1]
+                            opt.value = commune.split("-%@#-")[0];
+                            if (index === 0) {
+                                opt.selected = true;
+                            }
+                            communeDropDown.appendChild(opt)
+                        })
+                    }
+                }
+            };
+            const data = JSON.stringify({"province": province});
+            xhr.send(data);
+        }
+    </script>
+{% endblock %}

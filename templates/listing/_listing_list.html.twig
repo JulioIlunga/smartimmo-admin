@@ -1,0 +1,427 @@
+{% if propertiesCount != 0 %}
+
+    {# ====== CARD VIEW ====== #}
+    {% if show == 'card' %}
+        <div id="list" class="card-items">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+                {% for property in properties %}
+
+                    {# --- Promo card: Become an agent (index 5) --- #}
+                    {% if loop.index == 5 %}
+                        <div class="col">
+                            <a href="{{ path('app_sign_up') }}" class="text-decoration-none">
+                                <article class="promo-card rounded-4 h-100 p-4 d-flex flex-column gap-3 animate-in">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="{{ asset('assets/img/agent16.png') }}" alt="Devenez agent partenaire" class="rounded-3 promo-img">
+                                        <div>
+                                            <h5 class="fw-bold text-white mb-1">Rejoignez notre réseau d’agents</h5>
+                                            <p class="text-white-50 small mb-0">
+                                                Publiez vos biens et gagnez en visibilité partout en RDC.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="promo-chip"><i class="mdi mdi-account-group-outline me-1"></i> +500 agents</span>
+                                        <span class="promo-chip"><i class="mdi mdi-home-city-outline me-1"></i> +3 000 annonces</span>
+                                        <span class="promo-chip"><i class="mdi mdi-timer-sand-empty me-1"></i> Validation &lt; 24h</span>
+                                    </div>
+                                    <div class="text-center mt-auto">
+                    <span class="btn promo-cta btn-sm rounded-pill fw-semibold px-3">
+                      S’inscrire <i class="mdi mdi-arrow-right ms-1"></i>
+                    </span>
+                                    </div>
+                                </article>
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {# --- Promo card: Alerts (index 19) --- #}
+                    {% if loop.index == 19 %}
+                        <div class="col">
+                            <a href="{{ path('app_customer_recommandation') }}" class="text-decoration-none">
+                                <article class="promo-card promo-alerts rounded-4 h-100 p-4 d-flex flex-column text-center justify-content-between animate-in">
+                                    <div>
+                                        <h5 class="fw-bold text-white mb-2">Alertes immobilières personnalisées</h5>
+                                        <p class="text-white-50 small mb-3">
+                                            Recevez sur WhatsApp les offres taillées pour vous.
+                                        </p>
+                                    </div>
+                                    <img src="{{ asset('assets/img/add-list.svg') }}" class="img-fluid mx-auto" alt="" style="max-width:220px;">
+                                    <div class="mt-3">
+                    <span class="btn btn-light btn-sm rounded-pill fw-semibold px-3">
+                      Découvrir <i class="mdi mdi-arrow-right ms-1"></i>
+                    </span>
+                                    </div>
+                                </article>
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {# --- Property card --- #}
+                    <div class="col">
+                        <a href="{{ path('app_property_details', {propertyUuid : property.uuidProperty}) }}" class="text-decoration-none text-reset">
+                            <article class="listing-card border-0 rounded-4 shadow-sm h-100 overflow-hidden animate-in">
+
+                                <!-- Media -->
+                                <div class="listing-media position-relative">
+                                    <div class="ratio ratio-16x9">
+                                        {% if property.image is null %}
+                                            <img src="{{ asset('assets/img/smartimmoIcon.png') }}" class="w-100 h-100" alt="">
+                                        {% else %}
+                                            <img src="{{ property.image }}" class="w-100 h-100" alt="">
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Status badge -->
+                                    <span class="status-badge">
+                                        {% if property.propertyStatus.id != 1 %}
+                                            <i class="mdi mdi-close-circle text-danger me-1"></i>{{ property.propertyStatus.name }}
+                                        {% else %}
+                                            <i class="mdi mdi-check-circle text-success me-1"></i>{{ property.propertyStatus.name }}
+                                        {% endif %}
+                                      </span>
+
+                                    <!-- Nouveau chip -->
+                                    {% if property.publishAt is defined and property.publishAt %}
+                                        {% set diff = date("now").diff(property.publishAt) %}
+                                        {% if diff.days <= 3 %}
+                                            <span class="new-chip">Nouveau</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+
+                                <!-- Body -->
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-danger text-uppercase small fw-bold">{{ property.type }}</span>
+                                        <span class="corner-badge">
+                                          {% if property.typeLocation == 'sell' %}À vendre{% else %}À louer{% endif %}
+                                        </span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between small text-muted mb-2">
+                                        <span><i class="mdi mdi-map-marker-outline me-1"></i>{{ property.commune.name }}</span>
+                                        <strong>{{ property.city }}</strong>
+                                    </div>
+
+                                    <div class="price-box rounded-3 p-2 mb-2">
+                                        <div class="d-flex align-items-end">
+                                            <h4 class="mb-0">{{ property.price|format_currency('USD', {fraction_digit: 0}) }}</h4>
+                                            {% if property.typeLocation != 'sell' %}
+                                                <span class="text-muted small ms-1">
+                          / {% if property.periodicity == 'Daily' %}Jour{% else %}Mois{% endif %}
+                        </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-end small">
+                                            <div class="text-secondary">Frais de visite</div>
+                                            <div class="fw-semibold">
+                                                {{ property.priceOfVisit|format_currency('USD', {fraction_digit: 0}) }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-center text-muted small">
+                                        {% if property.bedroom != '0' %}
+                                            <span><i class="mdi mdi-bed-outline me-1"></i>{{ property.bedroom }} chambre{{ property.bedroom > 1 ? 's' : '' }}</span>
+                                            <i class="mx-2 mdi mdi-circle dot-list"></i>
+                                        {% endif %}
+                                        {% if property.bathroom != '0' %}
+                                            <span><i class="mdi mdi-shower-head me-1"></i>{{ property.bathroom }} toilette{{ property.bathroom > 1 ? 's' : '' }}</span>
+                                            <i class="mx-2 mdi mdi-circle dot-list"></i>
+                                        {% endif %}
+                                        <span><i class="mdi mdi-ruler me-1"></i>{% if property.surfaceArea != 0.00 %}{{ property.surfaceArea }}{% else %}-{% endif %} m²</span>
+                                    </div>
+                                </div>
+                            </article>
+                        </a>
+                    </div>
+                    {# --- /Property card --- #}
+
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# ====== LIST VIEW ====== #}
+    {% if show == 'list' %}
+        <div class="card-items">
+            <div class="row">
+                {% for property in properties %}
+                    <div class="col-sm-6 animate-item">
+                        <a href="{{ path('app_property_details', {'propertyUuid': property.uuidProperty }) }}"
+                           class="d-flex align-items-center border mb-4 rounded-4 p-2 text-dark">
+                            <div class="item-img w-25">
+                                {% if property.image != null %}
+                                    <img src="{{ property.image }}" class="img-fluid rounded-4 list-img" alt="">
+                                {% else %}
+                                    <img src="{{ asset('assets/img/smartimmoIcon.png') }}" class="img-fluid opacity-25 rounded-4 list-img" alt="">
+                                {% endif %}
+                            </div>
+                            <div class="item-body px-2 w-75">
+                                <p class="fw-bold mb-0 text-uppercase text-danger">{{ property.type }}</p>
+                                <p class="text-black fw-bold small mb-2">{{ property.header|slice(0,100) }}</p>
+                                <div class="text-muted small d-flex align-items-center mb-2">
+                                    <span>{{ property.livingroom }} salons</span>
+                                    <i class="mx-2 mdi mdi-circle dot-list"></i>
+                                    <span>{{ property.bedroom }} chambre(s)</span>
+                                    <i class="mx-2 mdi mdi-circle dot-list"></i>
+                                    <span>{{ property.bathroom }} salle(s) de bain</span>
+                                </div>
+                                <div class="fw-bold">
+                                    {{ property.currency }} {{ property.price }}
+                                    <span class="text-muted">
+                    / {% if property.periodicity == 'Daily' %}Jour{% else %}Mois{% endif %}
+                  </span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+{% else %}
+    {# ====== EMPTY STATE ====== #}
+    <div class="listing-items">
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="listing text-center col-md-5 py-4">
+                <img src="{{ asset('assets/img/nodata.jpg') }}" alt="" class="mb-3" width="80%"/>
+                <h2 class="fw-bold">Aucun résultat trouvé</h2>
+                <p class="py-2 text-muted">Créez un nouveau bien et ajoutez les détails. Vous serez notifié après validation.</p>
+                <button class="btn btn-dashboard rounded-pill" onclick="window.location.reload()">Rafraîchir la page</button>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% include 'paginator_listing.html.twig' with { 'url' : path('app_listing') } %}
+
+
+
+{#    {% if propertiesCount != 0 %}#}
+{#        {% if show == 'card' %}#}
+{#            <div id="list" class="card-items">#}
+{#                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">#}
+
+{#                    {% for property in properties %}#}
+
+{#                        #}{# ——— Promo card: Become an agent (index 5) ——— #}
+{#                        {% if loop.index == 5 %}#}
+{#                            <div class="col">#}
+{#                                <a href="{{ path('app_sign_up') }}" class="text-decoration-none" aria-label="Rejoindre le réseau d’agents">#}
+{#                                    <article class="promo-card rounded-4 h-100 p-4 d-flex flex-column gap-3 animate-in">#}
+{#                                        <div class="d-flex align-items-center gap-3">#}
+{#                                            <img src="{{ asset('assets/img/agent16.png') }}" alt="Devenez agent partenaire" class="rounded-3 promo-img">#}
+{#                                            <div>#}
+{#                                                <h5 class="fw-bold text-white mb-1">Rejoignez notre réseau d’agents</h5>#}
+{#                                                <p class="text-white-50 small mb-0">Publiez vos biens, gagnez en visibilité partout en RDC.</p>#}
+{#                                            </div>#}
+{#                                        </div>#}
+
+{#                                        <div class="d-flex flex-wrap gap-2">#}
+{#                                            <span class="promo-chip"><i class="mdi mdi-account-group-outline me-1"></i> +500 agents</span>#}
+{#                                            <span class="promo-chip"><i class="mdi mdi-home-city-outline me-1"></i> +3 000 annonces</span>#}
+{#                                            <span class="promo-chip"><i class="mdi mdi-timer-sand-empty me-1"></i> Validation &lt; 24h</span>#}
+{#                                        </div>#}
+
+{#                                        <div class="text-center mt-auto">#}
+{#          <span class="btn promo-cta btn-sm rounded-pill fw-semibold px-3">#}
+{#            S’inscrire <i class="mdi mdi-arrow-right ms-1"></i>#}
+{#          </span>#}
+{#                                        </div>#}
+{#                                    </article>#}
+{#                                </a>#}
+{#                            </div>#}
+{#                        {% endif %}#}
+{#                        #}{# ——— Promo card: Alerts (index 19) ——— #}
+{#                        {% if loop.index == 19 %}#}
+{#                            <div class="col">#}
+{#                                <a href="{{ path('app_customer_recommandation') }}" class="text-decoration-none">#}
+{#                                    <article class="promo-card promo-alerts rounded-4 h-100 p-4 d-flex flex-column justify-content-between text-center animate-in">#}
+{#                                        <div>#}
+{#                                            <h5 class="fw-bold text-white mb-2">Alertes immobilières personnalisées</h5>#}
+{#                                            <p class="text-white-50 small mb-3">Recevez sur WhatsApp les offres taillées pour vous.</p>#}
+{#                                        </div>#}
+{#                                        <img src="{{ asset('assets/img/add-list.svg') }}" class="img-fluid mx-auto" alt="" style="max-width: 220px;">#}
+{#                                        <div class="mt-3">#}
+{#                                            <span class="btn btn-light btn-sm rounded-pill fw-semibold px-3">#}
+{#                                              Découvrir <i class="mdi mdi-arrow-right ms-1"></i>#}
+{#                                            </span>#}
+{#                                        </div>#}
+{#                                    </article>#}
+{#                                </a>#}
+{#                            </div>#}
+{#                        {% endif %}#}
+
+{#                        #}{# ——— Property card ——— #}
+{#                        <div class="col">#}
+{#                            <a href="{{ path('app_property_details', {propertyUuid : property.uuidProperty}) }}"#}
+{#                               class="text-decoration-none text-reset">#}
+{#                                <article class="listing-card border-0 rounded-4 shadow-sm h-100 overflow-hidden animate-in">#}
+
+{#                                    <!-- Media -->#}
+{#                                    <div class="listing-media position-relative">#}
+{#                                        <div class="ratio ratio-16x9">#}
+{#                                            {% if property.image is null %}#}
+{#                                                <img src="{{ asset('assets/img/smartimmoIcon.png') }}" class="w-100 h-100" style="object-fit:cover;" alt="">#}
+{#                                            {% else %}#}
+{#                                                <img src="{{ property.image }}" class="w-100 h-100" style="object-fit:cover;" alt="">#}
+{#                                            {% endif %}#}
+{#                                        </div>#}
+
+{#                                        <!-- Status badge -->#}
+{#                                        <span class="status-badge badge bg-white text-dark shadow-sm rounded-pill">#}
+{#                                            {% if property.propertyStatus.id != 1 %}#}
+{#                                                <i class="mdi mdi-close-circle text-danger me-1"></i>{{ property.propertyStatus.name }}#}
+{#                                            {% else %}#}
+{#                                                <i class="mdi mdi-check-circle text-success me-1"></i>{{ property.propertyStatus.name }}#}
+{#                                            {% endif %}#}
+{#                                          </span>#}
+
+{#                                        <!-- Type chip -->#}
+
+
+{#                                        #}{# Nouveau (3 jours) #}
+{#                                        {% if property.publishAt is defined and property.publishAt %}#}
+{#                                            {% set diff = date("now").diff(property.publishAt) %}#}
+{#                                            {% if diff.days <= 3 %}#}
+{#                                                <span class="new-chip">Nouveau</span>#}
+{#                                            {% endif %}#}
+{#                                        {% endif %}#}
+{#                                    </div>#}
+
+{#                                    <!-- Body -->#}
+{#                                    <div class="card-body p-3">#}
+{#                                        <div class="d-flex align-items-center justify-content-between mb-2">#}
+{#                                            <span class="text-danger text-uppercase small fw-bold">{{ property.type }}</span>#}
+{#                                            <span class="corner-badge">#}
+{#                                            {% if property.typeLocation == 'sell' %}À vendre{% else %}À louer{% endif %}#}
+{#                                          </span>#}
+{#                                        </div>#}
+
+{#                                        <div class="d-flex justify-content-between small text-muted mb-2">#}
+{#                <span class="d-inline-flex align-items-center">#}
+{#                  <i class="mdi mdi-map-marker-outline me-1"></i>{{ property.commune.name }}#}
+{#                </span>#}
+{#                                            <strong>{{ property.city }}</strong>#}
+{#                                        </div>#}
+
+{#                                        <div class="d-flex justify-content-between align-items-end price-box rounded-3 p-2 mb-1">#}
+{#                                            <div class="d-flex mt-2">#}
+{#                                                <h4>#}
+{#                                                    {{ property.price|format_currency('USD', {fraction_digit: 0}) }}#}
+{#                                                </h4>#}
+{#                                                {% if property.typeLocation != 'sell' %}#}
+{#                                                    <span class="text-muted small mt-2"> /#}
+{#                                                      {% if property.periodicity == 'Daily' %}Jour{% else %}Mois{% endif %}#}
+{#                                                    </span>#}
+{#                                                {% endif %}#}
+{#                                            </div>#}
+{#                                            <div class="text-end small">#}
+{#                                                <div class="text-secondary">Frais de visite</div>#}
+{#                                                <div class="fw-semibold">#}
+{#                                                    {{ property.priceOfVisit|format_currency('USD', {fraction_digit: 0}) }}#}
+{#                                                </div>#}
+{#                                            </div>#}
+{#                                        </div>#}
+{#                                        <div class="d-flex justify-content-center align-items-center p-2">#}
+{#                                            <div class="text-muted small d-flex align-items-center">#}
+{#                                                {% if property.bedroom != '0' %}#}
+{#                                                    <span><span class="text-muted mdi mdi-bed-outline mb-0"></span> {{ property.bedroom }} chambre{{ property.bedroom > 1 ? 's' : '' }}</span><i class="mx-2 mdi mdi-circle dot-list"></i>#}
+{#                                                {% endif %}#}
+{#                                                {% if property.bathroom != '0' %}#}
+{#                                                    <span><span class="text-muted mdi mdi-shower-head mb-0"></span> {{ property.bathroom }} toilette{{ property.bathroom > 1 ? 's' : '' }}</span> <i class="mx-2 mdi mdi-circle dot-list"></i>#}
+{#                                                {% endif %}#}
+{#                                                <span><span class="text-muted mdi mdi-ruler mb-0"></span>{% if property.surfaceArea != 0.00 %}  {{ property.surfaceArea }} {% else %} - {% endif %}m²</span>#}
+{#                                            </div>#}
+{#                                        </div>#}
+
+{#                                        <div class="amenities text-muted small">#}
+{#                                            {% if property.bedroom != '0' %}#}
+{#                                                <span class="amenity">#}
+{#                                                  <i class="icon mdi mdi-bed-outline text-danger"></i>#}
+{#                                                  {{ property.bedroom }} chambre{{ property.bedroom > 1 ? 's' : '' }}#}
+{#                                                </span>#}
+{#                                            {% endif %}#}
+{#                                            <i class="mx-2 mdi mdi-circle dot-list"></i>#}
+{#                                            {% if property.bathroom != '0' %}#}
+{#                                                <span class="amenity">#}
+{#                                                  <i class="icon mdi mdi-shower text-danger"></i>#}
+{#                                                  {{ property.bathroom }} toilette{{ property.bathroom > 1 ? 's' : '' }}#}
+{#                                                </span>#}
+{#                                            {% endif %}#}
+{#                                            <i class="mx-2 mdi mdi-circle dot-list"></i>#}
+{#                                            <span class="amenity">#}
+{#                                                <i class="icon mdi mdi-ruler-square text-danger"></i>#}
+{#                                                {% if property.surfaceArea != 0.00 %}{{ property.surfaceArea }}{% else %}-{% endif %} m²#}
+{#                                              </span>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                </article>#}
+{#                            </a>#}
+{#                        </div>#}
+{#                        #}{# ——— /Property card ——— #}
+
+{#                    {% endfor %}#}
+
+{#                </div>#}
+{#            </div>#}
+
+
+
+
+{#        {% endif %}#}
+
+{#        {% if show == 'list' %}#}
+{#            <div class="card-items" >#}
+{#                <!-- List Item -->#}
+{#                <div class="row">#}
+{#                    {% for property in properties %}#}
+{#                        <div class="col-sm-6 animate-item">#}
+{#                            <a href="{{ path('app_property_details', {'propertyUuid': property.uuidProperty }) }}" class="d-flex align-items-center border mb-4 rounded-9 p-2 text-dark">#}
+{#                                <div class="item-img  w-25">#}
+{#                                    {% if property.image != null %}#}
+{#                                        <img src="{{ property.image }}" class="img-fluid rounded-9 list-img" alt="">#}
+{#                                    {% else %}#}
+{#                                        <img src="{{ asset('assets/img/smartimmoIcon.png') }}" width="80%" class="img-fluid opacity-25 rounded rounded-9 list-img" alt="">#}
+{#                                    {% endif %}#}
+{#                                </div>#}
+{#                                <div class="item-body px-2 w-75">#}
+{#                                    <p class="fw-bold mb-0 text-uppercase text-danger">{{ property.type }}</p>#}
+{#                                    <p class="text-black fw-bold small mb-3">{{ property.header|slice(0,100) }}</p>#}
+{#                                    <div class="text-muted small d-flex align-items-center mb-3"><span>{{ property.livingroom }} salons</span><i class="mx-2 mdi mdi-circle dot-list"></i> <span>{{ property.bedroom }} chambre(s)</span> <i class="mx-2 mdi mdi-circle dot-list"></i> <span>{{ property.bathroom }} salle des bains</span></div>#}
+{#                                    <div class="d-flex align-items-center">#}
+{#                                        <div class=""><span class="fw-bold">{{ property.currency}} {{ property.price}} </span><span class="text-muted">/#}
+{#                                                {% if property.periodicity == 'Daily' %}#}
+{#                                                    Jour#}
+{#                                                {% else %}#}
+{#                                                    Mois#}
+{#                                                {% endif %}#}
+{#                                                </span></div>#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </a>#}
+{#                        </div>#}
+{#                    {% endfor %}#}
+{#                </div>#}
+{#            </div>#}
+{#        {% endif %}#}
+{#    {% else %}#}
+{#        <div class="listing-items">#}
+{#            <div class="d-flex align-items-center justify-content-center">#}
+{#                <div class="listing text-center col-md-5 py-1">#}
+{#                    <img src="{{ asset('assets/img/nodata.jpg') }}" alt="" width="80%"/>#}
+{#                    <h2 class="fw-bold mb-0">Aucun filtré trouvé ?</h2>#}
+{#                    <p class="py-3 text-muted fw-light">Create new apartments and add details about your location. You will get notified once it will be reviewed.</p>#}
+{#                    <button class="btn btn-dashboard rounded-9" onclick="window.location.reload()">Rafrâichir page</button>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+
+{#    {% endif %}#}
+{#{% include 'paginator_listing.html.twig' with { 'url' : path('app_listing') } %}#}
+
+

@@ -1,0 +1,15 @@
+{{ form_start(form, {'attr': {'id':'entry-form-new', 'onsubmit':'return saveNewProvince();'} }) }}
+<div class="modal-body ps-5 pe-5">
+    <div id="flash-message-overlay">
+    </div>
+    <div class="row">
+        <div class="col">
+            {{ include('smart_immo_admin/location/_form.html.twig') }}
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Annuler</button>
+    <input type="submit" value="Enregistrer" class="btn btn-success btn-sm"/>
+</div>
+{{ form_end(form) }}

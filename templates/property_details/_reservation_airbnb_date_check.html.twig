@@ -1,0 +1,16 @@
+{% if availabilityMsg != '' %}
+    <p id="availabilityMsg" class="{% if availableDate == false %} text-danger {% else %} text-success {% endif %}" >
+        {% if availableDate == false %}
+            <span class="mdi mdi-thumb-down me-1"></span>
+        {% else %}
+            <span class="mdi mdi-thumb-up me-1"></span>
+        {% endif %}
+        {{ availabilityMsg }}</p>
+{% endif %}
+{% if availableDate == true %}
+    <button type="submit" id="submitBtn" class="btn btn-danger btn-sm fw-bold w-100 rounded-9 py-2">Réserver</button>
+{% else %}
+    <a class="btn btn-primary btn-sm fw-bold w-100 rounded-9 py-2" onclick="checkAvailableDate({{ property.id }})">Vérifier la disponibilité</a>
+{% endif %}
+<p id="errorMsg" class="text-danger text-center mt-1"></p>
+

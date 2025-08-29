@@ -1,0 +1,129 @@
+{% if count != 0 %}
+    <div class="d-flex align-items-center justify-content-between mb-3 mb-md-4">
+        <h5 class="mb-0 fw-bold">
+            Annonces en ligne
+            <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle ms-2">
+        {{ count }}
+      </span>
+        </h5>
+    </div>
+
+    <div class="row g-3 g-md-4">
+        {% for property in properties %}
+            {% set reportCount = property.propertyReports.count %}
+            {% set isOnline = property.publish == true %}
+            {% set statusOk = property.propertyStatus and property.propertyStatus.id == 1 %}
+            {% set per = property.periodicity == 'Daily' ? 'Jour' : 'Mois' %}
+            {% set alertsClass = reportCount > 3 ? 'chip-danger' : (reportCount > 0 ? 'chip-warning' : 'chip-muted') %}
+
+            <div class="col-sm-4">
+                <article class="property-card h-100">
+                    {# Media #}
+                    <div class="media-wrap">
+                        {% if isOnline %}
+                            <span class="ribbon"><i class="mdi mdi-web"></i> En ligne</span>
+                        {% endif %}
+
+                        <span class="media-chip">
+              {{ property.price|format_currency('USD') }}
+            </span>
+
+                        {% if property.image %}
+                            <img src="{{ property.image }}" alt="{{ property.type }}" class="media-img" loading="lazy">
+                        {% else %}
+                            <img src="{{ asset('assets/img/imageIcon.png') }}" alt="Image manquante" class="media-img obj-contain" loading="lazy">
+                        {% endif %}
+
+                        <div class="media-overlay"></div>
+
+                        <div class="media-caption">
+                            <div class="title">{{ property.type|upper }}</div>
+                            <div class="chips">
+                <span class="chip {{ alertsClass }}">
+                  <i class="mdi mdi-alert-circle-outline"></i>
+                  {{ reportCount }} alerte{{ reportCount>1?'s':'' }}
+                </span>
+                                {% if property.propertyStatus %}
+                                    <span class="chip">
+                    <i class="mdi mdi-check-decagram-outline {% if statusOk %}text-success{% else %}text-danger{% endif %}"></i>
+                    {{ property.propertyStatus.name }}
+                  </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Body #}
+                    <div class="property-body">
+                        <div class="property-meta">
+                            <span><i class="mdi mdi-account-badge-outline me-1"></i>{{ property.user.firstname }} {{ property.user.name }}</span>
+                            <span><i class="mdi mdi-calendar-blank-outline me-1"></i>{{ property.publishAt|date('d/m/y') }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-end mt-2">
+                            <div class="property-price">
+                                <div class="amount">{{ property.price|format_currency('USD') }}</div>
+                                <div class="unit">/ {{ per }}</div>
+                            </div>
+
+                            <div class="actions-stack d-flex align-items-center gap-2">
+                                {% if isOnline %}
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-success btn-sm rounded-pill dropdown-toggle"
+                                                type="button" id="dropdownStatus{{ property.id }}"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="mdi mdi-update me-1"></i> Statut
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3"
+                                            aria-labelledby="dropdownStatus{{ property.id }}">
+                                            {% for stat in status %}
+                                                {% if stat.id != 1 %}
+                                                    <li>
+                                                        <a class="dropdown-item d-flex align-items-center gap-2"
+                                                           href="{{ path('app_smart_immo_admin_change_property_status', {id: stat.id, propertyId: property.id, page: page}) }}">
+                                                            {% if stat.id == 2 %}
+                                                                <i class="mdi mdi-cancel text-danger"></i>
+                                                            {% elseif stat.id == 4 %}
+                                                                <i class="mdi mdi-eye-off text-danger"></i>
+                                                            {% else %}
+                                                                <i class="mdi mdi-circle-medium text-muted"></i>
+                                                            {% endif %}
+                                                            <span>{{ stat.name }}</span>
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% else %}
+                                    <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle">
+                    Hors ligne
+                  </span>
+                                {% endif %}
+
+                                <a href="{{ path('app_property_details', {propertyUuid : property.uuidProperty}) }}"
+                                   class="btn btn-dark btn-sm rounded-pill">
+                                    <i class="mdi mdi-eye me-1"></i> Aperçu
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% include 'paginator.html.twig' with { 'url' : path('app_smart_immo_admin') } %}
+
+{% else %}
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-5 text-center">
+            <img src="{{ asset('assets/img/nodata.jpg') }}" alt="" class="mb-3" style="max-width:200px;">
+            <h4 class="fw-bold mb-1">Aucun résultat</h4>
+            <p class="text-muted mb-3">Aucun filtrage correspondant. Essayez d’ajuster vos critères.</p>
+            <a href="{{ path('app_smart_immo_admin') }}" class="btn btn-dark rounded-pill">
+                Rafraîchir la page
+            </a>
+        </div>
+    </div>
+{% endif %}

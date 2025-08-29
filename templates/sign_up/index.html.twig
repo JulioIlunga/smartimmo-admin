@@ -1,0 +1,319 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+Smart-Immo | S'inscrire
+{% endblock %}
+{% block style %}
+    <style>
+        .invalid {
+            color: red;
+        }
+        .invalid:before{
+            position: relative;
+            left: -7px;
+            content: "✕";
+        }
+        .valid {
+            color:green;
+        }
+        .valid:before{
+            position: relative;
+            left: -7px;
+            content: "✓";
+        }
+        .checkPwd p{
+            font-size: 0.8em;
+        }
+    </style>
+    <style>
+        :root{
+            --brand:#dc3545;
+            --brand-600:#b02a37;
+            --ink:#1f2937;
+            --muted:#6b7280;
+            --rose-50:#fff5f6;
+        }
+
+        /* Wrapper */
+        .si-auth{
+            background:
+                    radial-gradient(1100px 420px at 50% -220px, rgba(220,53,69,.12), transparent 60%),
+                    linear-gradient(180deg, var(--rose-50), #fff);
+        }
+        .si-auth .auth-card{
+            background:#fff; border:1px solid rgba(220,53,69,.12);
+            border-radius:1.25rem; box-shadow:0 16px 48px rgba(220,53,69,.10);
+        }
+        .si-auth .lead-muted{color:var(--muted)}
+
+        /* Inputs */
+        .si-auth .form-floating>.form-control,
+        .si-auth .form-floating>.form-select{height:3.25rem; padding-top:1.25rem}
+        .si-auth .form-floating>label{color:#94a3b8}
+        .si-auth .form-control:focus,
+        .si-auth .form-select:focus{
+            box-shadow:0 0 0 .2rem rgba(220,53,69,.12);
+            border-color:rgba(220,53,69,.45);
+        }
+        .si-auth .with-icon{display:flex; align-items:flex-end; gap:.5rem}
+        .si-auth .with-icon > .mdi{color:#9aa1a9}
+
+        /* Radio chips */
+        .chip-group{display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:.5rem}
+        @media (min-width: 576px){ .chip-group{grid-template-columns:repeat(2,minmax(0,1fr))} }
+        .chip-radio{
+            position:relative; border:1px solid #e9ecef; border-radius:.75rem; padding:.75rem .9rem;
+            display:flex; align-items:center; gap:.5rem; cursor:pointer; transition:.18s ease;
+            background:#fff;
+        }
+        .chip-radio:hover{border-color:rgba(220,53,69,.35)}
+        .chip-radio input{position:absolute; inset:0; opacity:0; cursor:pointer}
+        .chip-radio .dot{
+            width:18px;height:18px; border-radius:999px; border:2px solid #cfd4da; flex:0 0 auto; display:grid; place-items:center;
+        }
+        .chip-radio .dot::after{
+            content:""; width:9px;height:9px; border-radius:999px; background:transparent; transition:.18s ease;
+        }
+        .chip-radio.active{border-color:rgba(220,53,69,.55); box-shadow:0 8px 22px rgba(220,53,69,.12)}
+        .chip-radio.active .dot{border-color:var(--brand)}
+        .chip-radio.active .dot::after{background:var(--brand)}
+        .chip-radio .label{text-wrap:balance}
+
+        /* Helper card */
+        .helper{
+            background:#f8f9fa; border:1px dashed rgba(220,53,69,.35); border-radius:.9rem;
+        }
+
+        /* Divider */
+        .or-divider{display:flex; align-items:center; gap:.75rem}
+        .or-divider::before,.or-divider::after{
+            content:""; height:1px; flex:1; background:linear-gradient(90deg,#e9ecef,transparent)
+        }
+        .or-divider::after{background:linear-gradient(90deg,transparent,#e9ecef)}
+
+        /* Buttons */
+        .btn-brand{background:var(--brand); border-color:var(--brand)}
+        .btn-brand:hover{background:var(--brand-600); border-color:var(--brand-600)}
+    </style>
+
+{% endblock %}
+
+{% block body %}
+    <!-- ======================= Smart-Immo • Signup (restyled) ======================= -->
+
+    <div class="section-display si-auth py-4 py-md-5">
+        <!-- container Start -->
+        <div class="container">
+            <!-- Sign Up Form -->
+            <div class="row justify-content-center">
+                <div class="col-lg-9 col-xl-8">
+                    <div class="auth-card p-4 p-md-5">
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold mb-1">Inscrivez-vous pour commencer</h2>
+                            <p class="lead-muted small mb-0">Entrez vos coordonnées pour continuer</p>
+                        </div>
+
+                        {{ form_start(form) }}
+
+                        {# PHONE + CODE #}
+                        {% if form_errors(form.phone) is not empty %}
+                            <div class="text-danger small mb-2">{{ form_errors(form.phone) }}</div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-floating with-icon px-3 py-1 border rounded-3 {% if form_errors(form.phone) is not empty or form_errors(form.phonecode) is not empty %} border-danger{% endif %}">
+                                    <select name="{{ field_name(form.phonecode) }}" id="countryCode" class="form-select border-0 px-0 w-100 select2">
+                                        {% for label, value in field_choices(form.phonecode) %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label class="px-3 mt-1">Code pays</label>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-floating with-icon px-3 py-1 border rounded-3 {% if form_errors(form.phone) is not empty or form_errors(form.phonecode) is not empty %} border-danger{% endif %}">
+                                    <input
+                                            name="{{ field_name(form.phone) }}"
+                                            value="{{ field_value(form.phone) }}"
+                                            placeholder="{{ field_label(form.phone) }}"
+                                            type="text" class="form-control border-0 px-0 w-100" id="inputPhone">
+                                    <i class="mdi mdi-phone"></i>
+                                    <label for="inputPhone" class="px-3 mt-1">Votre numéro de téléphone* (ex. 980 333 346)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Names -->
+                        <div class="row g-3 mt-1">
+                            <div class="col-md">
+                                <div class="form-floating with-icon px-3 py-1 border rounded-3 {% if form_errors(form.firstname) is not empty %} border-danger{% endif %}">
+                                    <input
+                                            name="{{ field_name(form.firstname) }}"
+                                            value="{{ field_value(form.firstname) }}"
+                                            placeholder="{{ field_label(form.firstname) }}"
+                                            type="text" class="form-control border-0 px-0" id="inputFirstname">
+                                    <i class="mdi mdi-account"></i>
+                                    <label for="inputFirstname" class="px-3 mt-1">Prénom</label>
+                                </div>
+                            </div>
+                            <div class="col-md">
+                                <div class="form-floating with-icon px-3 py-1 border rounded-3 {% if form_errors(form.name) is not empty %} border-danger{% endif %}">
+                                    <input
+                                            name="{{ field_name(form.name) }}"
+                                            value="{{ field_value(form.name) }}"
+                                            type="text" class="form-control border-0 px-0" id="inputLastname" placeholder="Nom">
+                                    <i class="mdi mdi-account"></i>
+                                    <label for="inputLastname" class="px-3 mt-1">Nom</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User type (chips) -->
+                        <div class="mt-3">
+                            <label class="text-muted d-block mb-2">Que souhaites-tu faire sur la plateforme ?*</label>
+                            <div class="chip-group">
+                                {% for label, value in field_choices(form.userType) %}
+                                    {% set isChecked = form.userType.vars.value == value or (form.userType.vars.value is null and loop.first) %}
+                                    <label class="chip-radio {% if isChecked %}active{% endif %}">
+                                        <span class="dot"></span>
+                                        <span class="label">{{ label }}</span>
+                                        <input class="visually-hidden" type="radio" name="{{ field_name(form.userType) }}"
+                                               id="userType_{{ loop.index }}" value="{{ value }}" {% if isChecked %}checked{% endif %}>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Security helper -->
+                        <div class="helper p-3 p-md-4 rounded-3 mt-3">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="mdi mdi-account-lock fs-4 text-muted"></i>
+                                <div class="small">
+                                    <div class="fw-semibold text-muted mb-1">Sécurité & conformité</div>
+                                    Créez un mot de passe robuste&nbsp;: <span class="text-danger">au moins <strong>6</strong> caractères,
+                avec chiffres et symboles</span> (ex: ! @ #).
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Password errors #}
+                        {% if form_errors(form.password.first) is not empty %}
+                            <div class="text-danger small mt-2">
+                                Le mot de passe ne correspond pas ou ne respecte pas les exigences.
+                            </div>
+                        {% endif %}
+
+                        <!-- Passwords -->
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <div class="form-floating with-icon px-3 py-1 border rounded-3 {% if form_errors(form.password.first) is not empty %} border-danger{% endif %}">
+                                    <input
+                                            name="{{ field_name(form.password.first) }}"
+                                            value="{{ field_value(form.password.first) }}"
+                                            type="password" class="form-control border-0 px-0" id="password" placeholder="Mot de passe">
+                                    <i class="mdi mdi-lock"></i>
+                                    <label for="password" class="px-3 mt-1">Mot de passe*</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating with-icon px-3 py-1 border rounded-3 {% if form_errors(form.password.second) is not empty %} border-danger{% endif %}">
+                                    <input
+                                            name="{{ field_name(form.password.second) }}"
+                                            value="{{ field_value(form.password.second) }}"
+                                            type="password" class="form-control border-0 px-0" id="cpassword" placeholder="Confirmation">
+                                    <i class="mdi mdi-check-circle"></i>
+                                    <label for="cpassword" class="px-3 mt-1">Confirmer le mot de passe</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Password checklist (optional, shown on focus via JS if you want) -->
+                        <div id="CheckPwd" class="form-control mt-2 mb-2 border-0 p-0 bg-transparent" hidden>
+                            <div class="small text-muted">
+                                <div class="fw-semibold">Le mot de passe doit contenir&nbsp;:</div>
+                                <ul class="ms-3 mb-0">
+                                    <li id="lowerletter" class="invalid">Une lettre minuscule</li>
+                                    <li id="upperletter" class="invalid">Une lettre majuscule</li>
+                                    <li id="number" class="invalid">Un chiffre</li>
+                                    <li id="specialSymbol" class="invalid">Un caractère spécial</li>
+                                    <li id="length" class="invalid">Au minimum 6 caractères</li>
+                                    <li id="matchpassword" class="invalid">Mots de passe identiques</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Terms -->
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <div class="form-check form-switch">
+                                <input name="{{ field_name(form.termsAndCondition) }}" value="{{ field_value(form.termsAndCondition) }}"
+                                       class="form-check-input" type="checkbox" id="check2" checked>
+                                <label class="form-check-label small {% if form_errors(form.termsAndCondition) is not empty %} text-danger text-decoration-underline {% else %} text-muted {% endif %}" for="check2">
+                                    J’accepte les conditions générales *
+                                </label>
+                            </div>
+                            <a href="{{ path('terms_conditions') }}" class="small text-danger">En savoir plus</a>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="btn text-white btn-brand text-uppercase fw-bold w-100 py-3 rounded-pill mt-3">
+                            Continuer
+                        </button>
+
+                        {{ form_end(form) }}
+
+                        <!-- Divider -->
+                        <div class="or-divider text-center my-4">
+                            <span class="small text-muted">Ou</span>
+                        </div>
+
+                        <!-- Existing account -->
+                        <a href="{{ path('app_login') }}"
+                           class="btn bg-white rounded-pill text-muted border w-100 py-3 d-flex align-items-center">
+                            <i class="mdi mdi-account-check fs-5"></i>
+                            <span class="mx-auto">Se connecter à son compte</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- Sign Up Form -->
+        </div>
+        <!-- container End -->
+    </div>
+
+    <script>
+        // Optional: highlight selected chip without extra CSS classes
+        document.querySelectorAll('.chip-radio input').forEach(inp=>{
+            inp.addEventListener('change', e=>{
+                document.querySelectorAll('.chip-radio').forEach(c=>c.classList.remove('active'));
+                e.target.closest('.chip-radio').classList.add('active');
+            });
+        });
+
+        // Optional: show password checklist on focus
+        const pwd = document.getElementById('password');
+        const cpw = document.getElementById('cpassword');
+        const checklist = document.getElementById('CheckPwd');
+        if(pwd && cpw && checklist){
+            const update = ()=>{
+                const v = pwd.value || '';
+                const set = (id, ok)=>{ const el=document.getElementById(id); if(!el) return; el.classList.toggle('invalid', !ok); el.classList.toggle('text-success', ok); };
+                set('lowerletter', /[a-z]/.test(v));
+                set('upperletter', /[A-Z]/.test(v));
+                set('number', /\d/.test(v));
+                set('specialSymbol', /[^A-Za-z0-9]/.test(v));
+                set('length', v.length >= 6);
+                set('matchpassword', v.length>0 && v === (cpw.value||''));
+            };
+            ['focus','input','blur'].forEach(ev => {
+                pwd.addEventListener(ev, ()=>{ checklist.hidden = ev==='blur' && !pwd.value; update(); });
+                cpw.addEventListener(ev, ()=>{ checklist.hidden = false; update(); });
+            });
+        }
+    </script>
+
+    <!-- Section Email End -->
+{% endblock %}
+{% block javascript %}
+    <script src="{{ asset('assets/js/checkPassword.js') }}"></script>
+{% endblock %}

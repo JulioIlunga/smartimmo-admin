@@ -1,0 +1,309 @@
+{# templates/customer_request/_show_modal_body.html.twig #}
+<style>
+    .blurred {
+        filter: blur(6px);
+        pointer-events: none;
+        user-select: none;
+    }
+    .mask-note {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        font-size: .85rem;
+        color: #6c757d;
+    }
+    .mask-chip {
+        background: #f8f9fa;
+        border: 1px dashed #dee2e6;
+        padding: .25rem .5rem;
+        border-radius: 999px;
+        font-size: .8rem;
+    }
+    .divider-soft { height:1px; background:rgba(0,0,0,.06); margin:.75rem 0; }
+</style>
+
+{# `isClaimedByMe` must be passed by the controller (bool). Default to false for safety. #}
+{% set showContact = isClaimedByMe|default(false) %}
+
+<div class="d-flex align-items-start justify-content-between mb-2">
+    <div>
+        <h5 class="mb-1">Demande immobilière</h5>
+        <div class="text-muted small">
+            Créée le {{ lead.createdAt|default('now')|date('d M Y') }}
+            {% if lead.createdAt|date('Y-m-d') == "now"|date('Y-m-d') %}
+                <span class="badge bg-success ms-2">Nouveau</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-3">Résumé</h6>
+
+                {# Transaction #}
+                <div class="mb-2">
+                    <i class="mdi mdi-swap-horizontal me-2"></i>
+                    Transaction :
+                    {% set tx = lead.transactionType|default(null) %}
+                    <strong>
+                        {% if tx == 'rent' %}Location{% elseif tx == 'sell' %}Achat{% else %}—{% endif %}
+                    </strong>
+                </div>
+
+                {# Type #}
+                <div class="mb-2">
+                    <i class="mdi mdi-home-outline me-2"></i>
+                    Type : <strong>{{ lead.propertyType|default('—') }}</strong>
+                </div>
+
+                {# Localisation (province + commune) #}
+                <div class="mb-2">
+                    <i class="mdi mdi-map-marker-outline me-2"></i>
+                    Localisation :
+                    <strong>
+                        {% if lead.province %}{{ lead.province }}{% else %}—{% endif %}
+                        {% if lead.commune %} — {{ lead.commune }}{% endif %}
+                    </strong>
+                </div>
+
+                {# Budget #}
+                <div class="mb-2">
+                    <i class="mdi mdi-cash me-2"></i>
+                    Budget :
+                    <strong>
+                        {% if lead.minPrice is not null %}{{ lead.minPrice|number_format(0, '.', ' ') }} ${% else %}—{% endif %}
+                        –
+                        {% if lead.maxPrice is not null %}{{ lead.maxPrice|number_format(0, '.', ' ') }} ${% else %}N/A{% endif %}
+                    </strong>
+                </div>
+
+                {# Rooms #}
+                <div class="mb-2">
+                    <i class="mdi mdi-sofa-single-outline me-2"></i>
+                    Pièces :
+                    <span class="badge rounded-pill bg-light text-dark border me-1">
+                      <i class="mdi mdi-bed-outline me-1"></i>{{ lead.bedrooms|default(0) }} ch.
+                    </span>
+                                    <span class="badge rounded-pill bg-light text-dark border">
+                      <i class="mdi mdi-shower me-1"></i>{{ lead.bathrooms|default(0) }} sdb
+                    </span>
+                </div>
+
+                {# Lead timeframe (urgent or by date) #}
+                <div class="mb-2">
+                    <i class="mdi mdi-timer-sand me-2"></i>
+                    Délai de contact :
+                    {% set tf = lead.leadTimeframe|default(null) %}
+                    {% if tf == 'by_date' and lead.leadUntil is not null %}
+                        <span class="badge rounded-pill bg-primary-subtle text-primary border">
+                            Avant le {{ lead.leadUntil|date('d/m/Y') }}
+                          </span>
+                    {% elseif tf == 'urgent' %}
+                        <span class="badge rounded-pill bg-success-subtle text-success border">
+                            Dès que possible
+                          </span>
+                    {% else %}
+                        <strong>—</strong>
+                    {% endif %}
+                </div>
+
+                {# Move-in window #}
+                {% if lead.moveInEarliest is not null or lead.moveInLatest is not null %}
+                    <div class="mb-2">
+                        <i class="mdi mdi-calendar-range me-2"></i>
+                        Emménagement :
+                        <strong>
+                            {% if lead.moveInEarliest %}à partir du {{ lead.moveInEarliest|date('d/m/Y') }}{% endif %}
+                            {% if lead.moveInEarliest and lead.moveInLatest %} — {% endif %}
+                            {% if lead.moveInLatest %}jusqu’au {{ lead.moveInLatest|date('d/m/Y') }}{% endif %}
+                        </strong>
+                    </div>
+                {% endif %}
+
+                {# Urgency #}
+                {% if lead.urgency %}
+                    <div class="mb-2">
+                        <i class="mdi mdi-alert-decagram-outline me-2"></i>
+                        Urgence :
+                        {% set u = lead.urgency %}
+                        <span class="badge rounded-pill
+                            {% if u == 'high' %} bg-danger text-white
+                            {% elseif u == 'medium' %} bg-warning text-dark
+                            {% else %} bg-secondary
+                            {% endif %}">
+                            {{ u == 'high' ? 'Élevée' : (u == 'medium' ? 'Moyenne' : 'Faible') }}
+                        </span>
+                    </div>
+                {% endif %}
+
+                {# Alert duration & frequency #}
+                <div class="mb-2">
+                    <i class="mdi mdi-bell-ring-outline me-2"></i>
+                    Alertes :
+                    <strong>
+                        {% if lead.alertDuration %}
+                            {% if lead.alertDuration == 'until_cancel' %}
+                                Jusqu’à annulation
+                            {% else %}
+                                {{ lead.alertDuration }} jour(s)
+                            {% endif %}
+                        {% else %}—{% endif %}
+                    </strong>
+                    {% if lead.alertFrequency %}
+                        <span class="text-muted">•</span>
+                        <span class="badge rounded-pill bg-light text-dark border">
+        {{ lead.alertFrequency == 'instant' ? 'Immédiates'
+        : (lead.alertFrequency == 'daily' ? 'Quotidiennes'
+        : (lead.alertFrequency == 'weekly' ? 'Hebdomadaires' : lead.alertFrequency)) }}
+      </span>
+                    {% endif %}
+                </div>
+
+                {# Contact preferences #}
+                <div class="mb-2">
+                    <i class="mdi mdi-account-voice me-2"></i>
+                    Contact :
+                    <strong>
+                        {% if lead.contactChannel %}
+                            {% if lead.contactChannel == 'whatsapp' %}WhatsApp
+                            {% elseif lead.contactChannel == 'phone' %}Téléphone
+                            {% elseif lead.contactChannel == 'email' %}E-mail
+                            {% else %}{{ lead.contactChannel }}{% endif %}
+                        {% else %}—{% endif %}
+                    </strong>
+                    {% if lead.contactTime %}
+                        <span class="text-muted">•</span>
+                        <span class="badge rounded-pill bg-light text-dark border">
+        {% if lead.contactTime == 'morning' %}Matin{% elseif lead.contactTime == 'afternoon' %}Après-midi{% elseif lead.contactTime == 'evening' %}Soir{% else %}{{ lead.contactTime }}{% endif %}
+      </span>
+                    {% endif %}
+                </div>
+
+                {# WhatsApp consent #}
+                <div class="mb-2">
+                    <i class="mdi mdi-whatsapp me-2"></i>
+                    Consentement WhatsApp :
+                    {% if lead.whatsappConsent is same as(true) %}
+                        <span class="badge rounded-pill bg-success text-white"><i class="mdi mdi-check-circle-outline me-1"></i>Oui</span>
+                    {% elseif lead.whatsappConsent is same as(false) %}
+                        <span class="badge rounded-pill bg-secondary text-white">Non</span>
+                    {% else %}
+                        <strong>—</strong>
+                    {% endif %}
+                </div>
+
+                {# Must-haves chips #}
+                <div class="mb-2">
+                    <i class="mdi mdi-format-list-checks me-2"></i>
+                    Indispensables :
+                    {% if lead.mustHaves is iterable and lead.mustHaves|length > 0 %}
+                        {% for tag in lead.mustHaves %}
+                            <span class="badge rounded-pill bg-light text-dark border me-1">{{ tag }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <strong>—</strong>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-1">Coordonnées client</h6>
+
+                {# Note: this gets hidden after a successful claim #}
+                <div class="mask-note mb-2 js-mask-note" {% if showContact %}style="display:none"{% endif %}>
+                    <span class="mdi mdi-lock-outline"></span>
+                    Réclamez ce lead pour voir les informations.
+                </div>
+
+                <div class="divider-soft"></div>
+
+                {# Name #}
+                <div class="mb-2 d-flex align-items-center gap-2">
+                    <i class="mdi mdi-account-outline"></i>
+
+                    {# masked placeholder #}
+                    <span class="mask-chip js-mask-name" {% if showContact %}style="display:none"{% endif %}>•••• ••••</span>
+
+                    {# real value (hidden until claimed) #}
+                    <span class="js-real-name" {% if not showContact %}style="display:none"{% endif %}>
+          {% if lead.user and (lead.user.firstname or lead.user.name) %}
+              {{ (lead.user.firstname|default('') ~ ' ' ~ lead.user.name|default(''))|trim }}
+          {% else %}—{% endif %}
+        </span>
+                </div>
+
+                {# Email #}
+                <div class="mb-2 d-flex align-items-center gap-2">
+                    <i class="mdi mdi-email-outline"></i>
+                    <span class="mask-chip js-mask-email" {% if showContact %}style="display:none"{% endif %}>••••@••••.com</span>
+                    <a class="js-real-email" {% if not showContact %}style="display:none"{% endif %}
+                       href="{{ lead.user and lead.user.email ? 'mailto:' ~ lead.user.email : '#' }}">
+                        {{ lead.user and lead.user.email ? lead.user.email : '—' }}
+                    </a>
+                </div>
+
+                {# Phone #}
+                <div class="mb-0 d-flex align-items-center gap-2">
+                    <i class="mdi mdi-phone-outline"></i>
+                    <span class="mask-chip js-mask-phone" {% if showContact %}style="display:none"{% endif %}>+243 •• ••• •••</span>
+                    <a class="js-real-phone" {% if not showContact %}style="display:none"{% endif %}
+                       href="{{ lead.user and lead.user.phone ? 'tel:' ~ lead.user.phone : '#' }}">
+                        {{ lead.user and lead.user.phone ? lead.user.phone : '—' }}
+                    </a>
+                </div>
+                {% if lead.leadCost is defined and lead.leadCost is not null %}
+                    {% set cost = lead.leadCost %}
+                {% else %}
+                    {% if lead.propertyType == 'buy' %}
+                        {% set cost = 5 %}
+                    {% else %}
+                        {% set cost = ((lead.minPrice|default(0) / 500)|round(0, 'ceil')) %}
+                        {% set cost = cost < 1 ? 1 : (cost > 5 ? 5 : cost) %}
+                    {% endif %}
+                {% endif %}
+                {% if not showContact %}
+                    <div class="mt-3">
+                        <form action="{{ path('leads.claim', {id: lead.id}) }}"
+                              method="post"
+                              class="d-grid js-claim-in-modal"
+                              data-ajax="1"
+                              data-turbo="false">
+                            <input type="hidden" name="_token" value="{{ csrf_token('claim_lead_' ~ lead.id) }}">
+                            <button type="submit" class="btn btn-sm btn-danger rounded-pill">
+                                <i class="mdi mdi-hand-coin-outline me-1"></i> Réclamer ce lead ({{ cost }} crédit{{ cost > 1 ? 's' : '' }})
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+            {% set m = membership ?? null %}
+            {% set claimLimit = m ? m.claimLimit|default(0) : 0 %}
+            {% set claimsUsed = m ? m.claimsUsed|default(0) : 0 %}
+            {% set pct        = claimLimit ? (claimsUsed / claimLimit * 100) : 0 %}
+
+
+            <div class="card-body border-top">
+                <h6 class="fw-semibold mb-3">Votre quota</h6>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Réclamations utilisées</span>
+                    <span class="fw-semibold"> {{ claimsUsed|default(0) }}/{{ claimLimit|default(0) }}</span>
+                </div>
+                {% set pct = (claimLimit|default(0) > 0) ? ((claimsUsed|default(0) / claimLimit|default(1)) * 100) : 0 %}
+                <div class="progress rounded-pill" style="height:8px;">
+                    <div
+                        class="progress-bar {% if pct < 70 %}bg-success{% elseif pct < 100 %}bg-warning{% else %}bg-danger{% endif %}"
+                        role="progressbar"
+                        style="width: {{ pct|round(0, 'floor') }}%;"
+                        aria-valuenow="{{ pct|round(0, 'floor') }}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

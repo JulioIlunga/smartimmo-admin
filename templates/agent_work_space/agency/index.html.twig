@@ -1,0 +1,349 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Smart-Immo | Agence{% endblock %}
+{% block style %}
+<style>
+    /* Layout helpers */
+    .agency-toolbar { gap: .5rem; }
+    .agency-note{
+        background:#fff; border:1px solid #eee; border-left:4px solid #dc3545;
+        border-radius:.75rem; padding:.6rem .9rem; color:#6c757d;
+    }
+
+    /* Cards */
+    .agency-card { background:#fff; }
+    .agency-logo{ width:64px; height:64px; object-fit:cover; }
+    .agency-empty-img{ width:72px; height:72px; object-fit:cover; }
+
+    .agency-member-img{ width:56px; height:56px; object-fit:cover; }
+
+    /* Icon-only button */
+    .btn-icon{
+        width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
+        padding:0;
+    }
+    .bg-danger-subtle{ background:rgba(220,53,69,.1) !important; }
+    .text-danger{ color:#dc3545 !important; }
+    .bg-success-subtle{ background:rgba(25,135,84,.1) !important; }
+    .bg-secondary-subtle{ background:rgba(108,117,125,.12) !important; }
+
+    /* Make chips/badges feel tactile */
+    .badge.border{ border:1px solid rgba(0,0,0,.08); }
+
+    /* Responsive polish */
+    @media (max-width: 576px){
+        .agency-logo{ width:56px; height:56px; }
+        .agency-member-img{ width:48px; height:48px; }
+    }
+
+</style>
+    <style>
+        /* Fieldset reset */
+        .aa-fieldset{border:0;margin:0;padding:0}
+
+        /* Card */
+        .aa-card{
+            position:relative; display:flex; align-items:center; justify-content:space-between; gap:1rem;
+            background:#fff; border:1px solid #e9ecef; border-radius:1rem; padding:1rem 1.25rem;
+            box-shadow:0 2px 10px rgba(0,0,0,.03);
+        }
+
+        /* Agency logo */
+        .aa-logo{width:56px;height:56px;object-fit:cover;border-radius:.5rem;border:1px solid #e9ecef}
+
+        /* Chips */
+        .code-chip{
+            display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .6rem;border-radius:999px;
+            font-size:.75rem;font-weight:600;background:#fff;color:#dc3545;border:1px solid rgba(220,53,69,.25)
+        }
+        .status-chip{
+            position:absolute;top:.6rem;right:.6rem;padding:.25rem .6rem;border-radius:999px;
+            font-size:.75rem;font-weight:600;background:rgba(25,135,84,.1);color:#198754;border:1px solid rgba(25,135,84,.25)
+        }
+
+        /* Disabled look */
+        fieldset[disabled] .aa-card{opacity:.85}
+        fieldset[disabled] .aa-action{pointer-events:none}
+
+        /* Form area sizing */
+        .aa-action{min-width:220px}
+        .aa-action .btn{padding:.35rem .7rem;border-radius:999px;font-weight:600}
+        .aa-action .form-control,
+        .aa-action select{height:36px}
+
+        /* Responsive */
+        @media (max-width: 576px){
+            .aa-card{flex-direction:column;align-items:flex-start}
+            .aa-action{width:100%}
+            .status-chip{position:static;margin-left:auto}
+        }
+
+    </style>
+
+{% endblock %}
+{% block bodyContent %}
+    {% include 'agent_work_space/partials/_flag.html.twig' %}
+{#    <div class="profile-content" id="profile">#}
+{#        <div class="d-flex align-items-center justify-content-between">#}
+{#            <h4 class="mb-0 fw-bold mb-4 pb-2">Mon agence</h4>#}
+{#            <div class="d-flex align-items-center justify-content-between">#}
+{#                <button type="button" class="btn btn-success mb-0 fw-bold mb-4 pb-2 me-2" onclick="sendRequest('{{ user.id }}')" data-bs-toggle="modal" data-bs-target="#modalCenter">Adhérer à une agence</button>#}
+{#                <button type="button" class="btn btn-success mb-0 fw-bold mb-4 pb-2" onclick="showFormCreateNewAgency()" data-bs-toggle="modal" data-bs-target="#modalCenter">Créer une nouvelle agence immobilière</button>#}
+{#            </div>#}
+{#        </div>#}
+{#        <div class="row settings pb-5 gy-3">#}
+{#            <div class="col-md-12 d-flex align-items-center justify-content-center justify-content-md-start mb-3 mb-md-0 text-primary">#}
+{#                <div class="d-none d-md-block">#}
+{#                    <span class="mdi mdi-information rounded-9 bg-light icon-booking me-2"></span>#}
+{#                </div>#}
+{#                <span class=" fw-light">Vous ne pouvez qu'adhérer qu'à une seule agence immobilière</span>#}
+{#            </div#}
+{#            {% if agency == null %}#}
+{#                <div class="col-md-12 mb-2">#}
+{#                    <div class="d-flex justify-content-between shadow-sm p-3 rounded-9 bg-white">#}
+{#                        <div class="d-flex align-items-center">#}
+{#                            <img src="{{ asset('assets/img/nodata.jpg') }}" class="img-fluid city-img me-3 rounded-9" alt="">#}
+{#                            <div class="">#}
+{#                                <h3 class="fw-bold mb-0 text-dark">Aucune agence</h3>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            {% else %}#}
+{#                <div class="col-md-12 mb-2">#}
+{#                    <div class="d-flex justify-content-between shadow-sm p-3 rounded-9 bg-white">#}
+{#                        <div class="d-flex align-items-center">#}
+{#                            {% if agency.agency.logo == null %}#}
+{#                                <img src="{{ asset('assets/img/imageIcon.png') }}" class="img-fluid city-img me-3 rounded-9" alt="">#}
+{#                            {% else %}#}
+{#                                <img src="{{ agency.agency.logo }}" class="img-fluid city-img me-3 rounded-9" alt="">#}
+{#                            {% endif %}#}
+{#                            <div class="">#}
+{#                                <p class="fw-bold mb-0 text-dark">{{ agency.agency.name }}</p>#}
+{#                                <p class="mb-1 text-muted">{{ agency.agency.adress }}</p>#}
+{#                                {% if agency.owner == true and agency.agent.id == user.id %}#}
+{#                                    <p class="mb-0 text-black fw-bold">{{ agency.agency.code }}</p>#}
+{#                                {% endif %}#}
+{#                            </div>#}
+{#                        </div>#}
+{#                        <div class="d-flex align-items-center">#}
+{#                            <div class="">#}
+{#                                <p class="mb-0 text-end">Administrateur</p>#}
+{#                                <p class="fw-bold mb-0 text-dark">{{ agency.agency.owner.firstname }} {{ agency.agency.owner.name }}</p>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                        {% if agency.owner == true and agency.agent.id == user.id %}#}
+{#                        <div class="">#}
+{#                            <div>#}
+{#                                <button class="btn mdi mdi-pencil text-white bg-danger rounded-9" type="button" onclick="editAgency('{{ agency.agency.id }}')" data-bs-toggle="modal" data-bs-target="#modalCenter" {% if agency.owner == false %} disabled {% endif %}></button>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                        {% endif %}#}
+{#                    </div>#}
+{#                </div>#}
+{#            {% endif %}#}
+{#        </div>#}
+{#    </div>#}
+{#    {% if agents %}#}
+{#        <div class="dashboard-content">#}
+{#            <h4 class="mb-0 fw-bold mb-4 pb-2">Membres</h4>#}
+{#            <div class="row">#}
+{#                {% for agent in agents %}#}
+{#                    <div class="col-lg-6 col-sm-6 mb-3 col-sm-4">#}
+{#                        <div class="bg-white rounded-9 border">#}
+{#                            <div>#}
+{#                                <div class="d-flex align-items-center shadow rounded-9 p-3">#}
+{#                                    {% if agent.agent.picture == null %}#}
+{#                                        <img src="{{ asset('assets/img/imageIcon.png') }}" class="img-fluid rounded-9 city-img" alt="">#}
+{#                                    {% else %}#}
+{#                                        <img src="{{ agent.agent.picture }}" class="img-fluid rounded-9 city-img" alt="">#}
+{#                                    {% endif %}#}
+{#                                    <div class="ms-3">#}
+{#                                        <h6 class="fw-bold text-dark mb-1">{{ agent.agent.firstname }} {{ agent.agent.name }} {% if agent.agency.owner.id == agent.agent.id %} <span class="text-danger small">[Admin]</span> {% endif %}</h6>#}
+{#                                        <p class="text-muted small mb-1">Nbre d'annonce: <strong> {{ agent.agent.properties.count }}</strong></p>#}
+{#                                        {% if agent.status == true %}#}
+{#                                            <span class="fw-bold text-white px-2 py-1 rounded-9 bg-success">Membre</span>#}
+{#                                        {% else %}#}
+{#                                            <span class="fw-bold text-white px-2 py-1 rounded-9 bg-danger">Pas membre</span>#}
+{#                                        {% endif %}#}
+{#                                    </div>#}
+{#                                    {% if agent.agency.owner.id == user.id %}#}
+{#                                        <button class="btn ms-auto mdi mdi-pencil text-success fs-4" onclick="editAgentForAgency('{{ agent.id }}')" data-bs-toggle="modal" data-bs-target="#modalCenter"></button>#}
+{#                                    {% endif %}#}
+{#                                </div>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                {% endfor %}#}
+{#            </div>#}
+{#        </div>#}
+{#    {% endif %}#}
+
+    <div class="profile-content" id="profile">
+        <!-- Header / actions -->
+        <div class="agency-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <h4 class="fw-bold mb-0">Mon agence</h4>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <button type="button"
+                        class="btn btn-outline-danger btn-sm fw-semibold rounded-pill"
+                        onclick="sendRequest('{{ user.id }}')" data-bs-toggle="modal" data-bs-target="#modalCenter">
+                    <i class="mdi mdi-account-multiple-plus-outline me-1"></i> Adhérer à une agence
+                </button>
+                <button type="button"
+                        class="btn btn-danger btn-sm fw-semibold rounded-pill"
+                        onclick="showFormCreateNewAgency()" data-bs-toggle="modal" data-bs-target="#modalCenter">
+                    <i class="mdi mdi-domain-plus me-1"></i> Créer une agence immobilière
+                </button>
+            </div>
+        </div>
+
+        <!-- Info note -->
+        <div class="row settings pb-4 gy-3">
+            <div class="col-12">
+                <div class="agency-note d-flex align-items-center gap-2">
+                    <i class="mdi mdi-information-outline fs-5 text-danger"></i>
+                    <span>Vous ne pouvez adhérer qu’à une seule agence immobilière.</span>
+                </div>
+            </div>
+
+            {% if agency == null %}
+                <!-- Empty state -->
+                <div class="col-12">
+                    <div class="card agency-card border-0 shadow-sm rounded-4 p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ asset('assets/img/nodata.jpg') }}" class="rounded-4 agency-empty-img" alt="">
+                            <div>
+                                <h5 class="fw-bold mb-1">Aucune agence</h5>
+                                <p class="text-muted mb-0 small">Rejoignez une agence existante ou créez la vôtre pour commencer.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Agency card -->
+                <div class="col-12">
+                    <div class="card agency-card border-0 shadow-sm rounded-4 p-3 p-md-4">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                {% if agency.agency.logo == null %}
+                                    <img src="{{ asset('assets/img/imageIcon.png') }}" class="rounded-3 agency-logo" alt="">
+                                {% else %}
+                                    <img src="{{ agency.agency.logo }}" class="rounded-3 agency-logo" alt="">
+                                {% endif %}
+                                <div>
+                                    <p class="fw-bold mb-1">{{ agency.agency.name }}</p>
+                                    <p class="text-muted mb-1 small">{{ agency.agency.adress }}</p>
+                                    {% if agency.owner == true and agency.agent.id == user.id %}
+                                        <span class="badge bg-light text-danger border rounded-pill fw-semibold">Code: {{ agency.agency.code }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-3 ms-auto">
+                                <div class="text-end">
+                                    <p class="mb-0 small text-muted">Administrateur</p>
+                                    <p class="fw-bold mb-0">{{ agency.agency.owner.firstname }} {{ agency.agency.owner.name }}</p>
+                                </div>
+                                {% if agency.owner == true and agency.agent.id == user.id %}
+                                    <button class="btn btn-danger btn-icon rounded-circle"
+                                            type="button"
+                                            onclick="editAgency('{{ agency.agency.id }}')"
+                                            data-bs-toggle="modal" data-bs-target="#modalCenter"
+                                            aria-label="Éditer l’agence">
+                                        <i class="mdi mdi-pencil"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if agents %}
+        <div class="dashboard-content">
+            <h5 class="fw-bold mb-3">Membres</h5>
+            <div class="row g-3">
+                {% for agent in agents %}
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                {% if agent.agent.picture == null %}
+                                    <img src="{{ asset('assets/img/imageIcon.png') }}" class="rounded-3 agency-member-img" alt="">
+                                {% else %}
+                                    <img src="{{ agent.agent.picture }}" class="rounded-3 agency-member-img" alt="">
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <h6 class="fw-bold mb-0">
+                                            {{ agent.agent.firstname }} {{ agent.agent.name }}
+                                        </h6>
+                                        {% if agent.agency.owner.id == agent.agent.id %}
+                                            <span class="badge bg-danger-subtle text-danger border rounded-pill">Admin</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-muted mb-1 small">Nbre d’annonces&nbsp;: <strong>{{ agent.agent.properties.count }}</strong></p>
+                                    {% if agent.status == true %}
+                                        <span class="badge bg-success-subtle text-success border rounded-pill">Membre</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary border rounded-pill">Pas membre</span>
+                                    {% endif %}
+                                </div>
+
+                                {% if agent.agency.owner.id == user.id %}
+                                    <button class="btn btn-outline-success btn-icon rounded-circle ms-auto"
+                                            onclick="editAgentForAgency('{{ agent.id }}')"
+                                            data-bs-toggle="modal" data-bs-target="#modalCenter"
+                                            aria-label="Éditer le membre">
+                                        <i class="mdi mdi-pencil"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <script>
+        function showFormCreateNewAgency() {
+            getContentForModal("{{ path('app_agency_create_agency') }}", "Créer une nouvelle agence");
+        }
+        function saveNewAgency() {
+            let url = "{{ path('app_agency_create_agency') }}";
+            return _saveNewAgency('#entry-form-new', url, "{{ path('app_agency') }}");
+        }
+
+        function editAgency(id) {
+            let url = replacePlaceholder("{{ path('app_agency_edit_agency', {'id': 'placeholder'}) }}", id);
+            getContentForModal(url, "Éditer Agence", function() {
+                enableEditForm(id);
+            });
+        }
+        function saveEditAgency(id) {
+            let url = replacePlaceholder("{{ path('app_agency_edit_agency', {'id': 'placeholder'}) }}", id);
+            return _saveNewAgency('#entry-form-'+id, url);
+
+        }
+        function editAgentForAgency(id) {
+            let url = replacePlaceholder("{{ path('app_agency_edit_status_agent_for_agency', {'id': 'placeholder'}) }}", id);
+            getContentForModal(url, "Changer le statut de l'agent", function() {
+                enableEditForm(id);
+            });
+        }
+        function saveEditAgentForAgency(id) {
+            let url = replacePlaceholder("{{ path('app_agency_edit_status_agent_for_agency', {'id': 'placeholder'}) }}", id);
+            return _doPost('#entry-form-'+id, url);
+        }
+        function sendRequest(id) {
+            let url = replacePlaceholder("{{ path('app_agency_send_request_for_joining', {'id': 'placeholder'}) }}", id);
+            getContentForModal(url, "Adhésion");
+        }
+        function saveSendRequest(id) {
+            let url = replacePlaceholder("{{ path('app_agency_save_send_request_for_joining', {'id': 'placeholder'}) }}", id);
+            return _doPost('#entry-form-'+id, url);
+        }
+    </script>
+{% endblock %}

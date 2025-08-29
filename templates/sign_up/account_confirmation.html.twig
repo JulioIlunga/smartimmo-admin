@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello SignUpController!{% endblock %}
+
+{% block body %}
+
+    <div class="section-display">
+        <!-- container Start -->
+        <div class="container" id="confirmation-form">
+            {% include 'sign_up/_form_account_confirmation.html.twig' %}
+        </div>
+        <!-- container End -->
+    </div>
+
+    <script>
+        function tokenConfirmation() {
+            const url = "{{ path('app_sign_up_account_token_confirmation') }}";
+            $.ajax({
+                url: url,
+                type: "post",
+                data: $("#token-confirmation-form").serialize(),
+                beforeSend: function () {
+                    $("#confirmed-button").prop("disabled", true);
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                },
+                success: function (data) {
+                    $("#confirmation-form").html(data);
+                }
+            });
+
+            return false;
+        }
+    </script>
+
+{% endblock %}

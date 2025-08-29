@@ -1,0 +1,243 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Site Title -->
+    <title>Smart-Immo | Espace Agent</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{{ asset('assets/img/smart-immo-h.png') }}" type="image/x-icon">
+    <!-- Bootstrap CSS -->
+    <link href="{{ asset('assets/vendor/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Icon CSS -->
+    <link href="{{ asset('assets/vendor/icons/css/materialdesignicons.min.css') }}" rel="stylesheet">
+    <!-- Slick Slider -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/slick/slick.min.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/slick/slick-theme.min.css') }}" />
+    <!-- Style CSS -->
+    <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/admin/css/dasboard.css') }}" rel="stylesheet">
+    <!-- Date Picker -->
+    <link rel="stylesheet" href="{{ asset('assets/vendor/date-picker/date-picker.css') }}">
+    <link href="{{ asset('assets/css/agent-work-space.css') }}" rel="stylesheet">
+
+
+    {% block style %}
+    {% endblock %}
+</head>
+<body class="bg-light">
+
+<div class="container-fluid p-0">
+    <div class="row g-0 position-relative align-items-start">
+
+        <div class="offcanvas offcanvas-start admin-offcanvas" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarLabel">
+            <div class="offcanvas-header">
+                <a href="{{ path('app_agent_work_space') }}" class="text-decoration-none d-flex align-items-center gap-2">
+                    <img src="{{ asset('assets/img/smart-immo-h.png') }}" alt="Smart-Immo" class="logo" style="max-width:160px;height:auto;">
+                </a>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
+            </div>
+
+            <div class="offcanvas-body p-0">
+                <nav class="admin-nav w-100" role="navigation" aria-label="Menu principal">
+                    <div class="brand d-none"><!-- hidden on mobile; header already shows brand --></div>
+
+                    <div class="nav-section">Menu</div>
+
+                    <a class="nav-link{% if app.request.pathinfo == '/agent/work/space' %} is-active{% endif %}"
+                       href="{{ path('app_agent_work_space') }}">
+                        <span class="mdi mdi-view-dashboard"></span> Tableau de bord
+                    </a>
+
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <a href="{{ path('app_smart_immo_admin') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/' %} is-active{% endif %}">
+                        <i class="mdi mdi-home-modern me-1"></i> Annonces en ligne
+                    </a>
+
+                    <a href="{{ path('app_location') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/location' %} is-active{% endif %}">
+                        <i class="mdi mdi-map-marker-multiple me-1"></i> Villes
+
+                    </a>
+
+                    <a href="{{ path('app_smart_immo_admin_real_estate_agent') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/real/estate/agent' %} is-active{% endif %}">
+                        <i class="mdi mdi-account-tie-outline me-1"></i> Agents immobiliers
+                    </a>
+                    <a href="{{ path('app_smart_immo_admin_real_estate_customer') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/real/estate/customer' %} is-active{% endif %}">
+                        <i class="mdi mdi-account-group me-1"></i> Liste des Clients
+                    </a>
+                    <a href="{{ path('app_admin_config') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/config' %} is-active{% endif %}">
+                        <i class="mdi mdi-cog pe-1"></i> Configuration
+                    </a>
+                    {% endif %}
+
+                    <a class="nav-link" href="{{ path('app_account', {show: 'profil'}) }}">
+                        <span class="mdi mdi-cog pe-1"></span> Mon profil
+                    </a>
+                </nav>
+            </div>
+
+        </div>
+
+
+        {# ========== Sidebar (desktop) ========== #}<aside class="col-lg-2 d-none d-lg-block admin-sidebar">
+            <nav class="admin-nav">
+                <div class="brand">
+                    <a href="{{ path('app_agent_work_space') }}" class="text-decoration-none">
+                        <img src="{{ asset('assets/img/smart-immo-h.png') }}" alt="Smart-Immo" class="logo">
+                    </a>
+                </div>
+
+                <div class="nav-section">Menu</div>
+
+                <!-- Tableau de bord -->
+                <a class="nav-link {% if app.request.pathinfo == '/agent/work/space' %} is-active{% endif %}"
+                   href="{{ path('app_agent_work_space') }}">
+                    <i class="mdi mdi-view-dashboard-outline me-1"></i> Tableau de bord
+                </a>
+
+
+
+
+                <!-- Admin only -->
+                {% if is_granted('ROLE_ADMIN') %}
+
+                    <a href="{{ path('app_smart_immo_admin') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/' %} is-active{% endif %}">
+                        <i class="mdi mdi-home-modern me-1"></i> Annonces en ligne
+                    </a>
+
+                    <a href="{{ path('app_location') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/location' %} is-active{% endif %}">
+                        <i class="mdi mdi-map-marker-multiple me-1"></i> Villes
+
+                    </a>
+
+                    <a href="{{ path('app_smart_immo_admin_real_estate_agent') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/real/estate/agent' %} is-active{% endif %}">
+                        <i class="mdi mdi-account-tie-outline me-1"></i> Agents immobiliers
+                    </a>
+                    <a href="{{ path('app_smart_immo_admin_real_estate_customer') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/real/estate/customer' %} is-active{% endif %}">
+                        <i class="mdi mdi-account-group me-1"></i> Liste des Clients
+                    </a>
+                    <a href="{{ path('app_admin_config') }}"
+                       class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/config' %} is-active{% endif %}">
+                        <i class="mdi mdi-cog pe-1"></i> Configuration
+                    </a>
+                {% endif %}
+
+                <!-- Profil -->
+                <a class="nav-link" href="{{ path('app_account', {show: 'profil'}) }}">
+                    <i class="mdi mdi-account"></i> Mon profil
+                </a>
+            </nav>
+        </aside>
+
+
+
+        {# ========== Content ========== #}
+        <div class="col-lg-10 content-dashboard p-3 p-lg-4">
+            <div class="top-bar row gx-3 gy-2 align-items-center">
+                <div class="col-6 d-flex align-items-center">
+                    <div class="toggle me-2 d-lg-none">
+                        <button class="btn bg-white rounded-3 px-2 py-1" type="button"
+                                data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar">
+                            <i class="mdi mdi-menu fs-5"></i>
+                        </button>
+                    </div>
+
+                    {% set hour = "now"|date("G") %}
+                    {% set greet = hour < 12 ? 'Bonjour' : (hour < 18 ? 'Bon après-midi' : 'Bonsoir') %}
+                    <span class="greet-chip d-none d-md-inline-flex align-items-center me-2" aria-live="polite">
+            <i class="mdi mdi-emoticon-happy-outline me-1"></i>
+            {{ greet }}{% if is_granted('IS_AUTHENTICATED') and app.user and app.user.firstname is defined and app.user.firstname %}, {{ app.user.firstname }}{% endif %} 👋
+          </span>
+
+                    {# <a href="{{ path('app_agent_listing_new_listing') }}" class="btn btn-dark btn-sm py-2 px-3 rounded-9">
+                        Créer une annonce
+                    </a> #}
+                </div>
+
+                <div class="col-6 d-flex justify-content-end align-items-center">
+                    <div class="dropdown profile-dropdown">
+                        <button class="btn bg-white rounded-9 btn-sm d-flex align-items-center dropdown-toggle py-1 ps-1 pe-2"
+                                type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if is_granted('IS_AUTHENTICATED') %}
+                                {% if app.user.picture == null %}
+                                    <img src="{{ asset('assets/img/imageIcon.png') }}" class="img-fluid rounded-9" alt="">
+                                {% else %}
+                                    <img src="{{ app.user.picture }}" class="img-fluid rounded-9" alt="">
+                                {% endif %}
+                            {% endif %}
+                            <span class="ms-2 me-1">{{ app.user.name }}</span>
+                        </button>
+                        <ul class="dropdown-menu border-0 rounded-9 dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                            <li><a class="dropdown-item" href="{{ path('app_account', {show: 'profil'}) }}"><span class="mdi mdi-account"></span> Mon profil</a></li>
+                            <li><a class="dropdown-item" href="{{ path('app_logout') }}"><span class="mdi mdi-logout"></span> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-content pt-4 pt-lg-5">
+                {% block bodyHeader %}{% endblock %}
+                {% block bodyContent %}{% endblock %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade " id="modalCenter" tabindex="-1" role="dialog" aria-labelledby="modalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="modal-content-ajax">
+                <div class="modal-body text-center">
+                    <img src="{{ asset('assets/img/ajax-loader.gif') }}" alt=""/>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    class Config {
+        constructor() {
+            this.basePath = '{{ app.request.basepath }}';
+
+            Object.seal(this);
+        }
+    }
+    var config = new Config();
+    var loader = '<img src="'+config.basePath+'/assets/img/ajax-loader.gif" />';
+    var loaderNode = document.createElement("img")
+    loaderNode.src = config.basePath+"/assets/img/ajax-loader.gif";
+    var modalLoader = '<div class="modal-body">' + loader + '</div>';
+</script>
+
+<!-- Footer bottom -->
+<script type="text/javascript" src="{{ asset('assets/js/bodyevents.js') }}"></script>
+<script src="{{ asset('assets/js/ajax_1.0.1.js') }}"></script>
+<script src="{{ asset('assets/js/settings.js') }}"></script>
+<!-- Jquery js -->
+<script src="{{ asset('assets/vendor/jquery/jquery.min.js') }}"></script>
+<!-- Bootstrap Bundle -->
+<script src="{{ asset('assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+<!-- slick Slider JS-->
+<script type="text/javascript" src="{{ asset('assets/vendor/slick/slick.min.js') }}"></script>
+<!-- Date Picker -->
+<script src="{{ asset('assets/vendor/date-picker/date-picker.js') }}"></script>
+<!-- Custom scripts for all pages-->
+<script src="{{ asset('assets/js/osahan.js') }}"></script>
+</body>
+</html>

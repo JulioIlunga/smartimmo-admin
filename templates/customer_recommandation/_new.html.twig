@@ -1,0 +1,300 @@
+{# customer_recommandation/_new.html.twig #}
+
+<form id="preference-form" role="form" action="{{ path('app_customer_recommandation_new') }}" method="POST" novalidate>
+    <div class="wizard-progress px-3">
+        <div class="step">Localisation</div>
+        <div class="step">Détails</div>
+        <div class="step">Budget & Délai</div>
+    </div>
+    <div class="modal-body">
+        <div class="container-fluid">
+
+            <div class="row g-3">
+                {# === Step 1: Localisation === #}
+                <div class="col-12 wizard-step" data-step="1">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <select class="form-select" id="country" name="country" onchange="findProvince()" required>
+                                    <option value="" selected disabled>-- Sélectionnez un pays --</option>
+                                    {% for country in countries %}
+                                        <option value="{{ country.id }}">{{ country.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label for="country"><i class="mdi mdi-map-marker me-1"></i> Pays</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <select class="form-select" id="province" name="province" onchange="findCommune()" required>
+                                    <option value="" selected disabled>-- Sélectionnez une ville --</option>
+                                </select>
+                                <label for="province"><i class="mdi mdi-city me-1"></i> Ville / Province</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <select class="form-select" id="commune" name="commune" required>
+                                    <option value="" selected disabled>-- Sélectionnez une commune --</option>
+                                </select>
+                                <label for="commune"><i class="mdi mdi-city-variant-outline me-1"></i> Commune</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# === Step 2: Détails === #}
+                <div class="col-12 wizard-step" data-step="2">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <select class="form-select" id="transaction" name="transaction" required>
+                                    <option value="" selected disabled>-- Achat ou Location ? --</option>
+                                    <option value="rent">Location</option>
+                                    <option value="buy">Achat</option>
+                                </select>
+                                <label for="transaction"><i class="mdi mdi-cash-multiple me-1"></i> Transaction</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <select class="form-select" id="property_type" name="property_type" required>
+                                    <option value="" selected disabled>-- Type de propriété --</option>
+                                    <option value="Appartement">Appartement</option>
+                                    <option value="Maison">Maison</option>
+                                    <option value="Villa">Villa</option>
+                                    <option value="Studio">Studio</option>
+                                    <option value="Local commercial">Local commercial</option>
+                                    <option value="Terrain">Terrain</option>
+                                </select>
+                                <label for="property_type"><i class="mdi mdi-home-outline me-1"></i> Type de propriété</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="bedrooms" name="bedrooms" value="0" min="0" placeholder="Nombre de chambres">
+                                <label for="bedrooms"><i class="mdi mdi-bed me-1"></i> Nombre de chambres</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="bathrooms" name="bathrooms" value="0" min="0" placeholder="Nombre de salles de bain">
+                                <label for="bathrooms"><i class="mdi mdi-shower me-1"></i> Nombre de salles de bain</label>
+                            </div>
+                        </div>
+
+                        {# Move-in window (optional) #}
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="move_in_earliest" name="move_in_earliest">
+                                <label for="move_in_earliest"><i class="mdi mdi-calendar-start me-1"></i> Emménagement à partir du</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="move_in_latest" name="move_in_latest">
+                                <label for="move_in_latest"><i class="mdi mdi-calendar-end me-1"></i> Emménagement jusqu’au</label>
+                            </div>
+                        </div>
+
+                        {# Urgency (optional) #}
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <select class="form-select" id="urgency" name="urgency">
+                                    <option value="" selected>— Facultatif —</option>
+                                    <option value="high">Élevée</option>
+                                    <option value="medium">Moyenne</option>
+                                    <option value="low">Faible</option>
+                                </select>
+                                <label for="urgency"><i class="mdi mdi-alert-decagram-outline me-1"></i> Urgence</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# === Step 3: Budget & Délai === #}
+                <div class="col-12 wizard-step" data-step="3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating d-flex align-items-end px-2 border rounded-3">
+                                <input type="number" class="form-control border-0 px-0" id="budget_min" name="budget_min" min="0" value="0" placeholder="Budget minimum">
+                                <label for="budget_min"><i class="mdi mdi-currency-usd me-1"></i> Budget minimum</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating d-flex align-items-end px-2 border rounded-3">
+                                <input type="number" class="form-control border-0 px-0" id="budget_max" name="budget_max" min="0" placeholder="Budget maximum" required>
+                                <label for="budget_max"><i class="mdi mdi-currency-usd me-1"></i> Budget maximum</label>
+                            </div>
+                        </div>
+
+                        {# Contact timeframe (urgent/by_date) #}
+                        <div class="col-12">
+                            <label class="form-label fw-semibold mb-2">Quand souhaitez-vous être contacté(e) ?</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check custom-radio-card">
+                                        <input class="form-check-input" type="radio" name="lead_timeframe" id="tf_urgent" value="urgent" checked>
+                                        <label class="form-check-label" for="tf_urgent">
+                                            <div class="fw-semibold">Dès que possible</div>
+                                            <small class="text-muted">Un agent peut vous appeler rapidement</small>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-check custom-radio-card">
+                                        <input class="form-check-input" type="radio" name="lead_timeframe" id="tf_date" value="by_date">
+                                        <label class="form-check-label" for="tf_date">
+                                            <div class="fw-semibold">Avant une date précise</div>
+                                            <small class="text-muted">Choisissez la date limite ci-dessous</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="lead_until_wrap" class="mt-3" style="display:none;">
+                                <div class="form-floating">
+                                    <input type="date" class="form-control" id="lead_until" name="lead_until">
+                                    <label for="lead_until"><i class="mdi mdi-calendar me-1"></i> Date limite</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Alert duration (alertDuration) #}
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <select class="form-select" id="lead_duration" name="lead_duration">
+                                    <option value="30" selected>30 jours</option>
+                                    <option value="14">14 jours</option>
+                                    <option value="7">7 jours</option>
+                                    <option value="until_cancel">Jusqu’à annulation</option>
+                                </select>
+                                <label for="lead_duration"><i class="mdi mdi-bell-ring-outline me-1"></i> Durée d’activation des alertes</label>
+                            </div>
+                        </div>
+
+                        {# Alert frequency (alertFrequency) #}
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <select class="form-select" id="alert_frequency" name="alert_frequency">
+                                    <option value="instant" selected>Immédiates</option>
+                                    <option value="daily">Quotidiennes</option>
+                                    <option value="weekly">Hebdomadaires</option>
+                                </select>
+                                <label for="alert_frequency"><i class="mdi mdi-bell-outline me-1"></i> Fréquence des alertes</label>
+                            </div>
+                        </div>
+
+                        {# Contact preferences #}
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <select class="form-select" id="contact_channel" name="contact_channel">
+                                    <option value="" selected>— Indifférent —</option>
+                                    <option value="whatsapp">WhatsApp</option>
+                                    <option value="phone">Téléphone</option>
+                                    <option value="email">E-mail</option>
+                                </select>
+                                <label for="contact_channel"><i class="mdi mdi-account-voice me-1"></i> Canal de contact préféré</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <select class="form-select" id="contact_time" name="contact_time">
+                                    <option value="" selected>— Indifférent —</option>
+                                    <option value="morning">Matin</option>
+                                    <option value="afternoon">Après-midi</option>
+                                    <option value="evening">Soir</option>
+                                </select>
+                                <label for="contact_time"><i class="mdi mdi-clock-outline me-1"></i> Moment préféré</label>
+                            </div>
+                        </div>
+
+                        {# WhatsApp consent #}
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="whatsapp_consent" name="whatsapp_consent" value="1">
+                                <label class="form-check-label" for="whatsapp_consent">
+                                    <i class="mdi mdi-whatsapp text-success me-1"></i>
+                                    J’accepte d’être contacté via WhatsApp
+                                </label>
+                            </div>
+                        </div>
+
+                        {# Must-haves list (comma separated or chips) #}
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="must_haves" name="must_haves"
+                                       placeholder="Ex.: Jardin, Parking, Meublé">
+                                <label for="must_haves"><i class="mdi mdi-format-list-checks me-1"></i> Indispensables (séparés par des virgules)</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0">
+                                <i class="mdi mdi-information-outline me-1"></i>
+                                <strong>Important :</strong> vos alertes personnalisées deviennent des <strong>leads</strong> pour nos agents immobiliers partenaires.
+                                Un agent vous contactera directement (WhatsApp / téléphone) pour vous proposer des biens correspondant à vos critères.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /modal-body -->
+
+        <div class="modal-footer d-flex justify-content-between mt-2">
+            <div>
+                <button type="button" class="btn btn-ghost" id="cancelBtn" data-bs-dismiss="modal">
+                    <i class="mdi mdi-close"></i> Annuler
+                </button>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-ghost" data-wz="prev">
+                    <i class="mdi mdi-chevron-left"></i> Précédent
+                </button>
+                <button type="button" class="btn btn-danger" data-wz="next">
+                    Suivant <i class="mdi mdi-chevron-right"></i>
+                </button>
+                <button type="submit" class="btn btn-success d-none" id="submitBtn" data-wz="submit">
+                    <i class="mdi mdi-content-save"></i> Enregistrer
+                </button>
+            </div>
+        </div>
+</form>
+
+
+{# Flash area (if controller returns the fragment again with flashes) #}
+<div class="px-3 pb-3">
+    {% for message in app.session.flashBag.get('success') %}
+        <div class="alert alert-success mt-2">
+            <i class="mdi mdi-check-circle-outline me-1"></i> {{ message }}
+        </div>
+    {% endfor %}
+    {% for message in app.session.flashBag.get('error') %}
+        <div class="alert alert-danger mt-2">
+            <i class="mdi mdi-alert-circle-outline me-1"></i> {{ message }}
+        </div>
+    {% endfor %}
+</div>
+
+{# Toggle date field visibility based on timeframe #}
+<script>
+    // This inline script WON'T run when injected via innerHTML,
+    // but we'll keep it in case you render the fragment directly.
+    document.addEventListener('DOMContentLoaded', function(){
+        const radios = document.querySelectorAll('input[name="lead_timeframe"]');
+        const wrap   = document.getElementById('lead_until_wrap');
+        radios.forEach(r => r.addEventListener('change', () => {
+            wrap.style.display = (document.getElementById('tf_date').checked ? '' : 'none');
+        }));
+    });
+</script>
+
+

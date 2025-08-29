@@ -1,0 +1,29 @@
+{% for message in messages %}
+    {% if message.whoSent.id == user.id %}
+    <!-- Senders -->
+    <div class="senders d-flex justify-content-end p-2">
+        <div class="small text-end me-2">
+            <p class="mb-2"><small class="text-muted">{{ message.createdAt|date('M d, Y H:i') }}</small><span class="ms-1 fw-bold">[ {{ message.whoSent.name }} ]</span></p>
+            <p class="px-3 py-2 border chat-sender mb-0">{{ message.message }}</p>
+        </div>
+        {% if message.whoSent.picture == null %}
+            <img src="{{ asset('assets/img/imageIcon.png') }}" class="img-fluid rounded-9 user-img" alt="">
+        {% else %}
+            <img src="{{ message.whoSent.picture }}" class="img-fluid rounded-9 user-img" alt="">
+        {% endif %}
+    </div>
+    {% else %}
+    <!-- Receivers -->
+    <div class="receivers d-flex p-2">
+        {% if message.whoSent.picture == null %}
+            <img src="{{ asset('assets/img/imageIcon.png') }}" class="img-fluid rounded-9 user-img" alt="">
+        {% else %}
+            <img src="{{ message.whoSent.picture }}" class="img-fluid rounded-9 user-img" alt="">
+        {% endif %}
+        <div class="small ms-2">
+            <p class="mb-2"><span class="me-1 fw-bold">[ {{ message.whoSent.name }} ]</span><small class="text-muted">{{ message.createdAt|date('M d, Y H:i') }}</small></p>
+            <p class="px-3 py-2 border chat-receiver bg-light mb-2">{{ message.message }}</p>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}

@@ -1,0 +1,496 @@
+{# Counters #}
+{% set onlineCount = 0 %}
+{% set draftCount = 0 %}
+{% set offCount = 0 %}
+{% set removedCount = 0 %}
+{% for p in properties %}
+    {% if p.publish %}{% set onlineCount = onlineCount + 1 %}{% endif %}
+    {% if not p.publish %}{% set draftCount  = draftCount  + 1 %}{% endif %}
+    {% if p.propertyStatus and p.propertyStatus.id == 4 %}{% set removedCount = removedCount + 1 %}{% endif %}
+    {% if p.propertyStatus and p.propertyStatus.id != 1 and p.propertyStatus.id != 4 and p.publish %}
+        {% set offCount = offCount + 1 %}
+    {% endif %}
+{% endfor %}
+{% set totalCount = properties|length %}
+
+{# Tabs #}
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <ul class="nav nav-pills listing-tabs gap-2" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-filter="online">
+                <i class="mdi mdi-web me-1"></i> Annonces en ligne
+                <span class="badge rounded-pill ms-2">{{ onlineCount }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-filter="draft">
+                <i class="mdi mdi-progress-pencil me-1"></i> À finaliser
+                <span class="badge rounded-pill ms-2">{{ draftCount }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-filter="off">
+                <i class="mdi mdi-alert-circle-outline me-1"></i> Indisponibles
+                <span class="badge rounded-pill ms-2">{{ offCount }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-filter="removed">
+                <i class="mdi mdi-trash-can-outline me-1"></i> Retirées
+                <span class="badge rounded-pill ms-2">{{ removedCount }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-filter="all">
+                <i class="mdi mdi-format-list-bulleted me-1"></i> Toutes
+                <span class="badge rounded-pill ms-2">{{ totalCount }}</span>
+            </button>
+        </li>
+    </ul>
+</div>
+
+{# Grid #}
+<div class="row g-3" id="propList">
+    {% for property in properties %}
+        {% set isDraft   = property.publish ? false : true %}
+        {% set isOnline  = property.publish ? true : false %}
+        {% set stId      = property.propertyStatus ? property.propertyStatus.id : null %}
+        {% set isRemoved = (stId == 4) %}
+        {% set isOff     = (stId is not null and stId != 1 and stId != 4 and property.publish) %}
+
+        <div class="col-sm-6 prop-col">
+            <div class="card prop-item
+                  {{ isOnline  ? 'is-online'  : '' }}
+                  {{ isDraft   ? 'is-draft'   : '' }}
+                  {{ isOff     ? 'is-off'     : '' }}
+                  {{ isRemoved ? 'is-removed' : '' }}
+                  p-3 mb-0">
+                <div class="card-body row g-3 align-items-stretch p-0">
+                    <!-- Thumb -->
+                    <div class="col-sm-3 thumb">
+                        <div class="ratio ratio-4x3 rounded-3 overflow-hidden">
+                            {% if property.image %}
+                                <img src="{{ property.image }}" alt="{{ property.type }} - vignette" class="w-100 h-100">
+                            {% else %}
+                                <img src="{{ asset('assets/img/imageIcon.png') }}" alt="Aperçu indisponible" class="w-100 h-100">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Main info -->
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                            <span class="chip"><i class="mdi mdi-home-outline"></i>{{ property.type }}</span>
+                            <span class="chip">{% if property.typeLocation == 'sell' %}À vendre{% else %}À louer{% endif %}</span>
+
+                            {% if property.propertyStatus %}
+                                {% set st = property.propertyStatus.id %}
+                                <span class="status-badge
+                  {% if st == 1 %}status-ok
+                  {% elseif st == 4 %}status-removed
+                  {% else %}status-off{% endif %}">
+                  {% if st == 1 %}
+                      <i class="mdi mdi-check-circle-outline"></i>
+                  {% elseif st == 4 %}
+                      <i class="mdi mdi-trash-can-outline"></i>
+                  {% else %}
+                      <i class="mdi mdi-alert-circle-outline"></i>
+                  {% endif %}
+                                    {{ property.propertyStatus.name }}
+                </span>
+                            {% endif %}
+
+                            {% if isDraft %}
+                                <span class="status-badge status-off"><i class="mdi mdi-progress-clock"></i> À finaliser</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="meta small text-muted">
+                            {% if property.publishAt is null %}
+                                Créé le <strong>{{ property.createdAt|date('d/m/y') }}</strong>
+                            {% else %}
+                                Dernière publication : <strong>{{ property.publishAt|date('d/m/y') }}</strong>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center justify-content-between mt-3">
+                            <div class="specs d-flex flex-wrap gap-2">
+                                <span class="pill"><i class="mdi mdi-bed-outline"></i>{{ property.bedroom }} chambre(s)</span>
+                                <span class="pill"><i class="mdi mdi-shower"></i>{{ property.bathroom }} salle de bains</span>
+                            </div>
+                            <div class="mt-2 mt-sm-0">
+                                <span class="price h6 mb-0">{{ property.price|format_currency('USD') }}</span>
+                                <span class="text-muted">/ {% if property.periodicity == 'Daily'%}Jour{% else%}Mois{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-sm-3 d-flex flex-column justify-content-between text-end">
+                        <div class="mb-2">
+                            {% if not property.publish %}
+                                <a href="#" onclick="editEntry('{{ property.id }}')" data-bs-toggle="modal" data-bs-target="#modalCenter"
+                                   class="btn btn-danger btn-sm text-white rounded-pill w-100 mb-2">
+                                    <i class="mdi mdi-earth me-1"></i> Publier
+                                </a>
+                            {% else %}
+                                <div class="d-flex justify-content-end align-items-center mb-2">
+                                    <span class="badge-live"><i class="mdi mdi-web"></i> EN LIGNE</span>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-success btn-sm text-white rounded-pill w-100 dropdown-toggle" type="button"
+                                            id="dropdownStatus-{{ property.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="mdi mdi-update me-1"></i> Statut
+                                    </button>
+                                    <ul class="dropdown-menu border-0 rounded-4 dropdown-menu-end"
+                                        aria-labelledby="dropdownStatus-{{ property.id }}">
+                                        {% for stat in status %}
+                                            {% if stat.id != 1 and stat.id != 4 %}
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ path('app_agent_listing_change_property_status', {id: stat.id, propertyId: property.id}) }}">
+                                                        {% if stat.id == 2 %}
+                                                            <i class="mdi mdi-cancel text-danger me-1"></i>
+                                                        {% else %}
+                                                            <i class="mdi mdi-circle-medium text-danger me-1"></i>
+                                                        {% endif %}
+                                                        {{ stat.name }}
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            {% if stat.id == 4 %}
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ path('app_agent_listing_change_property_status', {id: 4, propertyId: property.id}) }}">
+                                                        <i class="mdi mdi-trash-can-outline text-danger me-1"></i>{{ stat.name }}
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <a href="{{ path('app_property_details', {propertyUuid : property.uuidProperty}) }}"
+                           class="btn btn-soft-dark btn-sm rounded-pill w-100 mb-2">
+                            <i class="mdi mdi-eye me-1"></i> Aperçu
+                        </a>
+                        <a href="{{ path('app_agent_listing_property_editing',{code: property.code} ) }}"
+                           class="btn btn-soft-primary btn-sm rounded-pill w-100">
+                            <i class="mdi mdi-pencil me-1"></i> Éditer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{# Empty state #}
+<div id="emptyState" class="empty-state d-none">
+    <div class="inner text-center">
+        <div class="icon-wrap"><i class="mdi mdi-database-remove"></i></div>
+        <h6 class="title mb-1">Aucune annonce trouvée</h6>
+        <p class="text-muted small mb-3" id="emptyStateMsg">Essayez un autre filtre ou affichez toutes les annonces.</p>
+        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" id="showAllBtn">
+            <i class="mdi mdi-format-list-bulleted me-1"></i> Voir toutes les annonces
+        </button>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabs = document.querySelectorAll('.listing-tabs .nav-link');
+        const cols = document.querySelectorAll('#propList .prop-col');
+        const emptyBox = document.getElementById('emptyState');
+        const emptyMsg = document.getElementById('emptyStateMsg');
+        const showAllBtn = document.getElementById('showAllBtn');
+
+        const messages = {
+            online:  "Aucune annonce en ligne pour le moment.",
+            draft:   "Aucune annonce à finaliser.",
+            off:     "Aucune annonce indisponible trouvée.",
+            removed: "Aucune annonce retirée pour l’instant.",
+            all:     "Aucune annonce ne correspond à vos critères."
+        };
+
+        function updateEmptyState(mode){
+            const anyVisible = Array.from(cols).some(col => !col.classList.contains('d-none'));
+            emptyBox.classList.toggle('d-none', anyVisible);
+            if (!anyVisible) emptyMsg.textContent = messages[mode] || messages.all;
+        }
+
+        function show(mode){
+            cols.forEach(col => {
+                const card = col.querySelector('.prop-item');
+                const isOnline  = card?.classList.contains('is-online');
+                const isDraft   = card?.classList.contains('is-draft');
+                const isOff     = card?.classList.contains('is-off');
+                const isRemoved = card?.classList.contains('is-removed');
+
+                let visible = true;
+                if (mode === 'online')  visible =  isOnline;
+                if (mode === 'draft')   visible =  isDraft;
+                if (mode === 'off')     visible =  isOff && !isDraft && !isRemoved;
+                if (mode === 'removed') visible =  isRemoved;
+                if (mode === 'all')     visible =  true;
+
+                col.classList.toggle('d-none', !visible);
+            });
+            updateEmptyState(mode);
+        }
+
+        tabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                show(btn.dataset.filter);
+            });
+        });
+
+        showAllBtn.addEventListener('click', () => {
+            document.querySelector('.listing-tabs .nav-link[data-filter="all"]')?.click();
+        });
+
+        // Default view
+        show('online');
+    });
+</script>
+
+
+{# --- Counters for badges (match visible filters) --- #}
+{#{% set onlineCount = 0 %}#}
+{#{% set draftCount = 0 %}#}
+{#{% set offCount = 0 %}#}
+{#{% set removedCount = 0 %}#}
+{#{% for p in properties %}#}
+{#    {% if p.publish %}{% set onlineCount = onlineCount + 1 %}{% endif %}#}
+{#    {% if not p.publish %}{% set draftCount  = draftCount  + 1 %}{% endif %}#}
+{#    {% if p.propertyStatus and p.propertyStatus.id == 4 %}{% set removedCount = removedCount + 1 %}{% endif %}#}
+{#    {% if p.propertyStatus and p.propertyStatus.id != 1 and p.propertyStatus.id != 4 and p.publish %}#}
+{#        {% set offCount = offCount + 1 %}#}
+{#    {% endif %}#}
+{#{% endfor %}#}
+{#{% set totalCount = properties|length %}#}
+
+{# --- Tabs --- #}
+{#<div class="d-flex align-items-center justify-content-between mb-3">#}
+{#    <ul class="nav nav-pills listing-tabs gap-2" role="tablist">#}
+{#        <li class="nav-item"><button class="nav-link active" data-filter="online"><i class="mdi mdi-web me-1"></i>Annonces en ligne <span class="badge rounded-pill ms-2">{{ onlineCount }}</span></button></li>#}
+{#        <li class="nav-item"><button class="nav-link" data-filter="draft"><i class="mdi mdi-progress-pencil me-1"></i>Annonces à finaliser <span class="badge rounded-pill ms-2">{{ draftCount }}</span></button></li>#}
+{#        <li class="nav-item"><button class="nav-link" data-filter="off"><i class="mdi mdi-alert-circle-outline me-1"></i>Indisponibles <span class="badge rounded-pill ms-2">{{ offCount }}</span></button></li>#}
+{#        <li class="nav-item"><button class="nav-link" data-filter="removed"><i class="mdi mdi-trash-can-outline me-1"></i>Retirées <span class="badge rounded-pill ms-2">{{ removedCount }}</span></button></li>#}
+{#        <li class="nav-item"><button class="nav-link" data-filter="all"><i class="mdi mdi-format-list-bulleted me-1"></i>Toutes les annonces <span class="badge rounded-pill ms-2">{{ totalCount }}</span></button></li>#}
+{#    </ul>#}
+{#</div>#}
+
+{# --- Grid --- #}
+{#<div class="row g-3" id="propList">#}
+{#    {% for property in properties %}#}
+{#        {% set isDraft   = property.publish ? false : true %}#}
+{#        {% set isOnline  = property.publish ? true : false %}#}
+{#        {% set stId      = property.propertyStatus ? property.propertyStatus.id : null %}#}
+{#        {% set isRemoved = (stId == 4) %}#}
+{#        {% set isOff     = (stId is not null and stId != 1 and stId != 4 and property.publish) %}#}
+
+{#        <div class="col-sm-6 prop-col">#}
+{#            <div class="text-dark">#}
+{#                <div class="card prop-item#}
+{#                    {{ isOnline  ? 'is-online'  : '' }}#}
+{#                    {{ isDraft   ? 'is-draft'   : '' }}#}
+{#                    {{ isOff     ? 'is-off'     : '' }}#}
+{#                    {{ isRemoved ? 'is-removed' : '' }}#}
+{#                    {% if property.publish %} border-danger border-2 {% endif %}#}
+{#                    bg-white p-3 mb-0">#}
+
+{#                    <div class="card-body row g-3 align-items-stretch p-0">#}
+{#                        <!-- Thumb -->#}
+{#                        <div class="col-sm-3 thumb">#}
+{#                            <div class="ratio ratio-4x3 rounded-3 overflow-hidden">#}
+{#                                {% if property.image %}#}
+{#                                    <img src="{{ property.image }}" alt="{{ property.type }} - vignette" class="w-100 h-100" style="object-fit:cover;">#}
+{#                                {% else %}#}
+{#                                    <img src="{{ asset('assets/img/imageIcon.png') }}" alt="Aperçu indisponible" class="w-100 h-100" style="object-fit:cover;">#}
+{#                                {% endif %}#}
+{#                            </div>#}
+{#                        </div>#}
+
+{#                        <!-- Main info -->#}
+{#                        <div class="col-sm-6">#}
+{#                            <div class="d-flex align-items-center flex-wrap gap-2 mb-2">#}
+{#                                <span class="chip chip-type"><i class="mdi mdi-home-outline"></i>{{ property.type }}</span>#}
+{#                                <span class="chip chip-tx">{% if property.typeLocation == 'sell' %}À vendre{% else %}À louer{% endif %}</span>#}
+
+{#                                {% if property.propertyStatus %}#}
+{#                                    {% set st = property.propertyStatus.id %}#}
+{#                                    <span class="status-badge#}
+{#                    {% if st == 1 %}status-ok#}
+{#                    {% elseif st == 4 %}status-removed#}
+{#                    {% else %}status-off{% endif %}">#}
+{#                    {% if st == 1 %}#}
+{#                        <i class="mdi mdi-check-circle-outline"></i>#}
+{#                    {% elseif st == 4 %}#}
+{#                        <i class="mdi mdi-trash-can-outline"></i>#}
+{#                    {% else %}#}
+{#                        <i class="mdi mdi-alert-circle-outline"></i>#}
+{#                    {% endif %}#}
+{#                                        {{ property.propertyStatus.name }}#}
+{#                  </span>#}
+{#                                {% endif %}#}
+
+{#                                {% if isDraft %}#}
+{#                                    <span class="status-badge status-off"><i class="mdi mdi-progress-clock"></i> À finaliser</span>#}
+{#                                {% endif %}#}
+{#                            </div>#}
+
+{#                            <div class="meta small text-muted">#}
+{#                                {% if property.publishAt != null %}#}
+{#                                    Créé le <strong>{{ property.createdAt|date('d/m/y') }}</strong>#}
+{#                                {% else %}#}
+{#                                    Dernière publication : <strong>{{ property.publishAt|date('d/m/y') }}</strong>#}
+{#                                {% endif %}#}
+{#                            </div>#}
+
+{#                            <div class="d-flex flex-wrap align-items-center justify-content-between mt-3">#}
+{#                                <div class="specs d-flex flex-wrap gap-2">#}
+{#                                    <span class="pill"><i class="mdi mdi-bed-outline"></i>{{ property.bedroom }} chambre(s)</span>#}
+{#                                    <span class="pill"><i class="mdi mdi-shower"></i>{{ property.bathroom }} salle de bains</span>#}
+{#                                </div>#}
+{#                                <div class="mt-2 mt-sm-0">#}
+{#                                    <span class="price h6 mb-0">{{ property.price|format_currency('USD') }}</span>#}
+{#                                    <span class="text-muted">/ {% if property.periodicity == 'Daily'%}Jour{% else%}Mois{% endif %}</span>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                        </div>#}
+
+{#                        <!-- Actions -->#}
+{#                        <div class="col-sm-3 d-flex flex-column justify-content-between text-end">#}
+{#                            <div class="mb-2">#}
+{#                                {% if not property.publish %}#}
+{#                                    <a href="#" onclick="editEntry('{{ property.id }}')" data-bs-toggle="modal" data-bs-target="#modalCenter"#}
+{#                                       class="btn btn-danger btn-sm text-white rounded-9 w-100 mb-2">#}
+{#                                        <i class="mdi mdi-earth me-1"></i> Publier#}
+{#                                    </a>#}
+{#                                {% else %}#}
+{#                                    <div class="d-flex justify-content-end align-items-center mb-2">#}
+{#                                        <span class="badge-live"><i class="mdi mdi-web me-1"></i>EN LIGNE</span>#}
+{#                                    </div>#}
+{#                                    <div class="dropdown">#}
+{#                                        <button class="btn btn-success btn-sm text-white rounded-9 w-100 dropdown-toggle" type="button"#}
+{#                                                id="dropdownStatus" data-bs-toggle="dropdown" aria-expanded="false">#}
+{#                                            <i class="mdi mdi-update me-1"></i> Statut#}
+{#                                        </button>#}
+{#                                        <ul class="dropdown-menu border-0 rounded-9 dropdown-menu-end" aria-labelledby="dropdownStatus">#}
+{#                                            {% for stat in status %}#}
+{#                                                {% if stat.id != 1 and stat.id != 4 %}#}
+{#                                                    <li>#}
+{#                                                        <a class="dropdown-item" href="{{ path('app_agent_listing_change_property_status', {id: stat.id, propertyId: property.id}) }}">#}
+{#                                                            {% if stat.id == 2 %}#}
+{#                                                                <i class="mdi mdi-cancel text-danger me-1"></i>#}
+{#                                                            {% else %}#}
+{#                                                                <i class="mdi mdi-circle-medium text-danger me-1"></i>#}
+{#                                                            {% endif %}#}
+{#                                                            {{ stat.name }}#}
+{#                                                        </a>#}
+{#                                                    </li>#}
+{#                                                {% endif %}#}
+{#                                                {% if stat.id == 4 %}#}
+{#                                                    <li>#}
+{#                                                        <a class="dropdown-item" href="{{ path('app_agent_listing_change_property_status', {id: 4, propertyId: property.id}) }}">#}
+{#                                                            <i class="mdi mdi-trash-can-outline text-danger me-1"></i>{{ stat.name }}#}
+{#                                                        </a>#}
+{#                                                    </li>#}
+{#                                                {% endif %}#}
+{#                                            {% endfor %}#}
+{#                                        </ul>#}
+{#                                    </div>#}
+{#                                {% endif %}#}
+{#                            </div>#}
+
+{#                            <a href="{{ path('app_property_details', {propertyUuid : property.uuidProperty}) }}"#}
+{#                               class="btn btn-soft-dark btn-sm rounded-9 w-100 mb-2">#}
+{#                                <i class="mdi mdi-eye me-1"></i> Aperçu#}
+{#                            </a>#}
+{#                            <a href="{{ path('app_agent_listing_property_editing',{code: property.code} ) }}"#}
+{#                               class="btn btn-soft-primary btn-sm rounded-9 w-100">#}
+{#                                <i class="mdi mdi-pencil me-1"></i> Éditer#}
+{#                            </a>#}
+{#                        </div>#}
+
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    {% endfor %}#}
+{#</div>#}
+
+{# --- Empty state --- #}
+{#<div id="emptyState" class="empty-state d-none">#}
+{#    <div class="inner text-center">#}
+{#        <div class="icon-wrap"><i class="mdi mdi-database-remove"></i></div>#}
+{#        <h6 class="title mb-1">Aucune annonce trouvée</h6>#}
+{#        <p class="text-muted small mb-3" id="emptyStateMsg">Essayez un autre filtre ou affichez toutes les annonces.</p>#}
+{#        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" id="showAllBtn">#}
+{#            <i class="mdi mdi-format-list-bulleted me-1"></i> Voir toutes les annonces#}
+{#        </button>#}
+{#    </div>#}
+{#</div>#}
+
+{#<script>#}
+{#    document.addEventListener('DOMContentLoaded', () => {#}
+{#        const tabs = document.querySelectorAll('.listing-tabs .nav-link');#}
+{#        const cols = document.querySelectorAll('#propList .prop-col');#}
+{#        const emptyBox = document.getElementById('emptyState');#}
+{#        const emptyMsg = document.getElementById('emptyStateMsg');#}
+{#        const showAllBtn = document.getElementById('showAllBtn');#}
+
+{#        const messages = {#}
+{#            online:  "Aucune annonce en ligne pour le moment.",#}
+{#            draft:   "Aucune annonce à finaliser.",#}
+{#            off:     "Aucune annonce indisponible trouvée.",#}
+{#            removed: "Aucune annonce retirée pour l’instant.",#}
+{#            all:     "Aucune annonce ne correspond à vos critères."#}
+{#        };#}
+
+{#        function updateEmptyState(mode){#}
+{#            const anyVisible = Array.from(cols).some(col => !col.classList.contains('d-none'));#}
+{#            emptyBox.classList.toggle('d-none', anyVisible);#}
+{#            if (!anyVisible) emptyMsg.textContent = messages[mode] || messages.all;#}
+{#        }#}
+
+{#        function show(mode){#}
+{#            cols.forEach(col => {#}
+{#                const card = col.querySelector('.prop-item');#}
+{#                const isOnline  = card?.classList.contains('is-online');#}
+{#                const isDraft   = card?.classList.contains('is-draft');#}
+{#                const isOff     = card?.classList.contains('is-off');#}
+{#                const isRemoved = card?.classList.contains('is-removed');#}
+
+{#                let visible = true;#}
+{#                if (mode === 'online')  visible =  isOnline;#}
+{#                if (mode === 'draft')   visible =  isDraft;#}
+{#                if (mode === 'off')     visible =  isOff && !isDraft && !isRemoved;#}
+{#                if (mode === 'removed') visible =  isRemoved;#}
+{#                if (mode === 'all')     visible =  true;#}
+
+{#                col.classList.toggle('d-none', !visible);#}
+{#            });#}
+{#            updateEmptyState(mode);#}
+{#        }#}
+
+{#        tabs.forEach(btn => {#}
+{#            btn.addEventListener('click', () => {#}
+{#                tabs.forEach(b => b.classList.remove('active'));#}
+{#                btn.classList.add('active');#}
+{#                show(btn.dataset.filter);#}
+{#            });#}
+{#        });#}
+
+{#        showAllBtn.addEventListener('click', () => {#}
+{#            document.querySelector('.listing-tabs .nav-link[data-filter="all"]')?.click();#}
+{#        });#}
+
+{#        // Default view#}
+{#        show('online');#}
+{#    });#}
+{#</script>#}
+{#{% include 'paginator.html.twig' with { 'url' : path('app_agent_work_space_listing') } %}#}
+

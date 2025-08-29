@@ -1,0 +1,105 @@
+
+
+{% if propertiesCount != 0 %}
+
+    {# ===== GRID / CARD VIEW ===== #}
+    {% if show == 'card' %}
+        <section id="listing-grid">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3 g-lg-4">
+                {% for property in properties %}
+                    <div class="col">
+                        <a href="{{ path('app_property_details', {propertyUuid : property.uuidProperty}) }}"
+                           class="text-reset text-decoration-none"
+                           aria-label="Voir {{ property.type }} à {{ property.city }}">
+                            <article class="prop-card card border-0 h-100 overflow-hidden">
+                                <!-- Media -->
+                                <div class="prop-media ratio ratio-4x3 position-relative">
+                                    {% if property.image %}
+                                        <img src="{{ property.image }}"
+                                             alt="{{ property.type }} - {{ property.commune.name }}, {{ property.city }}"
+                                             class="w-100 h-100" style="object-fit:cover" loading="lazy" decoding="async">
+                                    {% else %}
+                                        <div class="placeholder w-100 h-100 d-flex align-items-center justify-content-center bg-light">
+                                            <img src="{{ asset('assets/img/smartimmoIcon.png') }}" class="opacity-25" alt="Aperçu indisponible" height="48">
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Top row chips -->
+                                    <div class="chips-top d-flex flex-wrap gap-2 p-2">
+                                        <span class="chip chip--tx">
+                                            {{ property.typeLocation == 'sell' ? 'À vendre' : 'À louer' }}
+                                        </span>
+                                        <span class="chip chip--type text-uppercase">
+                                            <i class="mdi mdi-home-outline"></i>{{ property.type }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Bottom-left chip -->
+                                    <div class="chips-bottom p-2">
+                                        <span class="chip chip--status {{ property.propertyStatus.id != 1 ? 'is-off' }}">
+                                            {% if property.propertyStatus.id != 1 %}
+                                                <i class="mdi mdi-alert-circle-outline"></i>{{ property.propertyStatus.name }}
+                                            {% else %}
+                                                <i class="mdi mdi-check-circle-outline"></i>{{ property.propertyStatus.name }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Body -->
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-baseline justify-content-between mb-1">
+                                        <div class="fw-semibold">
+                                            {{ property.commune.name }} <span class="text-muted">· {{ property.city }}</span>
+                                        </div>
+                                        <div class="price h6 mb-0 text-danger fw-bold">
+                                            {{ property.price|format_currency('USD', {fraction_digit: 0}) }}
+                                            {% if property.typeLocation != 'sell' %}
+                                                <span class="text-muted small fw-normal">/
+                                                  {% if property.periodicity == 'Daily' %}Jour{% else %}Mois{% endif %}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="specs d-flex flex-wrap mb-2 small">
+                                        {% if property.bedroom != '0' %}
+                                            <span class="pill"><i class="mdi mdi-bed-outline"></i>{{ property.bedroom }} ch</span>
+                                        {% endif %}
+                                        {% if property.bathroom != '0' %}
+                                            <span class="pill"><i class="mdi mdi-shower"></i>{{ property.bathroom }}</span>
+                                        {% endif %}
+                                        <span class="pill"><i class="mdi mdi-ruler-square"></i>{% if property.surfaceArea != 0.00 %}{{ property.surfaceArea }}{% else %}-{% endif %} m²</span>
+                                    </div>
+
+                                    <p class="text-dark text-uppercase small mb-0">
+                                        {{ property.header|slice(0,90) }}{% if property.title|length > 90 %}…{% endif %}
+                                    </p>
+                                </div>
+                            </article>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+{% else %}
+    <!-- Empty state -->
+    <div class="listing-items">
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="empty-state col-md-6">
+                <img src="{{ asset('assets/img/nodata.jpg') }}" class="img-fluid mb-3" alt="Aucune donnée" style="max-width:80%;">
+                <h4 class="fw-bold mb-1">Aucun résultat trouvé</h4>
+                <p class="text-muted mb-3">Ajustez vos filtres ou réessayez plus tard.</p>
+                <button class="btn-refresh" onclick="window.location.reload()">Rafraîchir la page</button>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+
+{% include 'paginator.html.twig' with { 'url' : path('app_agent_property', {id: agent.id }) } %}
+
+

@@ -1,0 +1,729 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ property.type }} | {{ property.header  }}
+{% endblock %}
+{% block favicon %}
+    <link rel="shortcut icon" href="{{ property.image }}" type="image/x-icon">
+{% endblock %}
+{% block style %}
+    <!-- Light Box -->
+    <link rel="stylesheet" href="{{ asset('assets/vendor/lightbox/dist/simple-lightbox.css') }}">
+    <link href="{{ asset('assets/css/listing-details-style.css') }}" rel="stylesheet">
+{% endblock %}
+{% block body %}
+    <!-- Details -->
+    <!-- One-time styles for this page -->
+
+    <div class="details container py-4">
+        <!-- HERO / TITLE -->
+        <div class="pd-hero p-3 p-md-4">
+            <p class="h3 h2-md title mb-2">
+                {{ property.type }}
+                {% if property.typeLocation == 'sell' %}
+                    à vendre
+                {% else %}
+                    à louer
+                {% endif %}
+                à {{ property.city }}, commune de {{ property.commune.name }}
+            </p>
+            <div class="d-flex justify-content-between">
+                <!-- Favoris -->
+                <div id="favorisId">
+                    <a href="#"
+                       onclick="saveFavoris({{ property.id }})"
+                       class="fav-chip {% if is_granted('IS_AUTHENTICATED') and property.favoris.count != 0 %}
+                           {% set name='false' %}
+                           {% for favoris in property.favoris %}
+                             {% if favoris.property.id == property.id %}
+                               {% if favoris.isSaved %}{% set name='true' %}{% endif %}
+                             {% endif %}
+                           {% endfor %}
+                           {% if name == 'true' %}active{% endif %}
+                         {% endif %}">
+                        {% if is_granted('IS_AUTHENTICATED') and property.favoris.count != 0 and name == 'true' %}
+                            <i class="mdi mdi-heart"></i> Favoris
+                        {% else %}
+                            <i class="mdi mdi-heart-outline"></i> Ajouter comme favoris
+                        {% endif %}
+                    </a>
+                </div>
+                {% if property.propertyStatus.name == 'Indisponible' or property.propertyStatus.name == 'Vendu' %}
+                    <div>
+                        <span class="btn btn-danger btn-sm rounded-pill mt-2" href="#">
+                            <i class="mdi mdi-cancel me-1"></i> {{ property.propertyStatus.name }}
+                        </span>
+                    </div>
+
+                {% endif %}
+            </div>
+
+
+        </div>
+
+        <div class="gallery row g-4 mt-3 mb-3">
+            <div class="col-md-7 col-12 left-img">
+                <a href="{{ property.image }}" class="link-dark">
+                    <div>
+                        <img src="{{ property.image }}" alt="" class="img-fluid rounded-left4 w-100 first-img">
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-5 col-12 right-imgs">
+                {% if image2 != null %}
+                    <a href="{{ image2.imageUrl }}" class="link-dark">
+                        <div>
+                            <img src="{{ image2.imageUrl }}" alt="" class="img-fluid rounded-topright4 mb-4">
+                        </div>
+                    </a>
+                {% endif %}
+                <div class="row">
+                    {% if image3 != null %}
+                        <div class="col-md-6 col-6">
+                            <a href="{{ image3.imageUrl }}" class="link-dark" >
+                                <div style="height: 175px">
+                                    <img src="{{ image3.imageUrl }}" alt="" class="img-fluid third-img" style="height: 100%; width: 100%; object-fit: cover">
+                                </div>
+                            </a>
+                        </div>
+                    {% endif %}
+                    {% if image4 != null %}
+                        <div class="col-md-6 col-6">
+                            <a href="{{ image4.imageUrl }}" class="link-dark" style="object-fit: cover">
+                                <div style="height: 175px">
+                                    <img src="{{ image4.imageUrl }}" alt="" class="img-fluid third-img rounded-bottomright4" style="height: 100%; width: 100%; object-fit: cover">
+                                </div>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- HEADER BAR (type + price) -->
+        <div class="mb-3">
+            {% if property.header != '' %}
+                <h5 class="text-uppercase mb-1">{{ property.header }}</h5>
+            {% endif %}
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="h5 mb-0 text-danger fw-bold">{{ property.type }}</span>
+                    <span class="badge-soft">
+          {% if property.typeLocation == 'sell' %} À VENDRE {% else %} À LOUER {% endif %}
+        </span>
+                </div>
+
+                <div class="h2 mb-0">
+                    <span class="price">{{ property.price|format_currency('USD', {fraction_digit: 0}) }}</span>
+                    {% if property.typeLocation != 'sell' %}
+                        <span class="text-muted fw-light">
+            / {% if property.periodicity == 'Daily' %} Jour {% else %} Mois {% endif %}
+          </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+            <div class="row g-2 g-md-3 spec-grid">
+                <div class="col-6 col-md-3">
+                    <div class="stat-tile">
+                        <span class="icon-wrap"><i class="mdi mdi-ruler-square"></i></span>
+                        <div>
+                            <div class="label">Surface</div>
+                            <div class="value">
+                                {% if property.surfaceArea != 0.00 %}
+                                    {{ property.surfaceArea }}<span class="unit">m²</span>
+                                {% else %}-{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="stat-tile">
+                        <span class="icon-wrap"><i class="mdi mdi-sofa-outline"></i></span>
+                        <div>
+                            <div class="label">Salon(s)</div>
+                            <div class="value">{{ property.livingroom|default('-') }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="stat-tile">
+                        <span class="icon-wrap"><i class="mdi mdi-bed-outline"></i></span>
+                        <div>
+                            <div class="label">Chambre(s)</div>
+                            <div class="value">{{ property.bedroom|default('-') }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="stat-tile">
+                        <span class="icon-wrap"><i class="mdi mdi-shower"></i></span>
+                        <div>
+                            <div class="label">Salles de bain</div>
+                            <div class="value">{{ property.bathroom|default('-') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider mb-2"></div>
+
+        <div class="row g-2">
+            <!-- LEFT CONTENT -->
+            <div class="col-md-7 pe-md-4">
+                <!-- Description -->
+                <section class="mb-lg-5">
+                    <h5 class="section-title mb-3">Description</h5>
+                    {% if property.header != '' %}
+                        <p class="text-uppercase mb-2">{{ property.header }}</p>
+                    {% endif %}
+                    <p class="text-muted fw-light">{{ property.title }}</p>
+                </section>
+
+                <!-- Amenities -->
+                <section class="mb-lg-5">
+                    <h5 class="section-title mb-3">Équipements</h5>
+                    <div class="row g-2">
+                        {% if property.furniture %}<div class="col-12 col-sm-6"><div class="amenity"><i class="mdi mdi-home"></i><span>Meublés</span></div></div>{% endif %}
+                        {% if property.airCondition %}<div class="col-12 col-sm-6"><div class="amenity"><i class="mdi mdi-air-conditioner"></i><span>Climatisation</span></div></div>{% endif %}
+                        {% if property.pool %}<div class="col-12 col-sm-6"><div class="amenity"><i class="mdi mdi-pool"></i><span>Piscine</span></div></div>{% endif %}
+                        {% if property.openspaceroof %}<div class="col-12 col-sm-6"><div class="amenity"><i class="mdi mdi-home-roof"></i><span>Espace sur le toit</span></div></div>{% endif %}
+                        {% if property.securityguard %}<div class="col-12 col-sm-6"><div class="amenity"><i class="mdi mdi-police-badge"></i><span>Agent de sécurité</span></div></div>{% endif %}
+                        {% if property.garden %}<div class="col-12 col-sm-6"><div class="amenity"><i class="mdi mdi-leaf"></i><span>Jardin</span></div></div>{% endif %}
+                        {% if property.wifi %}<div class="col-12 col-sm-6"><div class="amenity"><i class="mdi mdi-wifi"></i><span>Wifi</span></div></div>{% endif %}
+                        {% if property.parking %}<div class="col-12 col-sm-6"><div class="amenity"><i class="mdi mdi-parking"></i><span>Parking</span></div></div>{% endif %}
+                        {% if property.exteriortoilet %}<div class="col-12 col-sm-6"><div class="amenity"><i class="mdi mdi-scale-bathroom"></i><span>Toilette extérieure</span></div></div>{% endif %}
+                    </div>
+                </section>
+
+                {% if services is not empty %}
+                    <section class="mb-4">
+                        <h5 class="section-title mb-3">Services supplémentaires</h5>
+                        {% for service in services %}
+                            <div class="form-check border p-3 p-md-4 rounded-12 mb-2">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" id="service-{{ service.id }}" name="service-{{ service.id }}">
+                                <label class="form-check-label w-100 d-flex align-items-center" for="service-{{ service.id }}">
+                                    <span class="fw-semibold">{{ service.name }}</span>
+                                    <span class="ms-auto fw-bold h6 mb-0 text-dark">+${{ service.price }}</span>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+
+                <!-- Map -->
+                <section class="mb-4">
+                    <h5 class="section-title mb-3">Localisation</h5>
+                    <iframe
+                            src="https://maps.google.com/maps?&q={{ property.commune.name }} {{ property.propertyCountry.name }}&output=embed"
+                            class="rounded-12 w-100" height="380" style="border:0" allowfullscreen loading="lazy"></iframe>
+                </section>
+
+                <!-- Reviews -->
+
+                <section class="mb-5">
+                    <h5 class="section-title mb-3">Évaluation de l’agent</h5>
+
+                    <div class="rating-card p-3 p-md-4">
+                        <div class="row g-4 align-items-center">
+                            <!-- Summary -->
+                            <div class="col-md-3">
+                                <div class="score-wrap d-flex flex-column align-items-center justify-content-center h-100">
+                                    <div class="score-badge mb-3">
+                                        <i class="mdi mdi-star"></i>
+                                        <span class="score">{{ averageRating|number_format(1, '.') }}</span>
+                                    </div>
+                                    <p class="score-meta mb-0">
+                                        Basé sur <span class="text-danger fw-semibold">{{ ratingCount }}</span> avis
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Form / Message -->
+                            <div class="col-md-9 ps-md-4">
+                                {% if is_granted('IS_AUTHENTICATED') %}
+                                    <form id="ratingForm" class="rating-form p-3 p-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold mb-1">Notez votre expérience :</label>
+                                            <div id="starRating" class="star-rating{% if ratingExist is not null %} readonly{% endif %}">
+                                                {% for i in 1..5 %}
+                                                    <span
+                                                            class="star{% if ratingExist is not null and i <= ratingExist.score %} selected{% endif %}"
+                                                            data-value="{{ i }}">
+                    <i class="mdi mdi-star"></i>
+                  </span>
+                                                {% endfor %}
+                                            </div>
+                                            <input type="hidden" id="ratingInput" name="rating" value="0">
+                                        </div>
+
+                                        <div class="mb-3 {% if ratingExist is not null %} d-none{% endif %}">
+                                            <label for="comment" class="form-label fw-semibold">Commentaire (optionnel)</label>
+                                            <textarea id="comment" name="comment" rows="2" class="form-control form-control-sm rounded-3"
+                                                      placeholder="Dites-nous ce que vous avez pensé de l’agent…"></textarea>
+                                        </div>
+
+                                        {% if ratingExist is not null %}
+                                            <div class="alert alert-warning border-0 d-flex align-items-start shadow-sm" style="background:#fffbe6;">
+                                                <i class="mdi mdi-star-circle text-warning fs-3 me-2"></i>
+                                                <div>
+                                                    <strong class="text-dark">Merci pour votre avis !</strong><br>
+                                                    <span class="text-dark">Votre retour a bien été pris en compte.</span><br>
+                                                    <span class="small text-danger">Vous ne pouvez noter qu’une seule fois ce bien.</span>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <button id="submitRatingBtn" type="submit"
+                                                    class="btn btn-rate rounded-pill fw-bold d-inline-flex align-items-center gap-2 text-white btn-sm">
+                                                <i class="mdi mdi-star-outline"></i>
+                                                Envoyer mon avis
+                                                <span id="ratingBtnLoader" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                {% else %}
+                                    <div class="alert alert-light border d-flex flex-column align-items-center text-center mt-2 p-4 rounded-4">
+                                        <i class="mdi mdi-lock fs-3 mb-1"></i>
+                                        <div>Veuillez vous connecter pour laisser une évaluation.</div>
+                                        <a onclick="loginToContinuer()" class="link-danger fw-semibold mt-1">Cliquer ici</a> pour vous connecter.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- RIGHT SIDEBAR -->
+            <aside class="col-md-5 mt-2 mt-md-0">
+                <div class="sticky-card">
+
+                    <!-- Share -->
+                    <div class="border p-3 p-md-4 rounded-12 mb-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="text-uppercase fw-bold mb-0 text-muted">
+                                <i class="mdi mdi-share-circle me-1"></i> Partager la propriété
+                            </h6>
+                            <div class="d-flex align-items-center gap-2">
+                                <a class="social-link bg-primary"
+                                   href="https://www.facebook.com/sharer/sharer.php?u{{ absolute_url(path('app_property_details',{propertyUuid: property.uuidProperty}))}}"
+                                   target="_blank" aria-label="Partager sur Facebook"><i class="mdi mdi-facebook"></i></a>
+                                <a class="social-link" style="background:#E1306C"
+                                   href="https://www.instagram.com/?url={{ absolute_url(path('app_property_details',{propertyUuid: property.uuidProperty})|url_encode)}}"
+                                   target="_blank" aria-label="Partager sur Instagram"><i class="mdi mdi-instagram"></i></a>
+                                <a class="social-link" style="background: #25D366"
+                                   href="https://api.whatsapp.com/send?text={{ absolute_url(path('app_property_details',{propertyUuid: property.uuidProperty}))|url_encode}}"
+                                   target="_blank" aria-label="Partager sur WhatsApp"><i class="mdi mdi-whatsapp"></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if property.periodicity == "Monthly" %}
+                        <!-- Agent card -->
+                        <div class="border p-3 p-md-4 rounded-12 mb-3">
+                            <p class="h6 text-muted mb-2">Agent immobilier</p>
+
+                            {% if is_granted('IS_AUTHENTICATED') %}
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex">
+                                        {% if property.user.picture %}
+                                            <img src="{{ property.user.picture }}" class="rounded-12" alt="" style="width:64px;height:64px;object-fit:cover;">
+                                        {% else %}
+                                            <img src="{{ asset('assets/img/imageIcon.png') }}" class="rounded-12" alt="" style="width:64px;height:64px;object-fit:cover;">
+                                        {% endif %}
+                                        <div class="ms-3">
+                                            <h5 class="fw-bold mb-1">
+                                                {{ property.user.firstname }} {{ property.user.name }}
+                                                <i class="mdi mdi-shield-check text-success ms-1"></i>
+                                            </h5>
+                                            <p class="text-muted small mb-0">Actif depuis {{ property.user.createdAt|date('Y') }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a class="text-muted h5 mb-0" {% if property.user.fbckLink %}href="{{ property.user.fbckLink }}"{% else %}href="#"{% endif %} target="_blank"><i class="mdi mdi-facebook"></i></a>
+                                        <a class="text-muted h5 mb-0" {% if property.user.instaGLink %}href="{{ property.user.instaGLink }}"{% else %}href="#"{% endif %} target="_blank"><i class="mdi mdi-instagram"></i></a>
+                                    </div>
+                                </div>
+                                {% if property.relationshipToProperty %}
+                                    <p class="mb-2"><i class="mdi mdi-information text-success me-1"></i>{{ property.relationshipToProperty.label() }}</p>
+                                {% endif %}
+
+                                <div class="d-flex gap-2 mb-2">
+                                    <a href="#" onclick="viewAgentProfil('{{ property.user.id }}')" class="btn btn-danger btn-sm w-50 rounded-pill" data-bs-toggle="modal" data-bs-target="#modalCenter">
+                                        <i class="mdi mdi-account me-1"></i> Profil agent
+                                    </a>
+                                    <a href="{{ path('app_messenger_chat', {propertyUuid: property.UuidProperty }) }}" class="btn btn-outline-danger btn-sm w-50 rounded-pill">
+                                        <i class="mdi mdi-message me-1"></i> Contacter
+                                    </a>
+                                </div>
+                                {% if property.propertyStatus.name == 'Indisponible' or property.propertyStatus.name == 'Vendu' %}
+                                    <a class="btn btn-warning btn-sm rounded-pill w-100" href="#">
+                                        <i class="mdi mdi-whatsapp me-1 fs-5"></i> Impossible de contacter l'agent pour le moment
+                                    </a>
+                                {% else %}
+                                    <a class="btn btn-success btn-sm rounded-pill w-100"
+                                       href="https://wa.me/243{{ property.user.agentPhone }}?text={{ absolute_url(path('app_property_details',{propertyUuid: property.uuidProperty}))|url_encode}} Bonjour, Je suis interéssé par cette annonce"
+                                       target="_blank" {% if property.user.agentPhone is empty %}role="link" aria-disabled="true"{% endif %}>
+                                        <i class="mdi mdi-whatsapp me-1 fs-5"></i> Contacter sur WhatsApp
+                                    </a>
+                                {% endif %}
+
+
+
+                            {% else %}
+                                <hr>
+                                <div class="blur-container">
+                                    <div class="blur-background border p-3 rounded-12">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="d-flex">
+                                                {% if property.user.picture %}
+                                                    <img src="{{ property.user.picture }}" class="rounded-12" alt="" style="width:64px;height:64px;object-fit:cover;">
+                                                {% else %}
+                                                    <img src="{{ asset('assets/img/imageIcon.png') }}" class="rounded-12" alt="" style="width:64px;height:64px;object-fit:cover;">
+                                                {% endif %}
+                                                <div class="ms-3">
+                                                    <h5 class="fw-bold mb-1">{{ property.user.firstname }} {{ property.user.name }} <i class="mdi mdi-shield-check text-success ms-1"></i></h5>
+                                                    <p class="text-muted small mb-0">Actif depuis {{ property.user.createdAt|date('Y') }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <a class="text-muted h5 mb-0" href="#"><i class="mdi mdi-facebook"></i></a>
+                                                <a class="text-muted h5 mb-0" href="#"><i class="mdi mdi-instagram"></i></a>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a class="btn btn-danger btn-sm w-50 rounded-pill"><i class="mdi mdi-account me-1"></i> Profil agent</a>
+                                            <a class="btn btn-outline-danger btn-sm w-50 rounded-pill"><i class="mdi mdi-message me-1"></i> Contacter</a>
+                                        </div>
+                                        <a class="btn btn-success btn-sm rounded-pill w-100 mt-2"><i class="mdi mdi-whatsapp me-1 fs-5"></i> WhatsApp</a>
+                                    </div>
+                                    <div class="overlay-text rounded-12">
+                                        <div class="text-center">
+                                            <i class="mdi mdi-lock fs-1 text-dark mb-2"></i><br>
+                                            <a href="#" onclick="loginToContinuer()" class="btn btn-danger rounded-pill px-4 fw-semibold">Connectez-vous pour voir le profil</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Report -->
+                        <div class="rounded-12 p-3 p-md-4 bg-light text-center">
+                            <i class="mdi mdi-information fs-4 text-muted"></i>
+                            <h6 class="text-muted fw-bold mt-1">Le bien n'est plus disponible ?</h6>
+                            <p class="text-muted small">
+                                Si l’annonce n’est plus d’actualité, merci de nous le signaler afin de maintenir la plateforme à jour.
+                            </p>
+                            <button
+                                    class="btn btn-sm btn-outline-danger rounded-pill"
+                                    {% if is_granted('IS_AUTHENTICATED') %}
+                                onclick="reportProperty({{ property.id }})"
+                            {% else %}
+                                onclick="loginToContinuer()"
+                                    {% endif %}>
+                                <i class="mdi mdi-flag me-1"></i> Signaler
+                            </button>
+                            <p id="successfulMsg" class="small text-success mb-0"></p>
+                        </div>
+                    {% else %}
+                        {# Airbnb-like reservation include stays as-is #}
+                        {% include 'property_details/_reservation_airbnb.html.twig' %}
+
+                        <div class="border p-3 p-md-4 rounded-12">
+                            <p class="small text-muted mb-2">Host</p>
+                            <div class="d-flex">
+                                {% if property.user.picture %}
+                                    <img src="{{ property.user.picture }}" class="rounded-12" alt="" style="width:64px;height:64px;object-fit:cover;">
+                                {% else %}
+                                    <img src="{{ asset('assets/img/imageIcon.png') }}" class="rounded-12" alt="" style="width:64px;height:64px;object-fit:cover;">
+                                {% endif %}
+                                <div class="ms-3">
+                                    <h5 class="fw-bold mb-1">{{ property.user.firstname }} {{ property.user.name }} <i class="mdi mdi-shield-check text-success ms-1"></i></h5>
+                                    <p class="text-muted small mb-0">Actif depuis {{ property.user.createdAt|date('Y') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </aside>
+        </div>
+    </div>
+
+        <section class="container apartments py-5">
+            <h4 class="fw-bold mb-4">Autres propriétés publiées par l’agent</h4>
+
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-lg-4">
+                {% for p in properties %}
+                    {% if p.id != property.id %}
+                        <div class="col">
+                            <a href="{{ path('app_property_details', { propertyUuid: p.uuidProperty }) }}"
+                               class="text-decoration-none text-reset">
+                                <article class="ap-card card border-0 rounded-4 overflow-hidden h-100 shadow-sm">
+
+                                    <!-- Media -->
+                                    <div class="ap-media position-relative ratio ratio-16x9">
+                                        {% if p.image %}
+                                            <img src="{{ p.image }}" alt="{{ p.type|default('Propriété') }}"
+                                                 class="w-100 h-100" style="object-fit:cover;" loading="lazy" decoding="async">
+                                        {% else %}
+                                            <div class="placeholder w-100 h-100 d-flex align-items-center justify-content-center bg-light">
+                                                <img src="{{ asset('assets/img/smart-immo-h.png') }}" class="opacity-25" alt="Smart-Immo" style="height:46px;">
+                                            </div>
+                                        {% endif %}
+
+                                        <div class="ap-chips">
+                                            <span class="ap-chip ap-status">
+                                              {{ p.typeLocation == 'sell' ? 'À vendre' : 'À louer' }}
+                                            </span>
+                                            {% if p.type %}
+                                                <span class="ap-chip ap-type text-uppercase">{{ p.type }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <!-- Body -->
+                                    <div class="card-body p-3">
+                                        {% set bedrooms = p.bedroom|default(0) %}
+                                        {% set bathrooms = p.bathroom|default(0) %}
+                                        {% set area = p.surfaceArea|default(0) %}
+
+                                        <div class="ap-spec d-flex flex-wrap mb-2 small gap-2">
+                                            {% if bedrooms > 0 %}
+                                                <span class="pill"><i class="mdi mdi-bed-outline me-1"></i>{{ bedrooms }} ch</span>
+                                            {% endif %}
+                                            {% if bathrooms > 0 %}
+                                                <span class="pill"><i class="mdi mdi-shower me-1"></i>{{ bathrooms }} sdb</span>
+                                            {% endif %}
+                                            <span class="pill"><i class="mdi mdi-ruler-square me-1"></i>{{ area > 0 ? area : '-' }} m²</span>
+                                        </div>
+
+                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                            <!-- Price (can grow) -->
+                                            <div class="h6 mb-0 text-danger fw-bold me-2 flex-grow-1">
+                                                {{ p.price|format_currency('USD', { fraction_digit: 0 }) }}
+                                                {% if p.typeLocation != 'sell' and p.periodicity is defined and p.periodicity %}
+                                                    <span class="text-muted small fw-normal">
+                                                        / {{ p.periodicity == 'Daily' ? 'Jour' : 'Mois' }}
+                                                      </span>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Badge (doesn't grow; wraps below on small screens) -->
+                                            {% if p.publishAt is defined and p.publishAt %}
+                                                {% set days = (('now'|date('U') - (p.publishAt|date('U'))) / 86400)|round(0, 'floor') %}
+                                                {% if days <= 30 %}
+                                                    <span class="badge bg-white border text-danger shadow-sm flex-shrink-0 mt-1 mt-sm-0">
+                                                        Récent
+                                                      </span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+
+                                    </div>
+                                </article>
+                            </a>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="text-center pt-4">
+                <a href="{{ path('app_agent_property', { id: property.user.id }) }}"
+                   class="btn btn-outline-danger px-4 py-2 rounded-pill shadow-sm">
+                    <i class="mdi mdi-star mdi-spin me-2"></i> Voir les meilleures offres de cet agent
+                </a>
+            </div>
+        </section>
+    </div>
+
+        <script>
+        const stars = document.querySelectorAll('.star-rating .star');
+        const ratingInput = document.getElementById('ratingInput');
+        let currentRating = 0;
+
+        stars.forEach(star => {
+            star.addEventListener('mouseenter', () => {
+                const value = parseInt(star.dataset.value);
+                highlightStars(value);
+            });
+
+            star.addEventListener('mouseleave', () => {
+                highlightStars(currentRating);
+            });
+
+            star.addEventListener('click', () => {
+                currentRating = parseInt(star.dataset.value);
+                ratingInput.value = currentRating;
+                highlightStars(currentRating);
+            });
+        });
+
+        function highlightStars(value) {
+            stars.forEach(star => {
+                const starValue = parseInt(star.dataset.value);
+                star.classList.toggle('hovered', starValue <= value);
+                star.classList.toggle('selected', starValue <= currentRating);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const ratingForm = document.getElementById('ratingForm');
+            const commentInput = document.getElementById('comment');
+            const submitBtn = document.getElementById('submitRatingBtn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoader = document.getElementById('ratingBtnLoader');
+            const propertyId = '{{ property.id }}';
+            const url = "{{ path('app_rating', {'id': 'placeholder'}) }}".replace('placeholder', propertyId);
+
+            ratingForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                // Débogage : début de la soumission
+                console.log('Début de la soumission du formulaire de rating');
+
+                // Récupère la note
+                const rating = document.getElementById('ratingInput').value;
+                const comment = commentInput.value;
+
+                // Débogage : valeurs récupérées
+                console.log('Note sélectionnée :', rating);
+                console.log('Commentaire :', comment);
+
+                // Désactive le bouton et affiche le loader
+                submitBtn.disabled = true;
+                btnText.classList.add('d-none');
+                btnLoader.classList.remove('d-none');
+
+                // Création de l'objet FormData
+                const formData = new FormData();
+                formData.append('rating', rating);
+                formData.append('comment', comment);
+
+                // Débogage : données envoyées
+                console.log('Données envoyées :', Array.from(formData.entries()));
+
+                // Envoi de la requête AJAX
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    console.log('Réponse brute reçue :', response);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Réponse JSON reçue :', data);
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Merci !',
+                            text: 'Votre avis a bien été enregistré',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        ratingForm.reset();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: data.message || 'Une erreur est survenue'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la requête AJAX :', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Une erreur est survenue lors de l\'envoi de votre avis'
+                    });
+                })
+                .finally(() => {
+                    // Réactive le bouton et masque le loader
+                    btnText.textContent = 'Merci pour votre avis';
+                    btnText.classList.remove('d-none');
+                    btnLoader.classList.add('d-none');
+                    console.log('Fin de la soumission du formulaire de rating');
+                });
+            %});
+        });
+    </script>
+    <script>
+        function loginToContinuer(){
+            const property = '{{ property.id }}'
+            window.location.href = replacePlaceholder("{{ path('app_property_save_for_login', {'property': 'placeholder'}) }}", property);
+        }
+    </script>
+    <script>
+
+        {% if is_granted('IS_AUTHENTICATED') %}
+        function reportProperty(id) {
+            var url = "{{ path('app_property_report_unavailable_property', {'id': 'placeholder'}) }}";
+            url = url.replace("placeholder", id);
+            const msg = '<span class="mdi mdi-emoticon-happy me-1"></span>Merci, nous tenons compte de votre alerte.';
+            $.ajax({
+                url: url,
+                type: "post",
+                data: "user="+'{{ app.user.id }}',
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                },
+                success: function (data) {
+                    $("#successfulMsg").html(msg);
+                    setInterval(function() {
+                        $("#successfulMsg").html('');
+                    }, 10000);
+                }
+            });
+            return false;
+        }
+        {% endif %}
+    </script>
+    <script>
+        function saveFavoris(id) {
+            {% if is_granted('IS_AUTHENTICATED') %}
+                const url = "{{ path('app_listing_favoris_management') }}";
+                const data = "propertyId=" + id + "&" + "user=" + {{ app.user.id }};
+                const content = '<div class="text-center"> <div class="spinner-border text-danger m-1" style="width: 1rem; height: 1rem;" role="status"> <span class="visually-hidden">Loading...</span> </div>';
+
+                $.ajax({
+                    url: url,
+                    type: "post",
+                    data: data,
+                    beforeSend: function () {
+                        $("#favorisId").html(content);
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        alert(xhr.status);
+                    },
+                    success: function (data) {
+                        $("#favorisId").html(data);
+                        window.location.reload()
+                    }
+                });
+            {% else %}
+                loginToContinuer()
+            {% endif %}
+        }
+    </script>
+    <script>
+        var dummy = document.createElement('input'),
+            text = window.location.href;
+
+        document.body.appendChild(dummy);
+        dummy.value = text;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+    </script>
+    <script>
+        function viewAgentProfil(id) {
+            let url = replacePlaceholder("{{ path('app_property_details_view_agent_detail', {'id': 'placeholder'}) }}", id);
+            getContentForModal(url, "PROFIL AGENT");
+        }
+    </script>
+{% endblock %}

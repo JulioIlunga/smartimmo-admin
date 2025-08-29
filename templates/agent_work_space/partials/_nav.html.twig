@@ -1,0 +1,59 @@
+<a class="sidebar-brand text-decoration-none" href="{{ path('app_agent_work_space') }}">
+    <div class="sidebar-brand-icon p-4 img-center">
+        <img src="{{ asset('assets/img/smart-immo-h.png') }}" class="img-fluid logo">
+    </div>
+</a>
+<p class="px-3 fw-bold mt-3">Menu</p>
+<!-- Nav Item - Dashboard -->
+<li class="nav-item">
+    <a class="nav-link text-muted {% if app.request.pathinfo == "/agent/work/space" %} rounded-9 me-2 bg-danger {% endif %} p-3" href="{{ path('app_agent_work_space') }}">
+        <span class="mdi mdi-view-dashboard pe-1"></span>
+        <span class="">Tableau de bord</span>
+    </a>
+</li>
+
+<div id="navAdmin">
+    
+    {# ======================================================= version telephone =========================================== #}
+    {% if is_granted('ROLE_ADMIN') %}
+        <ul class="nav nav-pills flex-column ps-3" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if app.request.pathinfo == '/admin/smart/immo/' %} active {% else %} text-muted {% endif %}"
+                   href="{{ path('app_smart_immo_admin') }}">
+                    <span class="mdi mdi-bullhorn pe-1"></span> Annonces en ligne
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if app.request.pathinfo == '/admin/smart/immo/location' %} active {% else %} text-muted {% endif %}"
+                   href="{{ path('app_location') }}">
+                    <span class="mdi mdi-map-marker-multiple me-1"></span> Villes
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if app.request.pathinfo == '/admin/smart/immo/real/estate/agent' %} active {% else %} text-muted {% endif %}"
+                   href="{{ path('app_smart_immo_admin_real_estate_agent') }}">
+                    <span class="mdi mdi-account-tie-outline me-1"></span> Agents Immobiliers
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if app.request.pathinfo == '/admin/smart/immo/real/estate/customer' %} active {% else %} text-muted {% endif %}"
+                   href="{{ path('app_smart_immo_admin_real_estate_customer') }}">
+                    <span class="mdi mdi-account-group me-1"></span> Liste des clients
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if app.request.pathinfo == '/admin/smart/immo/config' %} active {% else %} text-muted {% endif %}"
+                   href="{{ path('app_admin_config') }}">
+                    <span class="mdi mdi-cog pe-1"></span> Configuration
+                </a>
+            </li>
+        </ul>
+    {% endif %}
+
+</div>
+<li class="nav-item">
+    <a class="nav-link text-muted rounded-9 p-3" href="{{ path('app_account', {show: 'profil'}) }}">
+        <span class="mdi mdi-account"></span>
+        <span class="">Mon profil</span>
+    </a>
+</li>

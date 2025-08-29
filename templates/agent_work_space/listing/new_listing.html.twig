@@ -1,0 +1,253 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Créer nouvelle annonce{% endblock %}
+
+{% block bodyHeader %}
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+        <div>
+            <h2 class="fw-bolder">Créer nouvelle annonce</h2>
+            <p class="text-muted fw-light">Entrez les informations de la propriété</p>
+        </div>
+        <img src="{{ asset('assets/img/add-list.svg') }}" class="img-fluid" style="max-width:120px;" alt="Ajouter">
+    </div>
+{% endblock %}
+
+{% block bodyContent %}
+    <div class="container px-0 px-md-2">
+        <div class="wizard-card card border-0 shadow-sm rounded-4 mx-auto" style="max-width: 920px;">
+            <!-- Top bar -->
+            <div class="d-flex align-items-center justify-content-between p-3 p-md-4 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-danger-subtle text-danger fw-semibold rounded-pill px-3 py-2">
+                      Étape {{ step|default(1) }}/5
+                    </span>
+                </div>
+                {# Actions row #}
+                <div class="d-flex align-items-center gap-2">
+
+                    {# Your existing Back/Cancel buttons… #}
+                    {% if step|default(1) > 1 %}
+                        <a href="{{ path('app_agent_listing_back_button_admission',{code: property.code, step: step}) }}"
+                           class="btn btn-light btn-sm rounded-pill d-inline-flex align-items-center">
+                            <i class="mdi mdi-arrow-left me-1"></i>
+                            {% if step == 6 %}Revenir pour modifier{% else %}Retour{% endif %}
+                        </a>
+                    {% else %}
+                        <a href="{{ path('app_agent_work_space_listing') }}"
+                           class="btn btn-outline-danger btn-sm rounded-pill d-inline-flex align-items-center">
+                            <i class="mdi mdi-cancel me-1"></i>
+                            Annuler
+                        </a>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            {% if step == 1 %}
+                <!-- Progress -->
+                <div class="px-3 px-md-4 pt-3">
+                    <div class="progress setup-progress" style="height:8px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width:11.1%" aria-valuenow="11" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                {# Fallback id for brand-new properties #}
+                {% set pid = property.id ?? 'new' %}
+
+                <form action="{{ path('app_agent_listing_new_listing_save', { id: pid }) }}"
+                      id="registration-form" enctype="multipart/form-data" method="post">
+                    <input type="hidden" name="step" value="1"/>
+
+                    <div class="p-3 p-md-4">
+                        <div class="mx-auto" style="max-width:680px;">
+                            <!-- Header -->
+                            <h3 class="fw-bold text-center mb-4">Quel type d’endroit proposez-vous&nbsp;?</h3>
+
+                            <!-- Titre -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Titre</label>
+                                <textarea name="header-{{ pid }}"
+                                          class="form-control rounded-3"
+                                          rows="2" maxlength="50"
+                                          placeholder="Ex: Appartement de luxe à Kalemie" required>{{ property.header }}</textarea>
+                                <div class="form-text">50 caractères max.</div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Description de la propriété</label>
+                                <textarea name="title-{{ pid }}"
+                                          class="form-control rounded-3"
+                                          rows="3"
+                                          placeholder="Ex: 2 chambres, 1 salon, proche des commerces…" required>{{ property.title }}</textarea>
+                            </div>
+
+                            <!-- Type de propriété -->
+                            <div class="form-floating mb-3 border p-2 rounded-3">
+                                <select class="form-select fw-bold border-0" name="type-{{ pid }}" required>
+                                    <option value="Appartement" {% if property.type == 'Appartement' %}selected{% endif %}>Appartement</option>
+                                    <option value="Maison" {% if property.type == 'Maison' %}selected{% endif %}>Maison</option>
+                                    <option value="Villa" {% if property.type == 'Villa' %}selected{% endif %}>Villa</option>
+                                    <option value="Studio" {% if property.type == 'Studio' %}selected{% endif %}>Studio</option>
+                                    <option value="Local commercial" {% if property.type == 'Local commercial' %}selected{% endif %}>Local commercial</option>
+                                    <option value="Terrain" {% if property.type == 'Terrain' %}selected{% endif %}>Terrain</option>
+                                    <option value="Ferme" {% if property.type == 'Ferme' %}selected{% endif %}>Ferme</option>
+                                </select>
+                                <label class="px-2">Choisissez un type de propriété</label>
+                            </div>
+
+                            <!-- Type de location -->
+                            <div class="form-floating mb-3 border p-2 rounded-3">
+                                <select class="form-select fw-bold border-0" name="typeLocation-{{ pid }}" required>
+                                    <option value="rent" {% if property.typeLocation == 'rent' %}selected{% endif %}>À louer</option>
+                                    <option value="sell" {% if property.typeLocation == 'sell' %}selected{% endif %}>À vendre</option>
+                                </select>
+                                <label class="px-2">Type de mise en location</label>
+                            </div>
+
+                            <!-- Prix -->
+                            <label class="form-label fw-semibold">Prix (USD)</label>
+                            <div class="row g-2 align-items-center mb-3">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text">USD</span>
+                                        <input name="price-{{ pid }}" type="number" min="0"
+                                               class="form-control"
+                                               placeholder="Prix" value="{{ property.price }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <input name="currency-{{ pid }}" type="text" class="form-control" value="USD" readonly>
+                                </div>
+                            </div>
+
+                            {# Périodicité #}
+                            {% set isMonthly = property.periodicity is defined and property.periodicity == 'Monthly' %}
+                            {% set isDaily   = property.periodicity is defined and property.periodicity == 'Daily' %}
+
+                            <div class="mb-2">
+                                <p class="text-muted mb-1">Périodicité</p>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="radio"
+                                               value="Monthly"
+                                               name="periodicity-{{ pid }}"
+                                               id="periodicity1"
+                                               {% if isMonthly %}checked{% endif %}>
+                                        <label class="form-check-label" for="periodicity1">Mensuelle</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="radio"
+                                               value="Daily"
+                                               name="periodicity-{{ pid }}"
+                                               id="periodicity2"
+                                               {% if isDaily %}checked{% endif %}>
+                                        <label class="form-check-label" for="periodicity2">Journalière</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Prix de visite (Mensuel) -->
+                            <div id="priceOfVisit" class="{% if not isMonthly %}d-none{% endif %}">
+                                <label class="form-label fw-semibold">Prix de la visite (USD)</label>
+                                <div class="row g-2 align-items-center mb-2">
+                                    <div class="col">
+                                        <div class="input-group">
+                                            <span class="input-group-text">USD</span>
+                                            <input name="priceOfVisit-{{ pid }}" type="number" min="0" max="20"
+                                                   class="form-control" placeholder="Montant de la visite"
+                                                   value="{{ property.priceOfVisit }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <input name="currency-{{ pid }}" type="text" class="form-control" value="USD" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-text">Le montant à payer pour la visite (plafonné à 20 USD).</div>
+                            </div>
+
+                            <!-- Pourcentage (Journalier) -->
+                            <div id="percent" class="{% if not isDaily %}d-none{% endif %}">
+                                <label class="form-label fw-semibold">Acompte avant réservation</label>
+                                <div class="form-floating border p-2 rounded-3">
+                                    <select class="form-select fw-bold border-0" name="percentage-{{ pid }}">
+                                        {% for p in [30,40,50,60,70,80,90,100] %}
+                                            <option value="{{ p }}"
+                                                    {% if property.pourcerntageOfBooking is defined and property.pourcerntageOfBooking == p %}selected{% elseif property.pourcerntageOfBooking is not defined and p == 30 %}selected{% endif %}>
+                                                {{ p }}%
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <label class="px-2">Choisissez un pourcentage</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer actions -->
+                    <div class="p-3 p-md-4 border-top">
+                        <div class="mx-auto" style="max-width:680px;">
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill btn-setup">
+                                Sauvegarder et Suivant &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="{{ asset('assets/libs/tinymce/tinymce.min.js') }}"></script>
+    <script src="{{ asset('assets/pages/form-editor.init.js') }}"></script>
+    <script>
+        (function () {
+            const monthly = document.getElementById('periodicity1');
+            const daily   = document.getElementById('periodicity2');
+            const pov     = document.getElementById('priceOfVisit');
+            const perc    = document.getElementById('percent');
+
+            function toggleBlocks() {
+                if (monthly && monthly.checked) {
+                    pov.classList.remove('d-none');
+                    perc.classList.add('d-none');
+                } else if (daily && daily.checked) {
+                    perc.classList.remove('d-none');
+                    pov.classList.add('d-none');
+                } else {
+                    // If neither selected yet, hide both
+                    pov.classList.add('d-none');
+                    perc.classList.add('d-none');
+                }
+            }
+
+            if (monthly) monthly.addEventListener('change', toggleBlocks);
+            if (daily)   daily.addEventListener('change', toggleBlocks);
+            toggleBlocks();
+        })();
+    </script>
+
+    <script>
+        function showPercentage(id) {
+            const val = document.querySelector('input[name="periodicity-' + id + '"]:checked')?.value;
+            const visit = document.getElementById('priceOfVisit');
+            const percent = document.getElementById('percent');
+            if (!visit || !percent) return;
+
+            if (val === 'Monthly') {
+                visit.classList.remove('d-none');
+                percent.classList.add('d-none');
+            } else if (val === 'Daily') {
+                percent.classList.remove('d-none');
+                visit.classList.add('d-none');
+            }
+        }
+        // Initialize on load (keeps UI in sync if periodicity already chosen)
+        document.addEventListener('DOMContentLoaded', function(){
+            showPercentage('{{ property.id }}');
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Mettre à niveau{% endblock %}
+{% block style %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+{% block bodyContent %}
+    <div class="container py-4 py-md-5">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <h4 class="fw-bold mb-3">Confirmer la mise à niveau</h4>
+
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-6">
+                        <div class="border rounded-4 p-3 h-100">
+                            <div class="text-dark fw-semibold small mb-1 bg-light rounded-3 p-2 mb-3">Plan actuel</div>
+                            <div class="h5 mb-1">
+                                {{ currentPlan ? currentPlan.name : 'Aucun' }}
+                            </div>
+                            {% if currentPlan %}
+                                <div class="text-muted small">
+                                    {{ currentPlan.monthlyPrice|number_format(0, '.', ' ') }} USD / mois
+                                </div>
+                            {% endif %}
+                            {% if app.user.creditWallet is defined %}
+                                <div class="mt-2 text-muted small">
+                                    <i class="mdi mdi-wallet-outline me-1"></i>
+                                    Vos crédits disponibles :
+                                    <span class="fw-semibold">{{ app.user.creditWallet.balanceCredits|default(0) }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded-4 p-3 h-100">
+                            <div class="text-white fw-semibold small mb-1 bg-success rounded-3 p-2 mb-3">Nouveau plan</div>
+                            <div class="h5 mb-1">
+                                {{ targetPlan.name }}
+                            </div>
+                            <div class="text-muted small">
+                                {{ targetPlan.monthlyPrice|number_format(0, '.', ' ') }} USD / mois
+                            </div>
+
+                            <div class="mt-2 text-muted small">
+                                <i class="mdi mdi-wallet-outline me-1"></i>
+                                Vos prochain crédits :
+                                <span class="fw-semibold">{{ targetPlan.monthlyCredit|default(0) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="alert alert-info rounded-4 mt-3">
+                    <i class="mdi mdi-information-outline me-1"></i>
+                    La mise à niveau prend effet immédiatement. Vos limites seront ajustées en conséquence.
+                </div>
+                    <button
+                        class="btn btn-danger btn-sm rounded-pill"
+                        onclick="PaymentHelper.pay({
+                                createUrl: '{{ path('app_payment_for_membership') }}',
+                                payload: { membership_id: {{ targetPlan.id }} },   // or your membership entity id
+                                button: this,
+                                timerSeconds: 300, // 5 minutes
+                                manualCheckUrl: (code) => `/transaction/check/manually/status/${code}`, // optional
+                                autoStatusUrl:   (code) => `/transaction/payment/status/${code}`,       // must return {status:'true'|'false'}
+                                successRedirect: '/agent/work/space',
+                                idleHtml: 'Choisir ce plan',
+                                loadingHtml: '<span class=&quot;spinner-border spinner-border-sm&quot; role=&quot;status&quot; aria-hidden=&quot;true&quot;></span>'
+                                })">
+                        Confirmer la mise à niveau
+                    </button>
+{#                </form>#}
+            </div>
+        </div>
+    </div>
+
+    {# Your helper (use {{ asset() }} if you move the file) #}
+    <script src="{{ asset('assets/js/payment-helper.js') }}"></script>
+
+
+{% endblock %}

@@ -1,0 +1,857 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Leads à réclamer{% endblock %}
+{% block style %}
+    <link href="{{ asset('assets/css/job-opportinuty.css') }}" rel="stylesheet">
+    {# jQuery (required by Select2) #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" defer></script>
+    {# Select2 CSS/JS #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.full.min.js" defer></script>
+    {# French i18n (optional) #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/i18n/fr.min.js" defer></script>
+
+    <style>
+        /* 🔥 Flashing "Nouveau" badge with gradient + glow */
+        .badge-flash-hot {
+            background: linear-gradient(135deg, #ff3d71, #ff7a59, #ffb84d);
+            color: #fff;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: .3rem .7rem;
+            font-size: .8rem;
+            text-transform: uppercase;
+            letter-spacing: .02em;
+            animation: hotPulse 1.6s ease-in-out infinite, hotGlow 3s linear infinite;
+            box-shadow: 0 0 12px rgba(255, 61, 113, 0.65);
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        /* Pulse grow/shrink */
+        @keyframes hotPulse {
+            0%,100% { transform: scale(1);   box-shadow: 0 0 10px rgba(255, 61, 113, 0.6); }
+            50%     { transform: scale(1.12); box-shadow: 0 0 22px rgba(255, 122, 89, 0.85); }
+        }
+
+        /* Gradient shimmer */
+        @keyframes hotGlow {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+    </style>
+{% endblock %}
+{% block bodyHeader %}
+    <div class="dashbar d-flex align-items-center flex-wrap gap-3">
+        <!-- Left: cities -->
+        <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+            <span class="dash-icon mdi mdi-map-marker-multiple-outline fs-5"></span>
+
+            {% set covered = app.user.coveredCities ?? [] %}
+            <div class="d-flex align-items-center flex-wrap gap-2 min-w-0">
+                <h6 class="mb-0 fw-bold me-1">Villes couvertes</h6>
+
+                <div class="dash-cities d-flex align-items-center flex-wrap gap-1 min-w-0">
+                    {% if covered|length > 0 %}
+                        {% for c in covered %}
+                            <span class="badge rounded-pill text-bg-light">{{ c.name }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted small">Aucune ville sélectionnée</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: button -->
+        <div class="ms-auto">
+            <button class="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#coveredCitiesModal">
+                <i class="mdi mdi-map-marker-plus-outline me-1"></i>
+                Gérer les villes couvertes
+            </button>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block bodyContent %}
+
+    <div class="m-2">
+        {# Leads header + CTAs #}
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <h4 class="mb-0 fw-bold">Leads disponibles</h4>
+
+            {# Resolve membership from explicit var OR user.subscriptions #}
+            {% set m = membership ?? app.user.subscriptions ?? null %}
+            {% set hasMembership = m and (m.status|default('active') == 'active') %}
+
+            {# Credits (wallet may be null) #}
+            {% set wallet = app.user.creditWallet ?? null %}
+            {% set credits = wallet ? (wallet.balanceCredits|default(0)) : 0 %}
+
+            {# Quota left (if your Subscription exposes claimLimit/claimsUsed) #}
+            {% set claimLimit = m ? m.claimLimit|default(null) : null %}
+            {% set claimsUsed = m ? m.claimsUsed|default(0) : 0 %}
+            {% set quotaLeft = claimLimit is not null ? (claimLimit - claimsUsed) : null %}
+
+            {% if hasMembership %}
+                {% if credits <= 0 %}
+                    <a href="{{ path('membership.membership.manage') }}"
+                       class="btn btn-sm btn-outline-danger rounded-pill"
+                       data-bs-toggle="tooltip" title="Crédits insuffisants">
+                        <i class="mdi mdi-cash-lock me-1 fs-6"></i>
+                        Crédits insuffisants - Top Up
+                    </a>
+                {% elseif quotaLeft is not null and quotaLeft <= 0 %}
+                    <a href="{{ path('membership.membership.manage') }}"
+                       class="btn btn-sm btn-warning rounded-pill disabled-claim"
+                       data-bs-toggle="tooltip" title="Quota mensuel atteint">
+                        <i class="mdi mdi-speedometer-slow me-1 fs-6"></i>
+                        Quota atteint
+                    </a>
+                {% else %}
+                    <span class="badge bg-success rounded-pill d-inline-flex align-items-center">
+                        <i class="mdi mdi-check-circle-outline me-1"></i> Abonné
+                    </span>
+                    <div class="small lead-muted text-end">
+                        Réclamations: <strong>{{ claims_used }}/{{ claim_limit }}</strong>
+                        {% if claims_left > 0 %}
+                            — <span class="text-success">{{ claims_left }} restant(s)</span>
+                        {% else %}
+                            — <span class="text-danger">limite atteinte</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <a href="{{ path('app_agent_work_space') }}"
+                   class="btn btn-sm btn-warning rounded-pill text-dark">
+                    <i class="mdi mdi-star-outline me-1"></i>
+                    S’abonner pour voir les leads
+                </a>
+            {% endif %}
+        </div>
+        {% if not membership %}
+            <div class="small text-muted mt-2">
+                <i class="mdi mdi-information-outline"></i>
+                Un abonnement est nécessaire pour afficher les détails des leads.
+            </div>
+        {% endif %}
+
+
+        <!-- Filters -->
+        <form class="card border-0 shadow-sm rounded-4 mb-4" method="get">
+            <div class="card-body p-3 p-md-4">
+                <div class="row g-2">
+                    <!-- Ville -->
+                    <div class="col-6 col-md-4">
+                        <div class="input-group">
+                      <span class="input-group-text bg-white border-end-0">
+                        <i class="mdi mdi-map-marker-outline"></i>
+                      </span>
+                            <select class="form-select border-start-0" name="city">
+                                <option value="">Toutes les villes couvertes</option>
+                                {% for city in coveredCities %}
+                                    <option value="{{ city.id }}" {{ filters.city == city.id ? 'selected' : '' }}>
+                                        {{ city.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Type -->
+                    <div class="col-6 col-md-4">
+                        <div class="input-group">
+                          <span class="input-group-text bg-white border-end-0">
+                            <i class="mdi mdi-home-outline"></i>
+                          </span>
+                            <select class="form-select border-start-0" name="type">
+                                <option value="">Tous</option>
+                                {% set types = ['Maison','Villa','Appartement','Studio','Terrain'] %}
+                                {% for t in types %}
+                                    <option value="{{ t }}" {{ filters.type == t ? 'selected' : '' }}>{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filtrer / Reset -->
+                    <div class="col-2 col-md-4 d-flex gap-2">
+                        <button class="btn btn-danger w-50 rounded-pill">
+                            <i class="mdi mdi-filter-outline me-1"></i> Filtrer
+                        </button>
+                        <a href="{{ path('app_job_opportunity') }}" class="btn btn-light rounded-pill d-none d-md-inline w-50">Réinitialiser</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} rounded-4">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        {% if leads is empty %}
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-5 text-center">
+                    <img src="{{ asset('assets/img/nodata.jpg') }}" alt="" class="mb-3" style="max-width:180px;">
+                    <h5 class="fw-semibold">Aucun lead disponible pour le moment</h5>
+                    <p class="text-muted mb-0">Revenez plus tard ou ajustez vos villes de couvertures ou filtres.</p>
+                </div>
+            </div>
+        {% else %}
+
+            <!-- Leads Grid -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 g-md-4">
+                {% for lead in leads %}
+                    {% set alreadyMine = lead.id in claimed_by_me %}
+                    {# --- CREDIT COST ---------------------------------------------------- #}
+                    {% if lead.leadCost is defined and lead.leadCost is not null %}
+                        {% set cost = lead.leadCost %}
+                    {% else %}
+                        {% if lead.propertyType == 'buy' %}
+                            {% set cost = 5 %}
+                        {% else %}
+                            {% set cost = ((lead.minPrice|default(0) / 500)|round(0, 'ceil')) %}
+                            {% set cost = cost < 1 ? 1 : (cost > 5 ? 5 : cost) %}
+                        {% endif %}
+                    {% endif %}
+
+                    <div class="col">
+                        <article class="lead-card card border-0 rounded-4 shadow-sm h-100">
+                            <div class="card-body p-3 p-md-4 d-flex flex-column">
+                                <!-- Header -->
+                                <div class="d-flex align-items-start justify-content-between mb-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="icon"><i class="mdi mdi-account-search-outline"></i></div>
+                                        <div>
+                                            <h6 class="mb-1 fw-semibold text-truncate">
+                                                {{ lead.title ?? ('Recherche ' ~ (lead.propertyType ?? 'bien')) }}
+                                            </h6>
+                                            <div class="small text-muted d-flex align-items-center gap-2">
+                                                <span>Publié le {{ lead.createdAt|date('d M Y') }}</span>
+                                                {% if lead.createdAt|date('Y-m-d') == "now"|date('Y-m-d') %}
+                                                    <span class="badge badge-flash-hot">🔥 Nouveau</span>
+                                                {% endif %}
+                                            </div>
+
+                                            {#                                            <div class="small text-muted">#}
+{#                                                Publié le {{ lead.createdAt|date('d M Y') }}#}
+{#                                                {% if lead.createdAt|date('Y-m-d') == "now"|date('Y-m-d') %}#}
+{#                                                    <span class="badge bg-success ms-2">Nouveau</span>#}
+{#                                                {% endif %}#}
+{#                                            </div>#}
+                                            <div class="small">
+                                                <i class="mdi mdi-alert-decagram-outline me-2"></i>
+                                                Urgence :
+                                                {% set u = lead.urgency %}
+                                                <span class="badge rounded-pill
+                                                    {% if u == 'high' %} bg-danger text-white
+                                                    {% elseif u == 'medium' %} bg-warning text-dark
+                                                    {% else %} bg-secondary
+                                                    {% endif %}">
+                                                    {{ u == 'high' ? 'Élevée' : (u == 'medium' ? 'Moyenne' : 'Faible') }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if alreadyMine %}
+                                        <span class="badge bg-success">Réclamé</span>
+                                    {% endif %}
+                                </div>
+                                <!-- Chips -->
+                                <div class="d-flex flex-wrap gap-2 mb-1">
+                                    {% if lead.transactionType %}
+                                        {% set tt = lead.transactionType|trim|lower %}
+                                        <span class="badge-chip bg-success text-white">
+                                            <i class="mdi mdi-tag-outline me-1"></i>
+                                            {{ tt == 'buy' ? 'À acheter' : (tt == 'rent' ? 'À louer' : lead.transactionType) }}
+                                          </span>
+                                    {% endif %}
+                                    {% if lead.commune %}
+                                        <span class="badge-chip"><i class="mdi mdi-map-marker-outline me-1"></i>{{ lead.commune }}</span>
+                                    {% endif %}
+
+                                    {% if lead.propertyType %}
+                                        <span class="badge-chip"><i class="mdi mdi-home-outline me-1"></i>{{ lead.propertyType }}</span>
+                                    {% endif %}
+                                    {% if lead.minPrice is not null or lead.maxPrice is not null %}
+                                        <span class="badge-chip">
+                                          <i class="mdi mdi-cash-multiple me-1"></i>
+                                          Budget
+                                          {% if lead.minPrice is not null %} {{ (lead.minPrice)|number_format(0, '.', ' ') }}$ {% endif %}
+                                          –
+                                          {% if lead.maxPrice is not null %} {{ (lead.maxPrice)|number_format(0, '.', ' ') }}$ {% else %}N/A{% endif %}
+                                        </span>
+                                    {% endif %}
+
+                                    {% if lead.rooms is defined and lead.rooms %}
+                                        <span class="badge-chip"><i class="mdi mdi-bed-outline me-1"></i>{{ lead.rooms }} ch.</span>
+                                    {% endif %}
+                                    {% if lead.moveIn is defined and lead.moveIn %}
+                                        <span class="badge-chip"><i class="mdi mdi-calendar-start me-1"></i>Entrée {{ lead.moveIn|date('d M Y') }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="lead-divider my-2"></div>
+
+                                {# ---- ELIGIBILITY USING COST ----------------------------------------- #}
+
+                                {# cost (only if not already computed above) #}
+                                {% if cost is not defined %}
+                                    {% set baseCost = ((lead.minPrice|default(0) / 500)|round(0, 'ceil')) %}
+                                    {% set cost = lead.propertyType == 'sell'
+                                        ? 5
+                                        : (baseCost < 1 ? 1 : (baseCost > 5 ? 5 : baseCost)) %}
+                                {% endif %}
+
+                                {# find active membership (prefer provided `membership`, else scan user subscriptions) #}
+                                {% set m = membership|default(null) %}
+                                {% if m is null and app.user.subscriptions is defined and app.user.subscriptions %}
+                                    {% for s in app.user.subscriptions %}
+                                        {% if s.status is defined and s.status == 'active' %}
+                                            {% set m = s %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% set hasMembership = m is not null and (m.status|default('inactive') == 'active') %}
+                                {% set credits = app.user.creditWallet.balanceCredits|default(0) %}
+
+                                {# quotaLeft only if both fields exist #}
+                                {% set claimLimit = hasMembership and m.claimLimit is defined ? m.claimLimit : null %}
+                                {% set claimsUsed = hasMembership and m.claimsUsed is defined ? m.claimsUsed : null %}
+                                {% set quotaLeft = (claimLimit is not null and claimsUsed is not null) ? (claimLimit - claimsUsed) : null %}
+
+                                {% set alreadyMine = lead.id in claimed_by_me %}
+                                {% set claimCount = lead.claimCount|default(0) %}
+                                {% set canClaim = (hasMembership and (credits >= cost) and (quotaLeft is null or quotaLeft > 0)) and (not alreadyMine) and (claimCount < 5) %}
+
+                                <div class="d-flex align-items-center justify-content-between mt-2 mt-auto lead-actions">
+                                    <button type="button"
+                                            class="btn btn-soft-dark btn-outline-primary btn-sm rounded-pill js-lead-details"
+                                            data-url="{{ path('app_customer_request_show_modal', {'id': lead.id}) }}">
+                                        <i class="mdi mdi-eye-outline me-1"></i> Détails
+                                    </button>
+
+                                    {% if claimCount < 5 %}
+                                        <form action="{{ path('leads.claim', {'id': lead.id}) }}"
+                                              method="post"
+                                              class="js-claim-form d-grid gap-2">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('claim_lead_' ~ lead.id) }}">
+
+                                            {% set disabledReason =
+                                                alreadyMine ? 'Vous avez déjà réclamé ce lead' :
+                                                (not hasMembership ? 'Abonnement requis pour réclamer' :
+                                                (credits < cost ? 'Crédits insuffisants (' ~ credits ~ '/' ~ cost ~ ')' :
+                                                (quotaLeft is not null and quotaLeft <= 0 ? 'Quota mensuel atteint' : ''))) %}
+
+                                            <button type="submit"
+                                                    class="btn btn-sm rounded-pill btn-claim {{ canClaim ? 'btn-danger' : 'btn-outline-secondary disabled-claim' }}"
+                                                    {% if not canClaim %}disabled data-bs-toggle="tooltip" title="{{ disabledReason }}"{% endif %}>
+                                                <i class="mdi mdi-hand-coin-outline me-1"></i>
+                                                {% if alreadyMine %}
+                                                    Déjà réclamé
+                                                {% elseif not hasMembership %}
+                                                    Abonnement requis
+                                                {% elseif credits < cost %}
+                                                    {{ cost }} crédit{{ cost > 1 ? 's' : '' }} requis
+                                                {% elseif quotaLeft is not null and quotaLeft <= 0 %}
+                                                    Quota atteint
+                                                {% else %}
+                                                    Réclamer ({{ cost }} crédit{{ cost > 1 ? 's' : '' }})
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="badge bg-warning mt-2">Max 5 réclamations atteintes</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    {# Success Modal #}
+    <div class="modal fade" id="claimSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg"> {# modal-lg for comfortable width #}
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="mdi mdi-check-circle-outline text-success me-2"></i>
+                        Lead réclamé avec succès
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+
+                <div class="modal-body pt-0">
+                    <div class="alert alert-success rounded-4">
+                        <div class="d-flex align-items-center">
+                            <i class="mdi mdi-shield-check-outline me-2 fs-4"></i>
+                            <div>
+                                <div class="fw-semibold">Vous avez désormais accès aux coordonnées du client.</div>
+                                <div class="small">Utilisez ces informations de manière responsable, conformément à nos conditions.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-4">
+                                <div class="card-body">
+                                    <h6 class="fw-semibold mb-3">Coordonnées du client</h6>
+                                    <div class="mb-2"><i class="mdi mdi-account-outline me-2"></i> <span id="cm-name">—</span></div>
+                                    <div class="mb-2"><i class="mdi mdi-email-outline me-2"></i> <a id="cm-email" href="#">—</a></div>
+                                    <div class="mb-0"><i class="mdi mdi-phone-outline me-2"></i> <a id="cm-phone" href="#">—</a></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-4">
+                                <div class="card-body">
+                                    <h6 class="fw-semibold mb-3">Votre quota</h6>
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>Réclamations utilisées</span>
+                                        <span class="fw-semibold"><span id="quota-used">0</span>/<span id="quota-limit">0</span></span>
+                                    </div>
+                                    <div class="progress rounded-pill" style="height:8px;">
+                                        <div id="quota-bar" class="progress-bar" style="width:0%"></div>
+                                    </div>
+                                    <div class="small text-muted mt-2">Restant : <span id="quota-left">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <a href="{{ path('app_job_opportunity') }}" class="btn btn-outline-secondary rounded-pill">
+                        <i class="mdi mdi-chevron-left me-1"></i> Retour
+                    </a>
+                    <button class="btn btn-danger rounded-pill" data-bs-dismiss="modal">
+                        <i class="mdi mdi-email-fast-outline me-1"></i> Contacter le client
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="leadDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="mdi mdi-file-document-outline me-2 text-danger"></i> Détails de la demande
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body" id="leadDetailsBody">
+                    <div class="text-center py-5">
+                        <div class="spinner-border" role="status" aria-hidden="true"></div>
+                        <div class="small text-muted mt-2">Chargement…</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">
+                        Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# Modal #}
+    <div class="modal fade" id="coveredCitiesModal" tabindex="-1" aria-labelledby="coveredCitiesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content rounded-3"
+                  method="post"
+                  action="{{ path('agent_covered_cities_update') }}"
+                  id="coveredCitiesForm">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="coveredCitiesModalLabel">Villes couvertes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+
+                <div class="modal-body">
+                    {# Current selection badges #}
+                    <div class="mb-3">
+                        <div class="small text-muted mb-1">Actuellement :</div>
+                        <div id="coveredCitiesBadges">
+                            {% if app.user.coveredCities is not empty %}
+                                {% for c in app.user.coveredCities %}
+                                    <span class="badge rounded-pill text-bg-light me-1 mb-1">{{ c.name }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted small">Aucune ville ou province sélectionnée.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# Filter input (client-side) #}
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="mdi mdi-magnify"></i></span>
+                        <input type="text" class="form-control" id="cityFilter" placeholder="Filtrer les villes…">
+                    </div>
+
+                    {# Multi-select #}
+                    <select class="form-select" name="cityIds[]" id="citySelect" multiple size="8" aria-label="Villes">
+                        {% for city in cities %}
+                            <option value="{{ city.id }}"
+                                    {% if city in app.user.coveredCities %}selected{% endif %}>
+                                {{ city.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <input type="hidden" name="_token" value="{{ csrf_token('update-covered-cities') }}">
+                </div>
+
+                <div class="modal-footer border-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="mdi mdi-content-save-outline me-1"></i> Enregistrer
+                        </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('shown.bs.modal', function (e) {
+            const modal = e.target.closest('.modal');
+            if (!modal) return;
+
+            // read what Twig rendered and sync the bar
+            const used  = Number(modal.querySelector('#quota-used') ?.textContent || 0);
+            const limit = Number(modal.querySelector('#quota-limit')?.textContent || 0);
+            const left  = Number(modal.querySelector('#quota-left') ?.textContent || 0);
+
+            updateQuotaUI(modal, { used, limit, left });
+        });
+    </script>
+
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            if (window.bootstrap) {
+                const triggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                triggerList.forEach(el => new bootstrap.Tooltip(el));
+            }
+
+            const $modal  = $('#coveredCitiesModal');
+            const $select = $('#citySelect');
+            const $filter = $('#cityFilter');
+
+            function ensureSelect2() {
+                if (!$select.length || $select.data('select2')) return;
+                $select.select2({
+                    language: 'fr',
+                    width: '100%',
+                    placeholder: 'Sélectionnez des villes…',
+                    allowClear: true,
+                    closeOnSelect: false,
+                    dropdownParent: $modal
+                });
+            }
+
+            function bindFilter() {
+                if (!$filter.length) return;
+
+                // Rebind safely
+                $filter.off('input.cityfilter').on('input.cityfilter', function () {
+                    const term = this.value;
+
+                    if ($select.data('select2')) {
+                        // Drive Select2's internal search
+                        if (!$select.data('select2').isOpen()) {
+                            $select.select2('open');
+                        }
+                        const $search = $('.select2-container--open .select2-search__field');
+                        $search.val(term);
+                        // Trigger both events for compatibility with Select2 4.x
+                        $search.trigger('input').trigger('keyup');
+                    } else {
+                        // Native <select multiple> filtering
+                        const q = term.trim().toLowerCase();
+                        const el = $select[0];
+                        if (!el) return;
+                        Array.from(el.options).forEach(opt => {
+                            const show = opt.text.toLowerCase().includes(q);
+                            opt.hidden = !show; // native filtering
+                        });
+                    }
+                });
+
+                // Reset filter when modal closes
+                $modal.off('hidden.bs.modal.cityfilter').on('hidden.bs.modal.cityfilter', function () {
+                    $filter.val('').trigger('input');
+                });
+            }
+
+            // Initialize on modal open (ensures correct width & dropdownParent)
+            $modal.on('shown.bs.modal', function () {
+                ensureSelect2();
+                bindFilter();
+                $filter.trigger('focus');
+            });
+
+            // If your modal is already visible or you want eager init:
+            if ($modal.is(':visible')) {
+                ensureSelect2();
+                bindFilter();
+            }
+        });
+    </script>
+    <script>
+        (function () {
+            const FORM_SELECTOR = '.js-claim-form, .js-claim-in-modal';
+
+            // Remember which submit button was clicked (Safari lacks e.submitter)
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('button[type="submit"], input[type="submit"]');
+                if (!btn) return;
+                const form = btn.form;
+                if (form && form.matches(FORM_SELECTOR)) {
+                    form._clickedSubmit = btn;
+                }
+            }, true);
+
+            // Intercept ALL submits for claim forms
+            document.addEventListener('submit', async function (e) {
+                const form = e.target;
+                if (!(form instanceof HTMLFormElement) || !form.matches(FORM_SELECTOR)) return;
+
+                // Hard-stop anything else (Turbo/Livewire/etc.)
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+                const isModalForm = form.classList.contains('js-claim-in-modal');
+                const isCardForm  = form.classList.contains('js-claim-form');
+
+                const btn = form._clickedSubmit || form.querySelector('button[type="submit"], input[type="submit"]');
+                const originalHTML = btn && 'innerHTML' in btn ? btn.innerHTML : null;
+                if (btn) {
+                    btn.disabled = true;
+                    if ('innerHTML' in btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Traitement...';
+                    else btn.value = 'Traitement...';
+                }
+
+                try {
+                    const resp = await fetch(form.action, {
+                        method: (form.method || 'POST').toUpperCase(),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new FormData(form)
+                    });
+
+                    // If server redirects, follow it (rare)
+                    if (resp.redirected) { window.location.href = resp.url; return; }
+
+                    // Expect JSON; if not, throw with preview
+                    const ct = resp.headers.get('content-type') || '';
+                    const payload = ct.includes('application/json') ? await resp.json() : await resp.text();
+                    const data = (typeof payload === 'string') ? (function(){ try { return JSON.parse(payload); } catch { throw new Error('Réponse non-JSON: ' + payload.slice(0,120)); } })() : payload;
+
+                    if (!resp.ok || !data.ok) {
+                        let msg = data.message || 'Impossible de réclamer ce lead.';
+                        if (data.reason === 'no_membership') msg += ' Activez un abonnement.';
+                        if (data.reason === 'no_quota')      msg += ' Quota atteint.';
+                        if (data.reason === 'no_credits')    msg += ' Crédits insuffisants.';
+                        alert(msg);
+                        if (btn) {
+                            btn.disabled = false;
+                            if (originalHTML !== null && 'innerHTML' in btn) btn.innerHTML = originalHTML;
+                        }
+                        return;
+                    }
+
+                    // SUCCESS — update UI in context
+                    if (isModalForm) {
+                        updateModalUI(form.closest('.modal'), data, btn);
+                    }
+                    if (isCardForm) {
+                        updateCardUI(form.closest('.lead-card'), data, btn);
+
+                        // Optional: also open a global success modal if you have one
+                        const globalModalEl = document.getElementById('claimSuccessModal');
+                        if (globalModalEl) {
+                            fillSuccessModal(globalModalEl, data);
+                            new bootstrap.Modal(globalModalEl).show();
+                        }
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    alert('Une erreur est survenue. Veuillez réessayer.');
+                    if (btn) {
+                        btn.disabled = false;
+                        if (originalHTML !== null && 'innerHTML' in btn) btn.innerHTML = originalHTML;
+                    }
+                } finally {
+                    // clean the stored submitter reference
+                    if (form._clickedSubmit) delete form._clickedSubmit;
+                }
+            }, true);
+
+            function updateModalUI(modal, data, btn) {
+                if (!modal) return;
+                modal.querySelector('.js-mask-note')?.classList.add('d-none');
+
+                const name  = data.client?.name  || '—';
+                const email = data.client?.email || '';
+                const phone = data.client?.phone || '';
+
+                const nameEl  = modal.querySelector('.js-real-name');
+                const emailEl = modal.querySelector('.js-real-email');
+                const phoneEl = modal.querySelector('.js-real-phone');
+
+                if (nameEl)  { nameEl.textContent = name; nameEl.style.display = ''; }
+                if (emailEl) { emailEl.textContent = email || '—'; emailEl.href = email ? 'mailto:' + email : '#'; emailEl.style.display = ''; }
+                if (phoneEl) { phoneEl.textContent = phone || '—'; phoneEl.href = phone ? 'tel:' + phone : '#'; phoneEl.style.display = ''; }
+
+                modal.querySelector('.js-mask-name') ?.style.setProperty('display','none');
+                modal.querySelector('.js-mask-email')?.style.setProperty('display','none');
+                modal.querySelector('.js-mask-phone')?.style.setProperty('display','none');
+
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-success');
+                    if ('innerHTML' in btn) btn.innerHTML = '<i class="mdi mdi-check-circle-outline me-1"></i> Déjà réclamé';
+                }
+            }
+
+            function updateCardUI(card, data, btn) {
+                if (!card) return;
+
+                const setTxt = (sel, val) => { const el = card.querySelector(sel); if (el) { el.textContent = val || '—'; el.classList.remove('blurred'); } };
+                setTxt('[data-client-name]',  data.client?.name);
+                setTxt('[data-client-email]', data.client?.email);
+                setTxt('[data-client-phone]', data.client?.phone);
+
+                const header = card.querySelector('.d-flex.align-items-start.justify-content-between');
+                if (header && !header.querySelector('[data-claimed-badge]')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-success';
+                    badge.setAttribute('data-claimed-badge', '');
+                    badge.textContent = 'Réclamé';
+                    header.appendChild(badge);
+                }
+
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-success');
+                    if ('innerHTML' in btn) btn.innerHTML = '<i class="mdi mdi-check-circle-outline me-1"></i> Déjà réclamé';
+                }
+            }
+
+            function fillSuccessModal(modalEl, data) {
+                if (!modalEl) return;
+
+                const name  = (data.client && data.client.name)  ? data.client.name  : '—';
+                const email = (data.client && data.client.email) ? data.client.email : '';
+                const phone = (data.client && data.client.phone) ? data.client.phone : '';
+
+                const nameEl  = modalEl.querySelector('#cm-name');
+                const emailEl = modalEl.querySelector('#cm-email');
+                const phoneEl = modalEl.querySelector('#cm-phone');
+
+                if (nameEl)  nameEl.textContent = name;
+                if (emailEl) { emailEl.textContent = email || '—'; emailEl.href = email ? 'mailto:' + email : '#'; }
+                if (phoneEl) { phoneEl.textContent = phone || '—'; phoneEl.href = phone ? 'tel:' + phone : '#'; }
+
+                const used  = Number((data.quota && data.quota.used)  || 0);
+                const limit = Number((data.quota && data.quota.limit) || 0);
+                const left  = Number((data.quota && data.quota.left)  || 0);
+                const pct   = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+
+                const usedEl  = modalEl.querySelector('#quota-used');
+                const limitEl = modalEl.querySelector('#quota-limit');
+                const leftEl  = modalEl.querySelector('#quota-left');
+                if (usedEl)  usedEl.textContent  = used;
+                if (limitEl) limitEl.textContent = limit;
+                if (leftEl)  leftEl.textContent  = left;
+
+                const bar = modalEl.querySelector('#quota-bar');
+                if (bar) {
+                    bar.style.width = pct + '%';
+                    bar.className = 'progress-bar ' + (pct < 70 ? 'bg-success' : (pct < 100 ? 'bg-warning' : 'bg-danger'));
+                }
+            }
+        })();
+    </script>
+    <script>
+        function updateQuotaUI(root, quota) {
+            if (!root || !quota) return;
+
+            const used  = Number(quota.used  ?? 0);
+            const limit = Number(quota.limit ?? 0);
+            const left  = ('left' in quota) ? Number(quota.left ?? 0) : (limit ? Math.max(0, limit - used) : 0);
+            const pct   = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+
+            const usedEl  = root.querySelector('#quota-used');
+            const limitEl = root.querySelector('#quota-limit');
+            const leftEl  = root.querySelector('#quota-left');
+            const barEl   = root.querySelector('#quota-bar');
+
+            if (usedEl)  usedEl.textContent  = used;
+            if (limitEl) limitEl.textContent = limit;
+            if (leftEl)  leftEl.textContent  = left;
+
+            if (barEl) {
+                barEl.style.width = pct + '%';
+                barEl.setAttribute('aria-valuenow', String(pct));
+                barEl.classList.remove('bg-success','bg-warning','bg-danger');
+                barEl.classList.add(pct < 70 ? 'bg-success' : (pct < 100 ? 'bg-warning' : 'bg-danger'));
+            }
+        }
+    </script>
+
+
+    <script>
+        document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.js-lead-details');
+            if (!btn) return;
+
+            e.preventDefault();
+            const url   = btn.dataset.url;
+            const modal = new bootstrap.Modal(document.getElementById('leadDetailsModal'));
+            const body  = document.getElementById('leadDetailsBody');
+
+            // show modal + spinner
+            body.innerHTML = `
+    <div class="text-center py-5">
+      <div class="spinner-border" role="status" aria-hidden="true"></div>
+      <div class="small text-muted mt-2">Chargement…</div>
+    </div>`;
+            modal.show();
+
+            try {
+                const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+                if (!res.ok) throw new Error('Erreur de chargement (' + res.status + ')');
+                const html = await res.text();
+                body.innerHTML = html;
+            } catch (err) {
+                body.innerHTML = `
+      <div class="alert alert-danger rounded-4 mb-0">
+        <i class="mdi mdi-alert-circle-outline me-2"></i>
+        ${err.message}
+      </div>`;
+            }
+        });
+    </script>
+
+
+{% endblock %}

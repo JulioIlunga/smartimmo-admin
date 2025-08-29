@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+Smart-Immo | Réinitialiser le mot de passe
+{% endblock %}
+
+{% block body %}
+    <!-- container Start -->
+    <div class="section-display">
+        <!-- container Start -->
+        <div class="container">
+            <div class="d-flex justify-content-center align-items-center vh-85">
+                <div class="header-body text-center">
+                    <img src="{{ asset('assets/img/recover-img.svg') }}" class="img-fluid mb-3 thanku-img">
+                    <h3 class="fw-bold">Vous avez perdu votre mot de passe ?</h3>
+                    <p class="small text-muted mb-4">Entrez vos coordonnées pour récupérer</p>
+                    {% include 'agent_work_space/partials/_flag.html.twig' %}
+                    <form action="{{ path('app_reset_password') }}" method="post">
+                        <div class="form-floating  d-flex align-items-end px-3 py-1 border rounded-3">
+                            <input type="text" name="phone-number" class="form-control border-0 px-0" id="floatingInput" >
+                            <span class="my-auto mdi mdi-phone"></span>
+                            <label for="floatingInput" class="text-muted px-3 mt-1">Entrer votre numéro de téléphone. Ex : 823484711</label>
+                        </div>
+                        <button id="confirmed-button" class="btn btn-danger text-uppercase fw-bold w-100 py-3 rounded-9 mt-3">Confirmer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- container End -->
+    </div>
+{% endblock %}

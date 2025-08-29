@@ -1,0 +1,231 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Smart-Immo | Admin - Location{% endblock %}
+{% block style %}
+<style>
+    /* Wrapper */
+    .city-accordion .city-item{ background:#fff; }
+    .city-accordion .city-item + .city-item{ margin-top:.5rem; }
+
+    /* Header button */
+    .city-toggle{
+        padding:.9rem 1rem;
+        background:linear-gradient(180deg,#fff, #fbfbfc);
+        border:none; outline:0;
+        text-align:left;
+        transition:background .18s ease, box-shadow .18s ease;
+    }
+    .city-toggle:hover{ background:#f7f8fa; }
+    .city-title{ font-weight:800; letter-spacing:.02em; }
+    .city-toggle .badge{ font-weight:700; font-size:.72rem; }
+    .collapse-caret{ transition:transform .2s ease, opacity .2s ease; opacity:.7; }
+    .city-toggle[aria-expanded="true"] .collapse-caret{ transform:rotate(180deg); opacity:1; }
+
+    /* Body */
+    .city-body{ padding:.75rem 1rem 1rem; background:#fff; }
+
+    /* Commune list */
+    .commune-list{
+        border:1px solid #eef1f4; border-radius:.8rem; overflow:hidden;
+    }
+    .commune-row{
+        display:flex; align-items:center; justify-content:space-between;
+        gap:1rem; padding:.6rem .8rem;
+        border-bottom:1px solid #eef1f4;
+    }
+    .commune-row:last-child{ border-bottom:none; }
+    .commune-row:hover{ background:#fafbfc; }
+    .commune-row .dot{
+        width:8px; height:8px; border-radius:50%;
+        background:#dc3545; display:inline-block;
+    }
+
+    /* Tiny icon button */
+    .btn-icon{
+        display:inline-flex; align-items:center; justify-content:center;
+        width:32px; height:32px; border-radius:.6rem;
+        background:transparent; border:1px solid transparent;
+    }
+    .btn-icon:hover{ background:#f0f2f5; border-color:#e9ecf1; }
+
+    /* Empty state */
+    .empty-state img{ opacity:.8; }
+
+</style>
+    <style>
+        .admin-header .mdi{ line-height:1; }
+        .admin-header .card-body{ padding-left:1rem; padding-right:1rem; }
+        @media (min-width: 768px){
+            .admin-header .card-body{ padding-left:1.25rem; padding-right:1.25rem; }
+        }
+
+    </style>
+{% endblock %}
+{% block bodyHeader %}
+    <div class="admin-header card border-0 shadow-sm rounded-4 mb-3">
+        <div class="card-body py-3 py-md-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <!-- Title + breadcrumb -->
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 text-muted small">
+                        <i class="mdi mdi-shield-crown-outline"></i>
+                        <span>Administration</span>
+                        <i class="mdi mdi-chevron-right mdi-18px opacity-50"></i>
+                        <span>Localisation</span>
+                    </div>
+                    <h4 class="fw-bold mb-0 mt-1">Admin • Villes & Communes</h4>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex align-items-center ms-auto">
+                    <button type="button"
+                            class="btn btn-success rounded-pill fw-semibold px-3"
+                            onclick="showFormCreateNewProvince()"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalCenter">
+                        <i class="mdi mdi-plus-circle-outline me-1"></i>
+                        Ajouter une ville
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block bodyContent %}
+
+    {% include 'agent_work_space/partials/_flag.html.twig' %}
+    <div class="city-accordion mt-4" id="citiesAccordion">
+        {% for city in cities %}
+            {% set cid = 'city-' ~ city.id %}
+            <article class="city-item card border-0 shadow-sm rounded-4 mb-2 overflow-hidden">
+                <h4 class="city-header mb-0" id="{{ cid }}-hdr">
+                    <button
+                            class="city-toggle d-flex align-items-center w-100"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#{{ cid }}-col"
+                            aria-expanded="false"
+                            aria-controls="{{ cid }}-col">
+                        <span class="mdi mdi-city-variant-outline me-2"></span>
+                        <span class="city-title">{{ city.name }}</span>
+                        <span class="badge rounded-pill bg-dark-subtle text-dark ms-2">
+            {{ city.communes|length }} commune{{ city.communes|length > 1 ? 's' : '' }}
+          </span>
+                        <i class="mdi mdi-chevron-down ms-auto collapse-caret"></i>
+                    </button>
+                </h4>
+
+                <div id="{{ cid }}-col"
+                     class="collapse"
+                     aria-labelledby="{{ cid }}-hdr"
+                     data-bs-parent="#citiesAccordion">
+                    <div class="city-body">
+                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-2">
+                            <div class="text-muted small">
+                                Gérez les communes de <strong>{{ city.name }}</strong>.
+                            </div>
+                            <button
+                                    type="button"
+                                    class="btn btn-success btn-sm rounded-pill"
+                                    onclick="newCommune({{ city.id }})"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalCenter">
+                                <i class="mdi mdi-plus me-1"></i> Ajouter une commune
+                            </button>
+                        </div>
+
+                        {% if city.communes is empty %}
+                            <div class="empty-state text-center py-4">
+                                <img src="{{ asset('assets/img/nodata.jpg') }}" class="mb-2" alt="" style="max-width:140px;">
+                                <div class="fw-semibold">Aucune commune</div>
+                                <div class="text-muted small">Ajoutez votre première commune pour cette ville.</div>
+                            </div>
+                        {% else %}
+                            <div class="commune-list">
+                                {% for commune in city.communes %}
+                                    <div class="commune-row">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="dot"></span>
+                                            <span class="fw-semibold">{{ commune.name }}</span>
+                                        </div>
+                                        <div class="actions">
+                                            <a href="#"
+                                               class="btn-icon"
+                                               title="Modifier"
+                                               onclick="editEditCommune({{ commune.id }})"
+                                               data-bs-toggle="modal"
+                                               data-bs-target="#modalCenter">
+                                                <i class="mdi mdi-pencil text-success"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+
+    {#    <div class="accordion accordion-flush mt-4 border rounded overflow-hidden" id="accordionFlushExample">#}
+{#        {% for city in cities %}#}
+{#        <div class="accordion-item border-0">#}
+{#            <h2 class="accordion-header" id="flush-heading-{{ city.id }}">#}
+{#                <button class="accordion-button border-0 p-2 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse-{{ city.id }}" aria-expanded="false" aria-controls="flush-collapsePrice">#}
+{#                   <span class="h5 ms-3 mt-3">{{ city.name }}</span>#}
+{#                </button>#}
+{#            </h2>#}
+{#            <div id="flush-collapse-{{ city.id }}" class="accordion-collapse collapse" aria-labelledby="flush-heading-{{ city.id }}" data-bs-parent="#accordionFlushExample">#}
+{#                <button type="button" class="btn btn-success mb-0 fw-bold mb-2 btn-sm ms-3" onclick="newCommune({{ city.id }})" data-bs-toggle="modal" data-bs-target="#modalCenter">Ajouter une commune</button>#}
+{#                <div class="accordion-body d-flex align-items-center justify-content-between p-2 border-bottom">#}
+{#                    <div class="p-2 text-end">#}
+{#                        {% for commune in city.communes %}#}
+{#                            <div class="ms-3 d-flex">#}
+{#                                <p class="mb-0 fw-bold">{{ commune.name }}</p>#}
+{#                                <a href="#" onclick="editEditCommune({{ commune.id }})" data-bs-toggle="modal" data-bs-target="#modalCenter"><i class="mx-2 mdi mdi-pencil text-success"></i></a>#}
+{#                            </div>#}
+{#                        {% endfor %}#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#        {% endfor %}#}
+{#    </div>#}
+    <script>
+        function showFormCreateNewProvince() {
+            getContentForModal("{{ path('app_location_create_new_location') }}", "Ajouter une nouvelle ville");
+        }
+        function saveNewProvince() {
+            let url = "{{ path('app_location_create_new_location')}}";
+            _doPost('#entry-form-new', url, '{{ path('app_location') }}');
+            return false;
+        }
+        function editEditProvince(id) {
+            let url = replacePlaceholder("{{ path('app_location_edit_province', {'id': 'placeholder'}) }}", id);
+            getContentForModal(url, "Éditer la ville");
+        }
+        function saveEditProvince(id) {
+            let url = replacePlaceholder("{{ path('app_location_edit_province', {'id': 'placeholder'}) }}", id);
+            return _doPost('#entry-form-'+id, url);
+        }
+        function newCommune(id) {
+            let url = replacePlaceholder("{{ path('app_agency_add_new_commune', {'id': 'placeholder'}) }}", id);
+            getContentForModal(url, "Ajouter commune");
+        }
+        function saveNewCommune(id) {
+            let url = replacePlaceholder("{{ path('app_agency_add_new_commune', {'id': 'placeholder'}) }}", id);
+            _doPost('#entry-form-'+id, url, '{{ path('app_location') }}');
+            return false;
+        }
+        function editEditCommune(id) {
+            let url = replacePlaceholder("{{ path('app_location_edit_commune', {'id': 'placeholder'}) }}", id);
+            getContentForModal(url, "Éditer la commune");
+        }
+        function saveEditCommune(id) {
+            let url = replacePlaceholder("{{ path('app_location_edit_commune', {'id': 'placeholder'}) }}", id);
+            return _doPost('#entry-form-'+id, url);
+        }
+    </script>
+{% endblock %}

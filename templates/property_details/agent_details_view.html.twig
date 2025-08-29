@@ -1,0 +1,58 @@
+<div class="modal-body px-4">
+    <div class="row g-4 align-items-stretch">
+        <!-- Photo -->
+        <div class="col-sm-6">
+            <div class="ratio ratio-4x3 rounded-4 overflow-hidden bg-light">
+                {% set photo = agent.picture ?: asset('assets/img/imageIcon.png') %}
+                <img
+                        src="{{ photo }}"
+                        class="w-100 h-100 object-fit-cover"
+                        alt="{{ (agent.firstname ~ ' ' ~ agent.name)|trim }}"
+                        loading="lazy">
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div class="col-sm-6">
+            <div class="p-4 border rounded-4 h-100 d-flex flex-column">
+                <div class="border-bottom pb-3 mb-3">
+                    <h6 class="fw-bold mb-1">
+                        {{ agent.firstname }} {{ agent.name }}
+                        {% if agent.topAgent is defined and agent.topAgent %}
+                            <span class="mdi mdi-shield-check text-success ms-2" aria-label="Vérifié"></span>
+                        {% endif %}
+                    </h6>
+
+                    {% set phone = (agent.agentPhoneCode ~ ' ' ~ agent.agentPhone)|trim %}
+                    {% if phone %}
+                        <p class="mb-2 text-muted small">
+                            <a class="text-muted text-decoration-none" href="tel:{{ phone|replace({' ':''}) }}">
+                                {{ phone }}
+                            </a>
+                        </p>
+                    {% endif %}
+
+                    <p class="mb-1 text-muted small">Actif depuis</p>
+                    <p class="fw-bold mb-0 small">
+                        {{ (agent.createdAt ?? 'now')|date('d M Y') }}
+                    </p>
+                </div>
+
+                <div class="d-flex justify-content-between text-center mt-auto">
+                    <div>
+                        <p class="text-muted mb-0 small">Annonces en ligne</p>
+                        <p class="fw-bold mb-0">{{ onlineListingCount|default(0) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-muted mb-0 small">Nombre d'annonces</p>
+                        <p class="fw-bold mb-0">{{ agent.properties|length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger rounded-pill" data-bs-dismiss="modal">Fermer</button>
+</div>

@@ -1,0 +1,80 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    aws_region: 'eu-north-1'
+    aws_key: '%env(AWS_KEY)%'
+    aws_secret: '%env(AWS_SECRET)%'
+    aws_bucket: 'smart-technology'
+    RECAPTCHA_SITE_KEY: '%env(RECAPTCHA_SITE_KEY)%'
+    RECAPTCHA_SECRET_KEY: '%env(RECAPTCHA_SECRET_KEY)%'
+    google_recaptcha_site_key: '%env(GOOGLE_RECAPTCHA_SITE_KEY)%'
+    smartPay_BasUrl: 'https://payment.smarttech-rdc.com'
+    smartPay_Key: 'QTTX3UAAPZMIGEDNBLFC'
+    mailHost: '%env(MAIL_HOST)%'
+    fromMail: '%env(FROM_MAIL)%'
+    fromName: '%env(FROM_NAME)%'
+    returnPath: '%env(RETURN_PATH)%'
+    mailCopy: '%env(default:default_mailcopy:MAIL_COPY)%'
+    default_mailcopy: 'true'
+    whatsapp_token: '%env(WHATSAPP_TOKEN)%'
+    image_temp_dir: '%kernel.project_dir%/public/uploads/tmp'
+
+services:
+    App\Security\LoginFormAuthenticator:
+        calls:
+            - method: setLogger
+              arguments:
+                  - '@logger'
+
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # Recaptcha security system
+    App\Service\RecaptchaValidator:
+        arguments:
+            $secretKey: '%env(RECAPTCHA_SECRET_KEY)%'
+
+
+    App\Service\MailerService:
+        arguments:
+            - '%fromMail%'
+            - '%fromName%'
+            - '%returnPath%'
+            - '%mailCopy%'
+
+    App\Service\WhatsappService:
+        arguments:
+            $token: '%whatsapp_token%'
+
+    Liip\ImagineBundle\Binary\Loader\LoaderInterface: '@liip_imagine.binary.loader.default'
+
+    Aws\S3\S3Client: '@aws.s3.client'
+
+    aws.s3.client:
+        class: Aws\S3\S3Client
+        arguments:
+            - region: '%aws_region%'
+              version: 'latest'
+              credentials:
+                  key: '%aws_key%'
+                  secret: '%aws_secret%'
+                  bucketName: '%aws_bucket%'
+
+
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones

@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ property.type }} | {{ property.header  }}
+{% endblock %}
+{% block favicon %}
+    <link rel="shortcut icon" href="{{ property.image }}" type="image/x-icon">
+{% endblock %}
+
+{% block body %}
+    <!-- Section Email Start -->
+    <div class="section-display">
+        <!-- container Start -->
+        <div class="container">
+            <!-- Sign Up Form -->
+            <div class="">
+                <div class="header-body py-5">
+                    <div class="text-center">
+                        <h2 class="fw-bold">Changement de statut de l'annonce</h2>
+                        <p class="small text-muted mb-4">Veuillez faire une mise à jour du statu de cette annonce</p>
+                    </div>
+                    {% for message in app.session.flashBag.get('success') %}
+                        <div class="alert alert-success">
+                            {{ message }}
+                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="text-dark">
+                                <div class="card border {% if property.publish == true %} border-danger border-2 {% endif %} bg-white rounded-9 p-3 mb-3">
+                                    <div class="card-body row ps-md-2 p-0">
+                                        <div class="col-sm-3">
+                                            {% if property.image != null %}
+                                                <img src="{{ property.image }}" class="rounded-9 w-100" alt="" width="200" height="150">
+                                            {% else %}
+                                                <img src="{{ asset('assets/img/imageIcon.png') }}" class="rounded-9 w-100" alt="" width="200" height="150">
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-sm-9 mt-3">
+                                            <div class="d-flex align-items-start justify-content-between">
+                                                <div class="mt-1">
+                                                    <h6 class="card-title fw-bold mb-0 text-uppercase">{{ property.type }}</h6>
+                                                    <p class="mb-0 small text-dark text-uppercase">{{ property.header}}</p>
+
+                                                    {% if property.propertyStatus != null %}
+                                                        <p class="mb-0 small text-muted">Statut : <strong class="{% if property.propertyStatus.id == 1 %} text-success {% else %}text-danger {% endif %}">{{ property.propertyStatus.name }}</strong></p>
+                                                    {% endif %}
+
+                                                    {% if property.publishAt != null %}
+                                                        <p class="mb-0 small text-muted">Date de la création : <strong>{{ property.createdAt|date('d/m/y') }}</strong></p>
+                                                    {% else %}
+                                                        <p class="mb-0 small text-muted">Date de la dernière publication : <strong>{{ property.publishAt|date('d/m/y') }}</strong></p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="row justify-content-between my-3">
+                                                <div class="text-muted small d-flex align-items-center my-auto mb-2">
+                                                    <span>{{ property.bedroom }} chambre(s)</span> <i class="mx-2 mdi mdi-circle dot-list"></i>
+                                                    <span>{{ property.bathroom }} salle de bains</span>
+                                                </div>
+                                                <div class="mt-auto">
+                                                    <span class="fw-bold h6 mb-2">{{ property.price|format_currency('USD')  }}</span>
+                                                    <span class="text-muted mb-2"> / {% if property.periodicity == 'Daily'%} Jour {% else%} Mois {% endif %}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-3 text-end">
+                                            <div class="row text-end">
+                                                <p class="mb-0 ms-auto text-danger mb-2"><span class="fs-6 ms-1 mdi mdi-web mdi-spin me-2"></span><span>Annonce en ligne</span></p>
+
+                                                <div class="d-flex justify-content-between">
+                                                    <a href="{{ path('app_property_details', {propertyUuid : property.uuidProperty}) }}" class="btn btn-dark btn-sm text-white rounded-9 w-auto mb-2"><span class="mdi mdi-eye me-1"></span>Aperçu</a>
+
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-success btn-sm float-end text-center w-100 text-white rounded-9 mb-2 d-flex align-items-center dropdown-toggle" type="button" id="dropdownStatus" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <span class="mdi mdi-update me-2 text-center me-3">  Changer le statut</span>
+                                                        </button>
+                                                        <ul class="dropdown-menu border-0 rounded-9 dropdown-menu-end" aria-labelledby="dropdownStatus">
+                                                            {% for stat in status %}
+                                                                {% if stat.id != 1 and stat.id != 4 %}
+                                                                    <li>
+                                                                        <a class="dropdown-item" href="{{ path('app_agent_change_status_of_property', {id: stat.id, propertyId: property.id}) }}">
+                                                                            {% if stat.id == 2 %}
+                                                                                <span class="mdi mdi-cancel text-danger me-1"></span>
+                                                                            {% else %}
+                                                                                <span class="mdi mdi-solid text-danger me-1"></span>
+                                                                            {% endif %}
+                                                                            {{ stat.name }}
+                                                                        </a>
+                                                                    </li>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Other Source for Sign Up -->
+                    <div class="d-flex align-items-center py-3">
+                        <hr class="w-50">
+                        <p class="small text-muted mb-0 mx-3">Òu</p>
+                        <hr class="w-50">
+                    </div>
+                    <!-- Other Links -->
+                    <div class="sign-links">
+                        <a href="{{ path('app_login') }}" class="btn bg-danger rounded-9 text-white border w-100 py-3 px-4 d-flex align-items-center mb-2"><span class="mdi mdi-login fw-bold"></span> <span class="mx-auto">Connectez-vous à votre compte</span></a>
+                    </div>
+
+                </div>
+
+            </div>
+            <!-- Sign Up Form -->
+        </div>
+        <!-- container End -->
+    </div>
+    <!-- Section Email End -->
+{% endblock %}

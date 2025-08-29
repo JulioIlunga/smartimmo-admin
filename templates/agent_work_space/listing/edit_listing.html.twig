@@ -1,0 +1,698 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Créer annonce{% endblock %}
+
+{% block bodyHeader %}
+
+    <div class="d-flex justify-content-between">
+        <div class="">
+            <h2 class="fw-bolder">Créer annonce</h2>
+            <p class="text-muted fw-light">Entrez les informations de la propriété</p>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block bodyContent %}
+    <!-- Add New Apartments -->
+
+    <div class="listing-wizard container-xxl">
+        <div class="wizard-card card shadow-sm border-0 rounded-4 mx-auto" style="max-width:980px;">
+            <!-- Top header -->
+            <div class="wizard-head d-flex align-items-center justify-content-between gap-2 p-3 p-md-4 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-danger-subtle text-danger fw-semibold rounded-pill px-3 py-2">
+                      Étape {{ step|default(1) }}/6
+                    </span>
+                    {% if step == 6 %}
+                        <span class="text-muted small">Finalisation</span>
+                    {% endif %}
+                </div>
+
+                {# Actions row #}
+                <div class="d-flex align-items-center gap-2">
+
+                    {# Your existing Back/Cancel buttons… #}
+                    {% if step|default(1) > 1 %}
+                        <a href="{{ path('app_agent_listing_back_button_admission',{code: property.code, step: step}) }}"
+                           class="btn btn-light btn-sm rounded-pill d-inline-flex align-items-center">
+                            <i class="mdi mdi-arrow-left me-1"></i>
+                            {% if step == 6 %}Revenir pour modifier{% else %}Retour{% endif %}
+                        </a>
+                    {% else %}
+                        <a href="{{ path('app_agent_work_space_listing') }}"
+                           class="btn btn-outline-danger btn-sm rounded-pill d-inline-flex align-items-center">
+                            <i class="mdi mdi-cancel me-1"></i>
+                            Annuler
+                        </a>
+                    {% endif %}
+
+                    {# Save draft (does NOT advance step) #}
+                    <button
+                            type="submit"
+                            class="btn btn-outline-secondary btn-sm rounded-pill d-inline-flex align-items-center"
+                            form="registration-form"
+                            formaction="{{ path('app_agent_listing_save_draft', { id: property.id, step: step|default(1) }) }}"
+                            formmethod="post"
+                            formnovalidate
+                            name="save_later"
+                            value="1">
+                        <i class="mdi mdi-content-save-outline me-1"></i>
+                        Sauvegarder et revenir plus tard
+                    </button>
+                </div>
+
+
+            </div>
+
+            {% include 'agent_work_space/partials/_flag.html.twig' %}
+
+            {# ─────────────────────────────────────────────────────────
+       STEP 1
+       ───────────────────────────────────────────────────────── #}
+            {% if step == 1 %}
+                <form action="{{ path('app_agent_listing_new_listing_save', {id: property.id}) }}"
+                      id="registration-form" method="post">
+                    <input type="hidden" name="step" value="1">
+
+                    <!-- Progress -->
+                    <div class="px-3 px-md-4 pt-3">
+                        <div class="progress setup-progress" style="height:8px;">
+                            <div class="progress-bar bg-success" style="width:11.1%"></div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 p-md-4">
+                        <div class="mx-auto" style="max-width:720px;">
+                            <h3 class="fw-bold text-center mb-4">Quel type d’endroit proposez-vous&nbsp;?</h3>
+
+                            <!-- Titre -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Titre</label>
+                                <textarea name="header-{{ property.id }}" class="form-control rounded-3"
+                                          rows="2" maxlength="50"
+                                          placeholder="Ex: Appartement de luxe dans la région de Kalemie" required>{{ property.header }}</textarea>
+                                <div class="form-text">50 caractères max.</div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Description de la propriété</label>
+                                <textarea name="title-{{ property.id }}" class="form-control rounded-3"
+                                          rows="5"
+                                          placeholder="Ex: 2 chambres, 1 salon, proche des commerces…" required>{{ property.title }}</textarea>
+                            </div>
+
+                            <!-- Type de propriété -->
+                            <div class="form-floating mb-3 border p-2 rounded-3">
+                                <select class="form-select fw-bold border-0 mt-2" name="type-{{ property.id }}" required>
+                                    <option value="Appartement" {% if property.type == 'Appartement' %}selected{% endif %}>Appartement</option>
+                                    <option value="Maison" {% if property.type == 'Maison' %}selected{% endif %}>Maison</option>
+                                    <option value="Villa" {% if property.type == 'Villa' %}selected{% endif %}>Villa</option>
+                                    <option value="Studio" {% if property.type == 'Studio' %}selected{% endif %}>Studio</option>
+                                    <option value="Local commercial" {% if property.type == 'Local commercial' %}selected{% endif %}>Local commercial</option>
+                                    <option value="Terrain" {% if property.type == 'Terrain' %}selected{% endif %}>Terrain</option>
+                                    <option value="Ferme" {% if property.type == 'Ferme' %}selected{% endif %}>Ferme</option>
+                                </select>
+                                <label class="px-2">Choisissez un type de propriété</label>
+                            </div>
+
+                            <!-- Type de mise en location (FIX: compare à property.typeLocation) -->
+                            <div class="form-floating mb-3 border p-2 rounded-3">
+                                <select class="form-select fw-bold border-0" name="typeLocation-{{ property.id }}" required>
+                                    <option value="rent" {% if property.typeLocation == 'rent' %}selected{% endif %}>À louer</option>
+                                    <option value="sell" {% if property.typeLocation == 'sell' %}selected{% endif %}>À vendre</option>
+                                </select>
+                                <label class="px-2">Type de mise en location</label>
+                            </div>
+
+                            <!-- Prix -->
+                            <label class="form-label fw-semibold">Prix (USD)</label>
+                            <div class="row g-2 mb-3">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text">USD</span>
+                                        <input name="price-{{ property.id }}" type="number" min="0" class="form-control"
+                                               placeholder="Prix" value="{{ property.price }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    {# FIX: garder la même clé que plus bas #}
+                                    <input name="currency-{{ property.id }}" type="text" class="form-control" value="USD" readonly>
+                                </div>
+                            </div>
+
+                            <!-- Périodicité -->
+                            <div class="mb-2">
+                                <p class="text-muted mb-1">Périodicité</p>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" value="Monthly"
+                                               onclick="showPercentage('{{ property.id }}')"
+                                               name="periodicity-{{ property.id }}" id="periodicityMonthly"
+                                               {% if property.periodicity == 'Monthly' %}checked{% endif %}>
+                                        <label class="form-check-label" for="periodicityMonthly">Mensuelle</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" value="Daily"
+                                               onclick="showPercentage('{{ property.id }}')"
+                                               name="periodicity-{{ property.id }}" id="periodicityDaily"
+                                               {% if property.periodicity == 'Daily' %}checked{% endif %}>
+                                        <label class="form-check-label" for="periodicityDaily">Journalière</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Prix de visite (si Mensuelle) -->
+                            <div id="priceOfVisit" class="{% if property.periodicity == 'Daily' %}d-none{% endif %}">
+                                <label class="form-label fw-semibold">Prix de la visite (USD)</label>
+                                <div class="row g-2 mb-2">
+                                    <div class="col">
+                                        <div class="input-group">
+                                            <span class="input-group-text">USD</span>
+                                            <input name="priceOfVisit-{{ property.id }}" type="number" min="0"
+                                                   class="form-control" placeholder="Montant de la visite"
+                                                   value="{{ property.priceOfVisit }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <input name="currency-{{ property.id }}" type="text" class="form-control" value="USD" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-text">Le montant à payer pour la visite.</div>
+                            </div>
+
+                            <!-- Acompte (si Journalière) -->
+                            <div id="percent" class="{% if property.periodicity == 'Monthly' %}d-none{% endif %}">
+                                <label class="form-label fw-semibold">Acompte avant réservation</label>
+                                <div class="form-floating border p-2 rounded-3">
+                                    <select class="form-select fw-bold border-0 mt-2" name="percentage-{{ property.id }}" required>
+                                        {% for p in [30,40,50,60,70,80,90,100] %}
+                                            <option value="{{ p }}" {% if (property.pourcerntageOfBooking|default('30')) == p|striptags %}selected{% endif %}>{{ p }}%</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label class="px-2">Choisissez un pourcentage</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="p-3 p-md-4 border-top">
+                        <div class="mx-auto" style="max-width:720px;">
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill btn-setup">
+                                Sauvegarder et Suivant &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
+
+            {# ─────────────────────────────────────────────────────────
+       STEP 2 (adresse)
+       ───────────────────────────────────────────────────────── #}
+            {% if step == 2 %}
+                <form action="{{ path('app_agent_listing_new_listing_save', {id: property.id}) }}" id="registration-form" method="post">
+                    <input type="hidden" name="step" value="2">
+
+                    <div class="px-3 px-md-4 pt-3">
+                        <div class="progress setup-progress" style="height:8px;">
+                            <div class="progress-bar bg-success" style="width:22.2%"></div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 p-md-4">
+                        <div class="mx-auto" style="max-width:720px;">
+                            <h4 class="fw-bold text-center mb-4">Où se situe votre propriété&nbsp;?</h4>
+
+                            <div class="mb-3 form-floating border p-2 rounded-3">
+                                <select class="form-select border-0" id="country" name="country-{{ property.id }}" onchange="findProvince()" required>
+                                    <option value="">— Pays —</option>
+                                    {% for country in countries %}
+                                        <option value="{{ country.id }}" {% if property.propertyCountry and property.propertyCountry.id == country.id %}selected{% endif %}>{{ country.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label class="px-2">Pays <span class="text-danger">*</span></label>
+                            </div>
+
+                            <div class="mb-3 form-floating border p-2 rounded-3">
+                                <select class="form-select border-0" id="province" name="province-{{ property.id }}" onchange="findCommune()" required>
+                                    {% if property.propertyProvince == null %}
+                                        <option value="">— Ville —</option>
+                                    {% else %}
+                                        <option value="{{ property.propertyProvince.id }}">{{ property.propertyProvince.name }}</option>
+                                    {% endif %}
+                                </select>
+                                <label class="px-2">Ville <span class="text-danger">*</span></label>
+                            </div>
+
+                            <div class="mb-3 form-floating border p-2 rounded-3">
+                                <select class="form-select border-0" id="commune" name="commune-{{ property.id }}" required>
+                                    {% if property.commune == null %}
+                                        <option value="">— Commune —</option>
+                                    {% else %}
+                                        <option value="{{ property.commune.id }}">{{ property.commune.name }}</option>
+                                    {% endif %}
+                                </select>
+                                <label class="px-2">Commune <span class="text-danger">*</span></label>
+                            </div>
+
+                            <div class="form-floating d-flex align-items-end px-3 py-1 border rounded-3 mb-3">
+                                <input type="text" class="form-control border-0 px-0" id="floatingInput" name="address-{{ property.id }}" value="{{ property.adress }}">
+                                <label for="floatingInput" class="text-muted px-3 mt-1">Adresse</label>
+                            </div>
+
+                            <div class="form-check form-switch d-flex justify-content-end">
+                                <label class="form-check-label me-5" for="addressCheck">Afficher l’adresse sur l’annonce</label>
+                                <input type="checkbox" id="addressCheck" name="adressview-{{ property.id }}" class="form-check-input" value="1"
+                                       {% if property.addressView %}checked{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 p-md-4 border-top">
+                        <div class="mx-auto" style="max-width:720px;">
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill btn-setup">
+                                Sauvegarder et Suivant &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
+
+            {# ─────────────────────────────────────────────────────────
+       STEP 3 (détails)
+       ───────────────────────────────────────────────────────── #}
+            {% if step == 3 %}
+                <form action="{{ path('app_agent_listing_new_listing_save', {id: property.id}) }}" id="registration-form" method="post">
+                    <input type="hidden" name="step" value="3">
+
+                    <div class="px-3 px-md-4 pt-3">
+                        <div class="progress setup-progress" style="height:8px;">
+                            <div class="progress-bar bg-success" style="width:33.3%"></div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 p-md-4">
+                        <div class="mx-auto" style="max-width:720px;">
+                            <h3 class="fw-bold text-center mb-4">Autres détails</h3>
+
+                            <div class="form-floating mb-3 border p-1 rounded-3">
+                                <input id="surfaceArea" type="text" class="form-control border-0" name="surfaceArea-{{ property.id }}" value="{{ property.surfaceArea }}">
+                                <label for="surfaceArea" class="px-2">Dimension en m²</label>
+                            </div>
+
+                            {% set counters = [
+                                {'label':'Invités','name':'guests-'~property.id,'value':property.guests},
+                                {'label':'Salon(s)','name':'livingroom-'~property.id,'value':property.livingroom},
+                                {'label':'Chambre(s)','name':'bedroom-'~property.id,'value':property.bedroom},
+                                {'label':'Salles de bains','name':'bathroom-'~property.id,'value':property.bathroom}
+                            ] %}
+
+                            {% for c in counters %}
+                                <div class="border p-3 rounded-3 mb-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <p class="mb-0 fw-bold">{{ c.label }}</p>
+                                        <div class="d-flex align-items-center quantity">
+                                            <button type="button" class="qty-btn" onclick="this.nextElementSibling.stepDown()">−</button>
+                                            <input type="number" class="qty-input" min="0" max="10" name="{{ c.name }}" value="{{ c.value|default(0) }}">
+                                            <button type="button" class="qty-btn" onclick="this.previousElementSibling.stepUp()">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="p-3 p-md-4 border-top">
+                        <div class="mx-auto" style="max-width:720px;">
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill btn-setup">
+                                Sauvegarder et Suivant &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
+
+            {# ─────────────────────────────────────────────────────────
+       STEP 4 (équipements + services)
+       ───────────────────────────────────────────────────────── #}
+            {% if step == 4 %}
+                <form action="{{ path('app_agent_listing_new_listing_save', {id: property.id}) }}" id="registration-form" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="step" value="4">
+
+                    <div class="px-3 px-md-4 pt-3">
+                        <div class="progress setup-progress" style="height:8px;">
+                            <div class="progress-bar bg-success" style="width:44.4%"></div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 p-md-4">
+                        <div class="mx-auto" style="max-width:720px;">
+                            <h3 class="fw-bold text-center mb-3">Quels équipements offrez-vous&nbsp;?</h3>
+
+                            <div class="border rounded-3 p-3">
+                                <h6 class="fw-semibold mb-2">Équipements essentiels</h6>
+                                <div class="row g-2">
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="furniture-{{ property.id }}" type="checkbox" id="furniture" value="1" {% if property.furniture %}checked{% endif %}>
+                                            <label class="form-check-label" for="furniture">Meublés</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="aircondition-{{ property.id }}" type="checkbox" id="aircondition" value="1" {% if property.airCondition %}checked{% endif %}>
+                                            <label class="form-check-label" for="aircondition">Climatisation</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="pool-{{ property.id }}" type="checkbox" id="pool" value="1" {% if property.pool %}checked{% endif %}>
+                                            <label class="form-check-label" for="pool">Piscine</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="roofspace-{{ property.id }}" type="checkbox" id="roofspace" value="1" {% if property.openspaceroof %}checked{% endif %}>
+                                            <label class="form-check-label" for="roofspace">Espace sur le toit</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="exteriortoilet-{{ property.id }}" type="checkbox" id="exteriortoilet" value="1" {% if property.exteriortoilet %}checked{% endif %}>
+                                            <label class="form-check-label" for="exteriortoilet">Toilette extérieure</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="securityguard-{{ property.id }}" type="checkbox" id="securityguard" value="1" {% if property.securityguard %}checked{% endif %}>
+                                            <label class="form-check-label" for="securityguard">Agent de sécurité</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="garden-{{ property.id }}" type="checkbox" id="garden" value="1" {% if property.garden %}checked{% endif %}>
+                                            <label class="form-check-label" for="garden">Espace vert</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="wifi-{{ property.id }}" type="checkbox" id="wifi" value="1" {% if property.wifi %}checked{% endif %}>
+                                            <label class="form-check-label" for="wifi">Wi-Fi</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="parking-{{ property.id }}" type="checkbox" id="parking" value="1" {% if property.parking %}checked{% endif %}>
+                                            <label class="form-check-label" for="parking">Parking</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if services is not empty %}
+                                <div class="border rounded-3 p-3 mt-3">
+                                    <h6 class="fw-semibold mb-2">Services supplémentaires</h6>
+                                    <div class="row g-2">
+                                        {% for service in services %}
+                                            <div class="col-12">
+                                                <div class="form-check">
+                                                    <input
+                                                            class="form-check-input"
+                                                            type="checkbox"
+                                                            name="services-{{ property.id }}[]"
+                                                            value="{{ service.id }}"
+                                                            id="service_{{ service.id }}"
+                                                            {% if serviceInPropertyIds is defined and service.id in serviceInPropertyIds %}checked{% endif %}
+                                                    >
+                                                    <label class="form-check-label" for="service_{{ service.id }}">
+                                                        {{ service.name }} – {{ service.price|number_format(2, '.', ' ') }} USD
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="p-3 p-md-4 border-top">
+                        <div class="mx-auto" style="max-width:720px;">
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill btn-setup">
+                                Sauvegarder et Suivant &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
+
+            {# ─────────────────────────────────────────────────────────
+       STEP 5 (photos)
+       ───────────────────────────────────────────────────────── #}
+            {% if step == 5 %}
+                <div class="px-3 px-md-4 pt-3">
+                    <div class="progress setup-progress" style="height:8px;">
+                        <div class="progress-bar bg-success" style="width:55.5%"></div>
+                    </div>
+                </div>
+
+                <div class="p-3 p-md-4">
+                    <div class="mx-auto" style="max-width:940px;">
+                        <h3 class="fw-bold text-center mb-2">Télécharger des photos</h3>
+                        <p class="small text-muted text-center mb-4">La première image sera utilisée comme photo principale de l’annonce.</p>
+                        {# --- Step 4: Photos (button + gallery + upload modal) --- #}
+
+                        {# Trigger + inline gallery #}
+                        <div class="mt-4">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h6 class="fw-semibold mb-0">Photos de l’annonce</h6>
+                                <button type="button"
+                                        class="btn btn-success btn-sm rounded-pill d-inline-flex align-items-center"
+                                        data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
+                                    <i class="mdi mdi-upload me-1"></i> Ajouter une photo
+                                </button>
+                            </div>
+                            <p class="text-muted small mb-2">
+                                Ajoutez au moins <strong>4 photos</strong>. La <strong>première</strong> sera utilisée comme image de couverture.
+                            </p>
+
+                            <div class="row g-2">
+                                {% for image in property.images %}
+                                    <div class="col-6 col-sm-4 col-md-3">
+                                        <div class="ratio ratio-4x3 rounded-4 overflow-hidden border position-relative">
+                                            <img src="{{ image.imageUrl }}" alt="Photo du bien" class="w-100 h-100" style="object-fit:cover;">
+                                            <a href="{{ path('app_agent_listing_image_action', { id: image.id }) }}"
+                                               class="thumb-del"
+                                               aria-label="Supprimer cette photo"
+                                               title="Supprimer">
+                                                <i class="mdi mdi-close"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="col-12">
+                                        <div class="alert alert-info rounded-4 py-2 mb-0">
+                                            Aucune photo pour le moment. Cliquez sur <em>Ajouter une photo</em> pour téléverser.
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+
+                        {# Upload Modal (XL) #}
+                        <div class="modal fade" id="uploadPhotosModal" tabindex="-1" aria-labelledby="uploadPhotosLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                                <div class="modal-content rounded-4">
+                                    <div class="modal-header border-0 pb-0">
+                                        <h5 class="modal-title fw-semibold" id="uploadPhotosLabel">Ajouter une photo</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                                    </div>
+
+                                    {{ form_start(formImage, { 'attr': { 'enctype': 'multipart/form-data' } }) }}
+                                    <div class="modal-body pt-2">
+                                        <div class=" p-4 rounded-4 border border-dashed text-center"
+                                             style="border-style:dashed!important;">
+                                            <i class="mdi mdi-image-multiple fs-2 d-block mb-2"></i>
+                                            <small class="text-muted d-block mb-3">Formats: JPG, PNG, WEBP · Taille max: 5&nbsp;Mo</small>
+                                            {{ form_widget(formImage.name, {
+                                                'attr': {
+                                                    'accept': 'image/*',
+                                                    'class': 'form-control'
+                                                }
+                                            }) }}
+                                        </div>
+                                        {{ form_errors(formImage.name) }}
+                                    </div>
+                                    <div class="text-center mb-3">
+                                        <img src="" alt="" id="avatarPreviewE" width="20%">
+                                    </div>
+
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-success btn-sm rounded-pill">
+                                            <i class="mdi mdi-upload me-1"></i> Téléverser
+                                        </button>
+                                    </div>
+                                    {{ form_end(formImage) }}
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <form action="{{ path('app_agent_listing_new_listing_save', {id: property.id}) }}" id="registration-form" enctype="multipart/form-data" method="post" class="mt-4">
+                            <input type="hidden" name="step" value="5">
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill btn-setup">Clôturer</button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+
+            {# ─────────────────────────────────────────────────────────
+       STEP 6 (succès)
+       ───────────────────────────────────────────────────────── #}
+            {% if step == 6 %}
+                <div class="px-3 px-md-4 pt-3">
+                    <div class="progress setup-progress" style="height:8px;">
+                        <div class="progress-bar bg-success" style="width:100%"></div>
+                    </div>
+                </div>
+
+                <div class="p-4 p-md-5 text-center">
+                    <img src="{{ asset('assets/img/listing-created.svg') }}" class="img-fluid mb-4" style="max-width:220px;" alt="">
+                    <h1 class="fw-bold mb-2">Annonce créée avec succès</h1>
+                    <p class="text-muted">Votre annonce est prête. Pensez à configurer la disponibilité et les tarifs.</p>
+                    <a href="{{ path('app_agent_work_space_listing') }}" class="btn btn-danger rounded-pill px-4">Voir les détails</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const avatarSpot = document.getElementById('avatarSpot');
+        $( document ).ready(function() {
+            avatarSpot.hidden = true
+        });
+        function previewAvatar(input) {
+            const preview = document.getElementById('avatarPreviewE');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+                avatarSpot.hidden = false;
+            }
+        }
+    </script>
+
+
+    {# Scripts conservés #}
+    <script>
+        // Saves the current form as draft and returns to listing
+        function saveAndReturnLater() {
+            const form = document.getElementById('registration-form');
+            if (!form) return;
+
+            // add/save_later flag
+            let saveFlag = form.querySelector('input[name="save_later"]');
+            if (!saveFlag) {
+                saveFlag = document.createElement('input');
+                saveFlag.type = 'hidden';
+                saveFlag.name = 'save_later';
+                form.appendChild(saveFlag);
+            }
+            saveFlag.value = '1';
+
+            // optional return URL for server redirect
+            let returnTo = form.querySelector('input[name="return_to"]');
+            if (!returnTo) {
+                returnTo = document.createElement('input');
+                returnTo.type = 'hidden';
+                returnTo.name = 'return_to';
+                returnTo.value = '{{ path('app_agent_work_space_listing') }}';
+                form.appendChild(returnTo);
+            }
+
+            form.submit();
+        }
+    </script>
+
+    <script>
+        function showPercentage(id){
+            const val = document.querySelector('input[name="periodicity-' + id + '"]:checked')?.value;
+            const visit = document.getElementById('priceOfVisit');
+            const percent = document.getElementById('percent');
+            if(!visit || !percent) return;
+            if(val === 'Monthly'){ visit.classList.remove('d-none'); percent.classList.add('d-none'); }
+            else { percent.classList.remove('d-none'); visit.classList.add('d-none'); }
+        }
+    </script>
+    <script>
+        function findProvince(){
+            const provinceDropDown = document.getElementById("province");
+            const country = document.querySelector('#country').value.trim();
+            const url = "{{ path('app_filter_provinces') }}";
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.status === 200) {
+                    provinceDropDown.innerHTML = "";
+                    const json = JSON.parse(xhr.responseText);
+                    const provinces = JSON.parse(json.provinces);
+                    if (provinces !== ''){
+                        provinces.forEach(province => {
+                            const opt = document.createElement("option");
+                            opt.innerHTML = province.split("-%@#-")[1];
+                            opt.value = province.split("-%@#-")[0];
+                            provinceDropDown.appendChild(opt);
+                        });
+                        findCommune();
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({"country": country}));
+        }
+
+        function findCommune(){
+            const communeDropDown = document.getElementById("commune");
+            const province = document.querySelector('#province').value.trim();
+            const url = "{{ path('app_filter_communes') }}";
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.status === 200) {
+                    communeDropDown.innerHTML = "";
+                    const json = JSON.parse(xhr.responseText);
+                    const communes = JSON.parse(json.communes);
+                    if (communes !== ''){
+                        communes.forEach(commune => {
+                            const opt = document.createElement("option");
+                            opt.innerHTML = commune.split("-%@#-")[1];
+                            opt.value = commune.split("-%@#-")[0];
+                            communeDropDown.appendChild(opt);
+                        });
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({"province": province}));
+        }
+    </script>
+    <script>
+        var avatarSpot = document.getElementById('avatarSpot');
+        $(document).ready(function(){ if(avatarSpot) avatarSpot.hidden = true; });
+        function previewAvatar(input){
+            var preview = document.getElementById('avatarPreviewE');
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e){ if(preview) preview.src = e.target.result; };
+                reader.readAsDataURL(input.files[0]);
+                if(avatarSpot) avatarSpot.hidden = false;
+            }
+        }
+    </script>
+
+{% endblock %}

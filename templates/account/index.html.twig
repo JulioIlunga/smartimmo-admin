@@ -1,0 +1,816 @@
+{% extends 'base.html.twig' %}
+
+{% block style %}
+    <link href="{{ asset('assets/admin/css/dasboard.css') }}" rel="stylesheet">
+    <style>
+        :root{
+            --brand:#dc3545;       /* Smart-Immo red */
+            --brand-600:#b02a37;
+            --ink:#1f2735;
+            --muted:#6b7280;
+            --ring:rgba(220,53,69,.18);
+        }
+        .profile-card{
+            background:#fff;border:1px solid rgba(2,6,23,.06);
+            border-radius:1.25rem;box-shadow:0 18px 48px rgba(220,53,69,.08);
+        }
+        .section-title h5{color:var(--ink)}
+        .section-title p{color:var(--muted)}
+        .avatar-wrap{
+            width:96px;height:96px;border-radius:50%;
+            overflow:hidden;position:relative;box-shadow:0 8px 24px rgba(0,0,0,.06)
+        }
+        .avatar-wrap img{width:100%;height:100%;object-fit:cover}
+        .avatar-edit{
+            position:absolute;bottom:.25rem;right:.25rem;
+            background:#fff;border-radius:999px;padding:.35rem .5rem;
+            border:1px solid rgba(0,0,0,.06);font-size:.85rem
+        }
+        .form-floating>.form-control, .form-floating>.form-select{height:3.25rem;padding-top:1.1rem}
+        .form-floating>label{color:#94a3b8}
+        .input-row{border-bottom:1px dashed #eef1f4}
+        .input-row:focus-within{box-shadow:inset 0 -2px 0 var(--ring)}
+        .help-tip{
+            background:#f8fafc;border:1px solid #eef2f7;border-radius:1rem
+        }
+        .btn-brand{background:var(--brand);border-color:var(--brand)}
+        .btn-brand:hover{background:var(--brand-600);border-color:var(--brand-600)}
+        .btn-soft{background:#fff;border:1px solid #e5e7eb}
+        .badge-note{background:rgba(220,53,69,.08);color:var(--brand-600)}
+    </style>
+    <style>
+        :root{
+            --brand:#dc3545;         /* base red */
+            --brand-600:#b02a37;
+            --ink:#1f2937;
+            --muted:#6b7280;
+            --line:#eef2f7;
+        }
+        .account-sidebar{
+            position: sticky; top: 1.25rem;
+            border:1px solid rgba(2,6,23,.06); border-radius:1rem; overflow:hidden;
+            box-shadow:0 14px 36px rgba(220,53,69,.08); background:#fff;
+        }
+        .account-cover{
+            height:96px;
+            background:linear-gradient(135deg, rgba(220,53,69,.15), rgba(220,53,69,.05));
+        }
+        .account-profile{
+            margin-top:-42px; text-align:center; padding:0 1.25rem 1.25rem;
+        }
+        .account-avatar{
+            width:84px;height:84px;border-radius:50%;overflow:hidden;
+            box-shadow:0 8px 24px rgba(0,0,0,.12); border:3px solid #fff; background:#f8fafc;
+        }
+        .account-name{color:var(--ink)}
+        .account-phone{color:var(--muted)}
+        .menu-label{
+            font-size:.75rem; letter-spacing:.04em; text-transform:uppercase;
+            color:var(--muted); margin: .25rem 1.25rem .5rem;
+        }
+        .side-nav{list-style:none; padding:.25rem  .75rem 1rem; margin:0;}
+        .side-link{
+            display:flex; align-items:center; gap:.5rem;
+            padding:.65rem .85rem; margin:.25rem 0; border-radius:.8rem;
+            color:var(--muted); text-decoration:none; border:1px solid transparent;
+            transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+        }
+        .side-link i, .side-link .mdi{font-size:1.05rem}
+        .side-link:hover{ background:#fff; border-color:var(--line); color:var(--ink); transform:translateY(-1px)}
+        .side-link.is-active{
+            background:linear-gradient(180deg, rgba(220,53,69,.10), rgba(220,53,69,.06));
+            border-color:rgba(220,53,69,.25); color:var(--brand-600);
+        }
+        .btn-dashboard{
+            background:var(--brand); color:#fff; border:none; padding:.6rem 1rem;
+            border-radius:999px; font-weight:600;
+        }
+        .btn-dashboard:hover{background:var(--brand-600); color:#fff}
+    </style>
+    <style>
+        :root{
+            --brand:#dc3545; --brand-600:#b02a37;
+            --ink:#1f2937; --muted:#6b7280; --line:#eef2f7;
+        }
+        .fav-wrap{background:#fff;border:1px solid rgba(2,6,23,.06);border-radius:1rem;padding:1.25rem}
+        .fav-header{gap:.75rem}
+        .count-chip{
+            background:rgba(220,53,69,.1); color:var(--brand-600);
+            border:1px solid rgba(220,53,69,.2); border-radius:999px;
+            padding:.25rem .6rem; font-weight:600; font-size:.85rem;
+        }
+        .tool-input{
+            border-radius:.75rem; border:1px solid var(--line); overflow:hidden;
+            background:#fff;
+        }
+        .tool-input .input-group-text{background:#fff;color:var(--muted)}
+        .fav-list{margin-top:1rem}
+        .fav-card{
+            border:1px solid rgba(2,6,23,.06); border-radius:1rem; padding:.85rem;
+            transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+        .fav-card:hover{transform:translateY(-2px); box-shadow:0 10px 28px rgba(220,53,69,.12); border-color:rgba(220,53,69,.25)}
+        .fav-media{
+            width:88px; height:66px; border-radius:.75rem; overflow:hidden; flex:0 0 auto;
+            background:#f8f9fa;
+        }
+        .fav-media img{width:100%;height:100%;object-fit:cover}
+        .type-badge{
+            display:inline-flex; align-items:center; gap:.35rem;
+            background:#fff; border:1px solid rgba(220,53,69,.2);
+            color:var(--brand-600); padding:.15rem .5rem; border-radius:999px;
+            font-size:.7rem; font-weight:700; text-transform:uppercase;
+        }
+        .fav-title{color:var(--ink); font-weight:600}
+        .fav-sub{color:var(--muted); font-size:.85rem}
+        .fav-price{color:var(--ink); font-weight:700}
+        .btn-view{
+            border:1px solid rgba(220,53,69,.25); color:var(--brand-600);
+            border-radius:.8rem; background:#fff;
+        }
+        .btn-view:hover{background:var(--brand); color:#fff; border-color:var(--brand)}
+        @media (max-width: 767.98px){
+            .fav-card{padding:1rem}
+            .fav-media{width:96px;height:72px}
+        }
+    </style>
+    <style>
+        /* ==== Reservations list styling ==== */
+        .res-card { transition: transform .18s ease, box-shadow .18s ease; border-radius: 1rem; }
+        .res-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(220,53,69,.10); background: #fff7f8; }
+
+        .res-thumb { width: 96px; height: 72px; border-radius: .75rem; overflow: hidden; flex: 0 0 auto; }
+        @media (min-width: 768px){
+            .res-thumb { width: 120px; height: 90px; }
+        }
+        .res-thumb img { object-fit: cover; display: block; }
+
+        /* Status chips */
+        .status-chip{
+            display: inline-flex; align-items: center; font-weight: 600; font-size: .85rem;
+            padding: .4rem .7rem; border-radius: 999px; line-height: 1; white-space: nowrap;
+            border: 1px solid transparent; background: #f8f9fa; color:#6c757d;
+        }
+        .status-reserved{ background: rgba(255,193,7,.12); color: #b88700; border-color: rgba(255,193,7,.3); }
+        .status-done{ background: rgba(25,135,84,.12); color: #0f7a52; border-color: rgba(25,135,84,.25); }
+        .status-pending{ background: rgba(220,53,69,.10); color:#b02a37; border-color: rgba(220,53,69,.25); }
+
+        /* Card container polish */
+        .card-body > p { margin-bottom: .5rem; }
+        hr.opacity-10 { opacity:.1; }
+    </style>
+{% endblock %}
+{% block title %}
+    Smart-Immo | Account manager
+{% endblock %}
+{% block bodyClass %}
+    class= 'bg-light header-top-br'
+{% endblock %}
+{% block body %}
+
+    <div class="py-5 container">
+        {% include 'agent_work_space/partials/_flag.html.twig' %}
+
+        <div class="row position-relative align-items-start">
+            <div class="col-lg-3 profile-sidebar-osahan">
+                <aside class="account-sidebar" aria-label="Menu du compte">
+                    <!-- Cover -->
+                    <div class="account-cover"></div>
+
+                    <!-- Profile -->
+                    <div class="account-profile">
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="account-avatar mb-2">
+                                {% if user.picture == null %}
+                                    <img src="{{ asset('assets/img/imageIcon.png') }}" class="w-100 h-100" style="object-fit:cover" alt="Photo de profil">
+                                {% else %}
+                                    <img src="{{ user.picture}}" class="w-100 h-100" style="object-fit:cover" alt="Photo de profil">
+                                {% endif %}
+                            </div>
+                            <h5 class="mb-0 fw-bold account-name">{{ user.firstname }} {{ user.name }}</h5>
+                            <small class="account-phone">{{ user.phonecode }} {{ user.phone }}</small>
+                        </div>
+
+                        {% set roles = app.user.roles %}
+                        {% if roles|length == 3 and 'ROLE_AGENT' in roles and 'ROLE_CUSTOMER' in roles %}
+                            <div class="listing text-center col-md-12 py-2">
+                                <a href="{{ path('app_agent_work_space') }}" class="btn btn-dashboard rounded-9">Espace Admin</a>
+                            </div>
+                        {% else %}
+                            <div class="listing text-center col-md-12 py-2">
+                                <a href="{{ path('app_account_switch', { id: user.id}) }}" class="btn btn-dashboard rounded-9">Passer à un compte agent</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Menu -->
+                    <p class="menu-label">Menu principal</p>
+                    <ul class="side-nav">
+
+                            <a class="side-link {% if show == 'profil' %}is-active{% endif %}"
+                               {% if show == 'profil' %}aria-current="page"{% endif %}
+                               href="{{ path('account.toggle.view', {show: 'profil'}) }}">
+                                <span class="mdi mdi-card-account-phone-outline"></span> Mon profil
+                            </a>
+                        </li>
+                        <li>
+                            <a class="side-link" href="{{ path('app_logout') }}">
+                                <span class="mdi mdi-logout"></span> Se déconnecter
+                            </a>
+                        </li>
+                    </ul>
+                </aside>
+            </div>
+
+            <!-- Content -->
+            <div class="col-lg-9 ps-xl-5">
+                {% if show == 'profil' %}
+                    <div class="account-info profile-card p-4 p-md-5">
+                        <!-- Header -->
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+                            <div class="section-title">
+                                <h5 class="fw-bold mb-1">Informations du compte</h5>
+                                <p class="small mb-0">Photo de profil, identité & coordonnées</p>
+                            </div>
+                            <span class="badge badge-note rounded-pill px-3 py-2">
+                              <i class="mdi mdi-shield-check-outline me-1"></i> Données protégées
+                            </span>
+                        </div>
+
+                        <div class=" form-account g-4 row">
+                            <!-- Left column -->
+                            <div class="col-lg-7 ">
+                                <form class="form-account g-4" action="{{ path('app_user_edit_information') }}" method="post" enctype="multipart/form-data">
+                                    <div class="input-row form-floating mb-2">
+                                        <select class="form-select border-0 fw-semibold px-0" id="sex" name="salutation">
+                                            <option value=""></option>
+                                            <option value="Mr" {% if user.salutation == 'Mr' %}selected{% endif %}>Mr</option>
+                                            <option value="Mme" {% if user.salutation == 'Mrs' %}selected{% endif %}>Mme</option>
+                                        </select>
+                                        <label for="sex" class="pt-3 ps-0">Salutation</label>
+                                    </div>
+                                    <div class="input-row form-floating mb-2">
+                                        <input type="text" class="form-control fw-semibold border-0 ps-0" id="firstname" name="firstname" value="{{ user.firstname }}">
+                                        <label for="firstname" class="pt-3 ps-0">Prénom</label>
+                                    </div>
+
+                                    <div class="input-row form-floating mb-2">
+                                        <input type="text" class="form-control fw-semibold border-0 ps-0" id="lastname" name="name" value="{{ user.name }}">
+                                        <label for="lastname" class="pt-3 ps-0">Nom</label>
+                                    </div>
+
+                                    <div class="input-row form-floating mb-2">
+                                        <input type="email" class="form-control fw-semibold border-0 ps-0" id="email" name="email" placeholder="Adresse e-mail" value="{{ user.email }}">
+                                        <label for="email" class="pt-3 ps-0">E-mail</label>
+                                    </div>
+
+                                    <div class="input-row form-floating mb-2">
+                                        <select class="form-select border-0 fw-semibold px-0" id="sex" name="sex">
+                                            <option value=""></option>
+                                            <option value="Homme" {% if user.sex == 'Homme' %}selected{% endif %}>Homme</option>
+                                            <option value="Femme" {% if user.sex == 'Femme' %}selected{% endif %}>Femme</option>
+                                        </select>
+                                        <label for="sex" class="pt-3 ps-0">Genre</label>
+                                    </div>
+
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="input-row form-floating mb-2">
+                                            <input type="text" class="form-control fw-semibold border-0 ps-0" id="phone" name="phone"
+                                                   value="{{ user.phonecode }} {{ user.phone }}" readonly>
+                                            <label for="phone" class="pt-3 ps-0">Téléphone <span class="text-danger">— non modifiable</span></label>
+                                        </div>
+                                        {% if user.accountconfirmed %}
+                                            <span class="d-flex align-items-center px-3 py-1 rounded-pill" style="background-color: #d4edda; color: #155724;">
+                                                <i class="mdi mdi-check me-1"></i> Numéro Verifié
+                                            </span>
+
+                                        {% else %}
+                                            <a href="{{ path('app_sign_up_account_confirmation', { 'phone': user.phone }) }}" class="text-danger fw-bold text-decoration-none">Vérifiez votre numéro</a>
+                                        {% endif %}
+                                    </div>
+
+
+
+                                    <!-- Actions -->
+                                    <div class="col-12 mt-4">
+                                        <div class="row align-items-center">
+                                            <div class="col-sm-12 mb-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <button type="submit" class="btn text-white btn-brand rounded-pill px-4 btn-profile">
+                                                        <i class="mdi mdi-content-save-outline me-1"></i> Sauvegarder
+                                                    </button>
+                                                    <button type="button" onclick="window.location.reload()" class="btn btn-soft rounded-pill px-4 btn-profile">
+                                                        Annuler
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- Right column -->
+                            <div class="col-lg-5 ps-lg-4">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="avatar-wrap" id="avatarPreview">
+                                        {% if user.picture == null %}
+                                            <img src="{{ asset('assets/img/imageIcon.png') }}" alt="Avatar">
+                                        {% else %}
+                                            <img src="{{ user.picture }}" alt="Avatar">
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ user.firstname }} {{ user.name }}</div>
+                                        <div class="text-muted small">{{ user.phonecode }} {{ user.phone }}</div>
+                                        <button data-bs-toggle="modal"
+                                                data-bs-target="#uploadPhotoModal" class="btn btn-soft btn-sm rounded-pill mt-2">
+                                            <i class="mdi mdi-image-edit-outline me-1"></i> Changer la photo
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="help-tip p-4">
+                                    <i class="mdi mdi-shield-lock-outline fs-4 text-danger"></i>
+                                    <h6 class="fw-bold mt-2 mb-1">Sécurité & conformité</h6>
+                                    <p class="small mb-0 text-muted">
+                                        Vos informations sont chiffrées et protégées. Nous appliquons de bonnes pratiques pour garantir la confidentialité de vos données.
+                                    </p>
+                                </div>
+                                <div class="col-sm-12 mt-3 text-sm-end">
+                                    <button class="btn btn-outline-danger btn-soft rounded-pill px-3 btn-profile"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#confirmDeactivateModal">
+                                        <i class="mdi mdi-account-off-outline me-1"></i> Désactiver le compte
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if show == 'reservations' %}
+                    <div class="dashboard-content">
+
+                        <!-- Header / Filter -->
+                        <div class="d-sm-flex align-items-center gap-3">
+                            <h4 class="mb-sm-0 fw-bold">Mes Réservations</h4>
+                            <div class="ms-sm-auto">
+                                <div class="input-group input-group-sm bg-white border rounded-4 overflow-hidden shadow-sm">
+                                    <span class="input-group-text bg-white border-0 text-muted">
+                                      <i class="mdi mdi-calendar-month"></i>
+                                    </span>
+                                    <input
+                                            type="datetime-local"
+                                            class="form-control border-0 text-muted"
+                                            id="Datein"
+                                            placeholder="{{ today }}"
+                                            aria-label="Filtrer par date"
+                                            data-input
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- List -->
+                        <div class="card border-0 shadow-sm rounded-4 mt-4">
+                            <div class="card-body p-3 p-md-4">
+                                <p class="fw-light text-center text-md-start mb-3">Historique des réservations</p>
+
+                                {% if reservations is not empty %}
+                                    {% for reservation in reservations %}
+                                        {# Compute status styling/text #}
+                                        {% set statusClass = (not reservation.status and reservation.confimred)
+                                            ? 'status-reserved'
+                                            : (reservation.status and reservation.confimred ? 'status-done' : 'status-pending') %}
+                                        {% set statusText = (not reservation.status and reservation.confimred)
+                                            ? 'Réservé'
+                                            : (reservation.status and reservation.confimred ? 'Terminé' : 'En attente') %}
+
+                                        <article class="res-card row g-3 align-items-center py-3 px-2 px-md-3">
+                                            <!-- Media -->
+                                            <div class="col-12 col-md-6 d-flex align-items-center">
+                                                <a href="{{ path('app_property_details', { propertyUuid: reservation.property.uuidProperty }) }}" class="d-inline-block res-thumb me-3">
+                                                    <img src="{{ reservation.property.image }}" alt="{{ reservation.property.header }}" class="w-100 h-100">
+                                                </a>
+                                                <div class="flex-grow-1 mb-5">
+                                                    <h6 class="mb-1 text-uppercase text-truncate">
+                                                        {{ reservation.property.header }}
+                                                    </h6>
+                                                    <div class="text-muted small d-flex flex-wrap align-items-center gap-2">
+                                                      <span><i class="mdi mdi-calendar-blank text-danger me-1"></i>
+                                                        Du {{ reservation.checkIn|date('d/m/Y') }} au {{ reservation.checkOut|date('d/m/Y') }}
+                                                      </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Amount -->
+                                            <div class="col-8 col-md-3 d-flex align-items-center justify-content-md-end">
+                                                <i class="mdi mdi-cash text-muted d-none d-md-inline-block me-2 fs-5"></i>
+                                                <span class="text-secondary fw-semibold">
+                                                    {{ reservation.property.currency }} {{ reservation.totalAmount|number_format(2, ',', '.') }}
+                                                  </span>
+                                            </div>
+
+                                            <!-- Status -->
+                                            <div class="col-4 col-md-3 d-flex justify-content-end">
+                                              <span class="status-chip {{ statusClass }}">
+                                                <i class="mdi {{ statusClass == 'status-done' ? 'mdi-check-circle' : (statusClass == 'status-reserved' ? 'mdi-clock-outline' : 'mdi-dots-horizontal') }} me-1"></i>
+                                                {{ statusText }}
+                                              </span>
+                                            </div>
+                                        </article>
+
+                                        {% if not loop.last %}
+                                            <hr class="my-0 opacity-10">
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:64px;height:64px;background:rgba(220,53,69,.08);">
+                                            <i class="mdi mdi-calendar-remove text-danger fs-3"></i>
+                                        </div>
+                                        <h6 class="fw-semibold mb-1">Aucune réservation trouvée</h6>
+                                        <p class="text-muted small mb-3">Commencez par explorer les propriétés et réservez votre prochain séjour.</p>
+                                        <a href="{{ path('air_bnb') }}" class="btn btn-danger btn-sm rounded-pill">
+                                            Découvrir les propriétés
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if show == 'favoris' %}
+                    <div class="dashboard-content">
+                        <!-- Header -->
+                        <div class="d-flex flex-column flex-sm-row align-items-sm-center fav-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <h4 class="mb-0 fw-bold">Mes favoris</h4>
+                                <span class="count-chip">{{ favoris|length }} élément(s)</span>
+                            </div>
+                        </div>
+
+                        <!-- List -->
+                        <div class="fav-wrap mt-3">
+                            <p class="text-muted mb-3">Vos propriétés enregistrées</p>
+
+                            {% if favoris is empty %}
+                                <div class="text-center p-4 border rounded-4 bg-light-subtle">
+                                    <i class="mdi mdi-heart-outline fs-2 text-danger d-block mb-1"></i>
+                                    <div class="text-muted">Aucun favori pour l’instant.</div>
+                                </div>
+                            {% else %}
+                                <div class="fav-list">
+                                    {% for favoris_ in favoris %}
+                                        <div class="fav-card mb-3">
+                                            <div class="row align-items-center g-3">
+                                                <!-- media + info -->
+                                                <div class="col-12 col-md-7 d-flex align-items-center gap-3">
+                                                    <div class="fav-media">
+                                                        <img src="{{ favoris_.property.image }}" alt="{{ favoris_.property.type }}">
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                                            <span class="type-badge">
+                                                              <i class="mdi mdi-home-outline"></i>{{ favoris_.property.type }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="fav-title">{{ favoris_.property.header }}</div>
+                                                        {# Optional: add location if available #}
+                                                    </div>
+                                                </div>
+
+                                                <!-- price -->
+                                                <div class="col-6 col-md-3 d-flex align-items-center gap-2 justify-content-start justify-content-md-end">
+                                                    <i class="mdi mdi-cash text-muted d-none d-md-inline"></i>
+                                                    <div class="fav-price">
+                                                        {{ favoris_.property.currency }} {{ favoris_.property.price }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- cta -->
+                                                <div class="col-6 col-md-2 text-end">
+                                                    <a href="{{ path('app_property_details', { propertyUuid: favoris_.property.uuidProperty }) }}"
+                                                       class="btn btn-view w-100">
+                                                        Voir détail <i class="mdi mdi-arrow-right ms-1"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                {% if show == 'conversation' %}
+                <div class="dashboard-content">
+                    <!-- Bookings Empty -->
+                    <div class="rounded-9 border bg-white">
+                        <div class="border-bottom px-4 py-3 d-flex align-items-center">
+                            <h6 class="mb-0 fw-bold">Tous les messages</h6>
+                            <div class="d-flex ms-auto">
+                                <button class="btn btn-light text-muted rounded-9 me-2 fs-14 fw-bold" data-bs-toggle="modal" data-bs-target="#newlistModal">New conversation</button>
+                                <button class="btn btn-light text-muted rounded-9 mdi mdi-filter-menu-outline fw-bold"></button>
+                            </div>
+                        </div>
+                        <div class="m-4">
+                            <!-- Item -->
+                            {% for conversation in conversations %}
+                            <a href="conversation.html" class="message-item row align-items-center mt-4 text-dark g-2">
+                                <div class="col-md-4 col-12 d-flex align-items-center">
+                                    <img src="../img/rmate1.jpg" class="img-fluid rounded-9 me-3 message-img">
+                                    <div class="">
+                                        <div class="d-flex align-items-center">
+                                            <p class="mb-0 fw-bold">Helena</p>
+                                            <span class="bg-danger rounded-circle alert-icon"></span>
+                                        </div>
+                                        <span>In efforts to expand our horizons, we</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-8 d-flex justify-content-md-end">
+                                    <div class="">
+                                        <p class="mb-0">Sep 20 - Sep 27, 2023</p>
+                                        <span class="text-muted">Entire apartment at philadelphia</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-4 d-flex justify-content-end">
+                                    <button class="btn btn-light text-success rounded-9 message-status">Active</button>
+                                </div>
+                            </a>
+                            {% endfor %}
+                            <!-- Item -->
+                            <a href="conversation.html" class="message-item row align-items-center text-dark mt-5 g-2">
+                                <div class="col-md-4 col-12 d-flex align-items-center">
+                                    <img src="../img/rmate2.jpg" class="img-fluid rounded-9 me-3 message-img">
+                                    <div class="">
+                                        <div class="d-flex align-items-center">
+                                            <p class="mb-0 fw-bold">Sallie</p>
+                                            <span class="bg-danger rounded-circle alert-icon"></span>
+                                        </div>
+                                        <span>In this digital generation</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-8 d-flex justify-content-md-end">
+                                    <div class="">
+                                        <p class="mb-0">Aug 2 - Aug 7, 2023</p>
+                                        <span class="text-muted">Entire apartment at philadelphia</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-4 d-flex justify-content-end">
+                                    <button class="btn btn-light text-success rounded-9 message-status">Active</button>
+                                </div>
+                            </a>
+                            <!-- Item -->
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if show == 'chat' %}
+                <div class="dashboard-content">
+                    <div class="row border rounded-9 overflow-hidden">
+                        <div class="col-md-8 bg-white border-end px-0">
+                            <div class="p-4 d-flex align-items-center justify-content-between border-bottom">
+                                <div class="d-flex align-items-center">
+                                    <a href="messenger-list.html" class="mdi mdi-arrow-left btn btn-light text-muted me-3 rounded-9"></a>
+                                    <h6 class="mb-0 fw-bold">Sallie Wade</h6>
+                                </div>
+                                <button class="btn btn-light mdi mdi-dots-vertical text-muted rounded-9 px-2"></button>
+                            </div>
+                            <div class="messages messages-content">
+                                <!-- Senders -->
+                                <div class="senders d-flex justify-content-end p-4">
+                                    <div class="small text-end me-2">
+                                        <p class="mb-2"><small class="text-muted">8:20 PM</small><span class="ms-1 fw-bold">Johanna</span></p>
+                                        <p class="px-3 py-2 border chat-sender mb-0">Freelance Design Tricks</p>
+                                    </div>
+                                    <img src="../img/rmate1.jpg" class="img-fluid rounded-9 user-img">
+                                </div>
+                                <!-- Receivers -->
+                                <div class="receivers d-flex p-4">
+                                    <img src="../img/rmate2.jpg" class="img-fluid rounded-9 user-img">
+                                    <div class="small ms-2">
+                                        <p class="mb-2"><span class="me-1 fw-bold">Sallie</span><small class="text-muted">8:35 PM</small></p>
+                                        <p class="px-3 py-2 border chat-receiver bg-light mb-2">Some graphic designers always manage to produce</p>
+                                        <div class="receiver-img">
+                                            <img src="../img/city1.jpg" class="img-fluid rounded-9 me-1">
+                                            <img src="../img/city2.jpg" class="img-fluid rounded-9 me-1">
+                                            <img src="../img/city3.jpg" class="img-fluid rounded-9 me-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Senders -->
+                                <div class="senders d-flex justify-content-end p-4">
+                                    <div class="small text-end me-2">
+                                        <p class="mb-2"><small class="text-muted">8:40 PM</small><span class="ms-1 fw-bold">Johanna</span></p>
+                                        <p class="px-3 py-2 border chat-sender mb-0">Thanks. Some graphic designers always manage to produce?</p>
+                                    </div>
+                                    <img src="../img/rmate1.jpg" class="img-fluid rounded-9 user-img">
+                                </div>
+                                <!-- Senders -->
+                                <div class="senders d-flex justify-content-end p-4">
+                                    <div class="small text-end me-2">
+                                        <p class="mb-2"><small class="text-muted">8:41 PM</small><span class="ms-1 fw-bold">Johanna</span></p>
+                                        <p class="px-3 py-2 border chat-sender mb-0">Attending a trade show can be avery effective method</p>
+                                    </div>
+                                    <img src="../img/rmate1.jpg" class="img-fluid rounded-9 user-img">
+                                </div>
+                                <!-- Receivers -->
+                                <div class="receivers d-flex p-4">
+                                    <img src="../img/rmate2.jpg" class="img-fluid rounded-9 user-img">
+                                    <div class="small ms-2">
+                                        <p class="mb-2"><span class="me-1 fw-bold">Sallie</span><small class="text-muted">8:50 PM</small></p>
+                                        <p class="px-3 py-2 border chat-receiver bg-light mb-2">Advertising on a budget part 3</p>
+                                        <div class="fw-light small text-muted typing-msg mt-4"><span class="mdi mdi-circle text-muted-300 me-1"></span><span class="mdi mdi-circle text-muted-200 me-1"></span><span class="mdi mdi-circle text-muted-100 me-2"></span>Sallie is typing</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <form class="p-2 d-flex align-items-center justify-content-between border rounded-9 m-4">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control border-0" placeholder="Type to add your message">
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <a href="#" class="fs-4 text-muted me-3 mdi mdi-sticker-emoji"></a>
+                                        <a href="#" class="fs-4 text-muted me-3">+</a>
+                                        <button class="btn btn-dark mdi mdi-send rounded-9"></button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-4 bg-white p-4">
+                            <img src="../img/apartment1.jpg" class="img-fluid rounded-9 mb-4">
+                            <h6 class="mb-1 fw-bold">Shepherd's Hut with hot tub</h6>
+                            <p class="text-muted small mb-5">Entire apartment at philadelphia</p>
+                            <div class="d-flex align-items-center justify-content-between border-bottom pb-3">
+                                <p class="mb-0 text-muted fw-light">Madrid . Aug 2 - Aug 7, 2023</p>
+                                <button class="btn btn-success btn-sm rounded-9 px-3">Paid</button>
+                            </div>
+                            <div class="border-bottom py-4">
+                                <h6 class="fw-bold">Guests</h6>
+                                <div class="guests-relation mt-3">
+                                    <img src="../img/rmate2.jpg" class="img-fluid user-img rounded-9">
+                                    <small class="text-muted ms-2">Sallie Jonhson</small>
+                                </div>
+                                <div class="guests-relation mt-3">
+                                    <img src="../img/rmate1.jpg" class="img-fluid user-img rounded-9">
+                                    <small class="text-muted ms-2">Marilyn Smith</small>
+                                </div>
+                            </div>
+                            <div class="border-bottom py-4 d-flex align-items-center justify-content-between">
+                                <h6 class="mb-0 fw-bold">Rent amount</h6>
+                                <h6 class="mb-0 fw-bold">$130.50</h6>
+                            </div>
+                            <div class="py-4">
+                                <p class="mb-4"><a href="#" class="text-muted d-flex align-items-center fw-bold small"><span class="mdi mdi-progress-question me-2 fs-5"></span>Help center</a></p>
+                                <a href="#" class="text-muted d-flex align-items-center fw-bold small"><span class="mdi mdi-flag me-2 fs-5"></span>Report host</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmDeactivateModal" tabindex="-1" aria-labelledby="confirmDeactivateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-3">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="confirmDeactivateModalLabel">Confirmer la désactivation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p class="mb-2">Êtes-vous sûr de vouloir désactiver votre compte&nbsp;?</p>
+                    <ul class="small text-muted ps-3 mb-0">
+                        <li>Vous ne pourrez plus vous connecter tant qu’il est désactivé.</li>
+                        <li>Vos données restent conservées et pourront être réactivées plus tard.</li>
+                        <li>Vous serez directement déconnecté après cette action.</li>
+                    </ul>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <form method="post" action="{{ path('account_deactivate') }}">
+                        <input type="hidden" name="_token" value="{{ token }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="mdi mdi-account-off-outline me-1"></i> Désactiver
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="uploadPhotoModal" tabindex="-1" aria-labelledby="uploadPhotoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content rounded-3" method="post"
+                  action="{{ path('account_upload_photo') }}"
+                  enctype="multipart/form-data">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="uploadPhotoModalLabel">Télécharger une nouvelle photo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="text-center mb-2">
+                        <img id="photoPreview" src="#" alt="Aperçu"
+                             class="rounded-circle d-none"
+                             style="width:140px;height:140px;object-fit:cover;">
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <input class="form-control" type="file" name="avatar" id="avatarInput"
+                                   accept="image/jpeg,image/png,image/webp"
+                                   required>
+                            <div class="form-text">
+                                Formats: JPG/PNG/WebP • Max 3&nbsp;Mo.
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="_token" value="{{ csrf_token('upload-photo') }}">
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light btn-primary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" id="uploadBtn" class="btn btn-primary" disabled>
+                        <i class="mdi mdi-upload me-1"></i> Télécharger
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Preview avatar on file select
+        (function(){
+            const input = document.getElementById('picture');
+            const preview = document.querySelector('#avatarPreview img');
+            if(input && preview){
+                input.addEventListener('change', e=>{
+                    const [file] = e.target.files || [];
+                    if(file){
+                        const url = URL.createObjectURL(file);
+                        preview.src = url;
+                    }
+                });
+            }
+        })();
+    </script>
+    {# Preview + validation #}
+    <script>
+        (function () {
+            const input = document.getElementById('avatarInput');
+            const btn   = document.getElementById('uploadBtn');
+            const img   = document.getElementById('photoPreview');
+            let previewUrl = null;
+
+            function resetPreview() {
+                btn.disabled = true;
+                img.classList.add('d-none');
+                if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
+            }
+
+            input.addEventListener('change', function () {
+                resetPreview();
+                const file = this.files && this.files[0];
+                if (!file) return;
+
+                const okTypes = ['image/jpeg','image/png','image/webp'];
+                if (!okTypes.includes(file.type)) {
+                    alert('Type de fichier non valide. Utilisez JPG/PNG/WebP.');
+                    this.value = '';
+                    return;
+                }
+
+                previewUrl = URL.createObjectURL(file);
+                img.src = previewUrl;
+                img.classList.remove('d-none');
+                btn.disabled = false;
+            });
+
+            // Optional: disable submit to prevent double post
+            document.querySelector('#uploadPhotoModal form').addEventListener('submit', function () {
+                btn.disabled = true; btn.innerHTML = 'Chargement…';
+            });
+
+            // Clean preview when modal hides
+            const modalEl = document.getElementById('uploadPhotoModal');
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                input.value = '';
+                resetPreview();
+            });
+        })();
+    </script>
+    <!-- Jquery js -->
+    <script src="{{ asset('assets/vendor/jquery/jquery.min.js') }}"></script>
+    <!-- Bootstrap Bundle -->
+    <script src="{{ asset('assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- slick Slider JS-->
+    <script type="text/javascript" src="{{ asset('assets/vendor/slick/slick.min.js') }}"></script>
+    <!-- Date Picker -->
+    <script src="{{ asset('assets/vendor/date-picker/date-picker.js') }}"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="{{ asset('assets/js/osahan.js') }}"></script>
+{% endblock %}
+

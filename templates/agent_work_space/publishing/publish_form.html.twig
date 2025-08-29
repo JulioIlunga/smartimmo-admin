@@ -1,0 +1,16 @@
+<form id="entry-form-{{ property.id }}" role="form" onsubmit="return savePublication('{{ property.id }}')">
+    <div class="modal-body ps-5 pe-5">
+        <div id="flash-message-overlay">
+        </div>
+        <div class="col">
+            {{ include('agent_work_space/publishing/_form.html.twig') }}
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-danger" data-bs-dismiss="modal">Annuler</button>
+        {% if property.images.count >= 4 and property.user.agentPhone != null  %}
+        <input type="submit" value="Publier" id="entry-submit-{{ property.id }}"
+               class="btn btn-sm btn-success"/>
+        {% endif %}
+    </div>
+</form>

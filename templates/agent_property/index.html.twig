@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Smart-Immo | Listing By {{ agent.firstname }} {{ agent.name }}
+{% endblock %}
+{% block description %}
+    Découvrez une variété d'hébergements adaptés à vos besoins et préférences.
+{% endblock %}
+{% block style %}
+    <link href="{{ asset('assets/css/agent-listing.css') }}" rel="stylesheet">
+
+{% endblock %}
+
+{% block body %}
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12 p-3 p-lg-4">
+                <!-- Agent header -->
+                <section class="agent-header rounded-4 mb-4">
+                    <div class="container py-4 py-lg-5">
+                        <div class="agent-card rounded-4 p-3 p-lg-4 d-flex align-items-center gap-3 gap-lg-4">
+                            <!-- Avatar -->
+                            <div class="agent-avatar">
+                                {% if agent.picture %}
+                                    <img src="{{ agent.picture }}" alt="{{ agent.firstname }} {{ agent.name }}"
+                                         loading="lazy" decoding="async" class="avatar-img">
+                                {% else %}
+                                    <img src="{{ asset('assets/img/imageIcon.png') }}" alt="Photo de profil"
+                                         loading="lazy" decoding="async" class="avatar-img opacity-75">
+                                {% endif %}
+                                <span class="ring" aria-hidden="true"></span>
+                            </div>
+                            <!-- Identity & meta -->
+                            <div class="flex-grow-1">
+                                <div class="d-flex flex-wrap align-items-baseline gap-2">
+                                    <h1 class="h4 h3-lg fw-bold mb-0">
+                                        <span class="text-muted">Compte :</span>
+                                        <span class="text-dark">{{ agent.firstname }} {{ agent.name }}</span>
+                                    </h1>
+                                    <span class="chipProfil ms-0 ms-lg-2">
+                                        <i class="mdi mdi-shield-check-outline me-1"></i> Profil vérifié
+                                    </span>
+                                </div>
+                                <p class="text-secondary mt-2 mb-3 small">
+                                    Trouvez facilement votre futur chez-vous grâce à nos agents et agences partenaires.
+                                </p>
+                                <!-- Dynamic counts -->
+                                <div id="listing-count">
+                                    {% include 'listing/_count_listing.html.twig' %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- /Agent header -->
+
+                <!-- Listings -->
+                <section class="container px-0">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-10">
+                            <div class="content-surface rounded-4">
+                                <div class="px-3 px-lg-0" id="listing-table">
+                                    {% include 'agent_property/_listing_list.html.twig' %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

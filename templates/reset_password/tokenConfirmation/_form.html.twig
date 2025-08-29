@@ -1,0 +1,14 @@
+<p class="text-success mb-1" id="informationSuccessMsg"></p>
+<form action="{{ path('app_reset_password_account_token_confirmation') }}" method="post">
+    <div class="form-floating  d-flex align-items-end px-3 py-1 border rounded-3 {% if error == true %} border border-danger{% endif %}">
+        <input type="text" name="token-number" class="form-control border-0 px-0" id="floatingInput" >
+        <span class="my-auto mdi mdi-phone"></span>
+        <label for="floatingInput" class="text-muted px-3 mt-1">Entrer code</label>
+    </div>
+    {% if error == true %}
+        <p class="text-danger mb-3">Le code est invalide.</p>
+    {% endif %}
+    <a href="#" class="text-danger small text-end" onclick="ResendToken('{{ user.id }}')"><span class="mdi mdi-reload"></span> Renvoyez code</a>
+    <input type="hidden" name="user" value="{{ user.id }}">
+    <button id="confirmed-button" class="btn btn-danger text-uppercase fw-bold w-100 py-3 rounded-9 mt-3">Confirmer</button>
+</form>

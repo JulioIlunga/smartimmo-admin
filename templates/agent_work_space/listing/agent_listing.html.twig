@@ -1,0 +1,208 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Hello HomeeController!{% endblock %}
+{% block style %}
+    <style>
+        /* ===== Listing row (agent) ===== */
+        :root{ --brand:#dc3545; --ink:#0f172a; --muted:#6b7280; --line:#eef2f6; }
+        .prop-item{
+            border-radius:1rem!important; border:1px solid var(--line)!important;
+            box-shadow:0 6px 18px rgba(16,18,22,.06);
+            transition:transform .18s ease, box-shadow .18s ease;
+        }
+        .prop-item:hover{ transform:translateY(-2px); box-shadow:0 14px 32px rgba(220,53,69,.16); }
+        .prop-item.is-online{ outline:1px solid rgba(220,53,69,.35); box-shadow:0 14px 36px rgba(220,53,69,.18); }
+
+        .thumb .ratio{ border-radius:.8rem; overflow:hidden; }
+        .thumb img{ object-fit:cover; transition:transform .35s ease; }
+        .prop-item:hover .thumb img{ transform:scale(1.04); }
+
+        .chip{
+            display:inline-flex; align-items:center; gap:.35rem;
+            padding:.3rem .6rem; border-radius:999px; font-weight:700; font-size:.72rem;
+            border:1px solid var(--line); background:#fff; letter-spacing:.2px;
+        }
+        .chip-type{ color:var(--brand); border-color:rgba(220,53,69,.25); text-transform:uppercase; }
+        .chip-tx{ background:#fff5f5; color:#b91c1c; border-color:#ffe1e1; }
+
+        .status-badge{
+            display:inline-flex; align-items:center; gap:.35rem;
+            padding:.28rem .6rem; border-radius:999px; font-size:.72rem; font-weight:700;
+        }
+        .status-ok{ background:#ecfdf5; color:#047857; }
+        .status-off{ background:#fff1f2; color:#b91c1c; }
+
+        .meta{ color:var(--muted); font-size:.84rem; }
+        .specs{ gap:.5rem; }
+        .specs .pill{
+            display:inline-flex; align-items:center; gap:.35rem;
+            background:#f8fafc; border:1px solid var(--line); padding:.25rem .6rem;
+            border-radius:999px; font-weight:600; font-size:.78rem; color:#64748b;
+        }
+
+        .price{ font-weight:800; color:var(--brand); white-space:nowrap; }
+
+        .badge-live{
+            color:#fff; background:linear-gradient(135deg,#ef4444,#dc2626);
+            border:0; font-weight:800; padding:.35rem .6rem; border-radius:999px;
+            animation:pulse 1.6s infinite;
+        }
+        @keyframes pulse{
+            0%{ box-shadow:0 0 0 0 rgba(220,38,38,.45) }
+            70%{ box-shadow:0 0 0 12px rgba(220,38,38,0) }
+            100%{ box-shadow:0 0 0 0 rgba(220,38,38,0) }
+        }
+
+        .btn-soft-dark{ background:#111827; color:#fff; }
+        .btn-soft-primary{ background:#f1f5f9; color:#111827; border:1px solid var(--line); }
+        .btn-soft-primary:hover{ background:#e2e8f0; }
+    </style>
+
+    <style>
+        /* Smaller buttons inside property cards */
+        .prop-item .btn,
+        .prop-item .dropdown-toggle {
+            padding: .3rem .55rem;       /* tighter padding */
+            font-size: .78rem;           /* smaller text */
+            border-radius: .45rem;       /* subtler rounding */
+            line-height: 1.15;
+        }
+        .prop-item .btn .mdi {         /* smaller icons in buttons */
+            font-size: .9em;
+            margin-top: -1px;
+        }
+        /* Also trim items in the status dropdown */
+        .prop-item .dropdown-menu .dropdown-item {
+            padding: .35rem .5rem;
+            font-size: .85rem;
+        }
+        /* Toolbar polish */
+        .listing-toolbar .smart-pill{
+            background:#fff;
+            border:1px solid #e9ecef;
+            border-radius:999px;
+            min-width:260px;
+            box-shadow:0 2px 10px rgba(220,53,69,.06);
+            transition:box-shadow .2s ease, border-color .2s ease;
+        }
+        .listing-toolbar .smart-pill:focus-within{
+            border-color:#dc3545;
+            box-shadow:0 0 0 .15rem rgba(220,53,69,.15);
+        }
+        .listing-toolbar .smart-pill .form-control{
+            padding:.5rem .75rem;
+            box-shadow:none !important;
+        }
+        .listing-toolbar .smart-pill .input-group-text{
+            padding:.5rem .6rem;
+        }
+        .listing-toolbar .btn{
+            padding:.4rem .75rem;
+            font-weight:600;
+        }
+
+    </style>
+    <style>
+        /* lets the input-group and its input actually shrink in a flex row */
+        .smart-pill { border:1px solid rgba(220,53,69,.2); border-radius:999px; background:#fff; }
+        .smart-pill .form-control { min-width:0; }          /* critical for no-overlap */
+        .listing-toolbar .controls { min-width:0; }         /* if you wrapped controls in a flex container */
+    </style>
+
+
+{% endblock %}
+
+{% block bodyHeader %}
+
+    <div class="listing-toolbar py-2 border-bottom">
+        <div class="d-flex align-items-center justify-content-between gap-2 flex-nowrap">
+
+            <!-- Left: title -->
+            <h4 class="mb-0 fw-bold d-flex align-items-center flex-shrink-0">
+                <i class="mdi mdi-clipboard-text-outline text-danger me-2"></i>
+                Vos annonces
+            </h4>
+
+            <!-- Right: controls -->
+            <form id="property-search-form" onsubmit="return false;" class="ms-3 flex-grow-1">
+                <div class="d-flex align-items-center justify-content-end gap-2 flex-nowrap">
+
+                    <!-- Date range -->
+                    <div class="input-group input-group-sm smart-pill flex-grow-1 overflow-hidden"
+                         style="max-width:520px; min-width:0;">
+                          <span class="input-group-text border-0 bg-white">
+                            <i class="mdi mdi-filter-menu-outline text-muted"></i>
+                          </span>
+                        <input
+                                type="text"
+                                class="form-control border-0 bg-white"
+                                id="Daterange"
+                                name="search"
+                                placeholder="Trier par date"
+                                data-input
+                                aria-label="Trier par date">
+                    </div>
+
+
+                    <!-- Actions -->
+                    <button type="button"
+                            onclick="doSearchProperty()"
+                            class="btn btn-danger btn-sm rounded-pill d-inline-flex align-items-center flex-shrink-0">
+                        <i class="mdi mdi-book-search me-1"></i> Rechercher
+                    </button>
+
+                    <button type="button"
+                            onclick="window.location.reload()"
+                            class="btn btn-outline-danger btn-sm rounded-pill d-inline-flex align-items-center flex-shrink-0">
+                        <i class="mdi mdi-reload me-1"></i> Réinitialiser
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block bodyContent %}
+
+    {% include 'agent_work_space/partials/_flag.html.twig' %}
+    <!-- Listings -->
+    <div class="row listing-items mt-3" id="listing-agent-table">
+        {% include 'agent_work_space/listing/listing_table.html.twig' %}
+    </div>
+
+    <script>
+        function doSearchProperty() {
+            const url = "{{ path('app_agent_work_space_listing_search') }}";
+            const content = '<div class="text-center"> <div class="spinner-border text-primary m-1" role="status"> <span class="sr-only"></span> </div>';
+
+            $.ajax({
+                url: url,
+                type: "post",
+                data: $("#property-search-form").serialize(),
+                beforeSend: function () {
+                    $("#listing-agent-table").html(content);
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                },
+                success: function (data) {
+                    $("#listing-agent-table").html(data);
+                }
+            });
+            return false;
+        }
+    </script>
+    <script>
+        function editEntry(id) {
+            let url = replacePlaceholder("{{ path('app_agent_work_space_publish_listing', {'id': 'placeholder'}) }}", id);
+            getContentForModal(url, "Publié annonce");
+        }
+        function savePublication(id) {
+            let url = replacePlaceholder("{{ path('app_agent_work_space_publish_listing_save', {'id': 'placeholder'}) }}", id);
+            return _doPost('#entry-form-'+id, url, '{{ path('app_agent_work_space_listing') }}');
+        }
+    </script>
+
+{% endblock %}

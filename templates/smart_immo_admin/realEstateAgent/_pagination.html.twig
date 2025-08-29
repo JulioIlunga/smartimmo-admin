@@ -1,0 +1,53 @@
+{% if totalPages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+
+            {# Bouton Précédent #}
+            {% if currentPage > 1 %}
+                <li class="page-item">
+                    <a class="page-link text-danger border-0" href="{{ path('app_agent_reviews', {'id': agent.id, 'page': currentPage - 1}) }}" aria-label="Précédent">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+
+            {# Affichage page 1 + "..." si on est plus loin que la page 3 #}
+            {% if currentPage > 3 %}
+                <li class="page-item">
+                    <a class="page-link text-danger border-0" href="{{ path('app_agent_reviews', {'id': agent.id, 'page': 1}) }}">1</a>
+                </li>
+                {% if currentPage > 4 %}
+                    <li class="page-item disabled"><span class="page-link text-danger border-0">…</span></li>
+                {% endif %}
+            {% endif %}
+
+            {# Pages autour de la page courante #}
+            {% set startPage = max(1, currentPage - 2) %}
+            {% set endPage = min(totalPages, currentPage + 2) %}
+
+            {% for i in startPage..endPage %}
+                <li class="page-item {% if i == currentPage %}active{% endif %}">
+                    <a class="page-link {% if i == currentPage %}bg-danger text-white{% else %}text-danger{% endif %} border-0" href="{{ path('app_agent_reviews', {'id': agent.id, 'page': i}) }}">{{ i }}</a>
+                </li>
+            {% endfor %}
+
+            {# "..." + dernière page si besoin #}
+            {% if currentPage < totalPages - 2 %}
+                {% if currentPage < totalPages - 3 %}
+                    <li class="page-item disabled"><span class="page-link text-danger border-0">…</span></li>
+                {% endif %}
+                <li class="page-item">
+                    <a class="page-link text-danger border-0" href="{{ path('app_agent_reviews', {'id': agent.id, 'page': totalPages}) }}">{{ totalPages }}</a>
+                </li>
+            {% endif %}
+            {# Bouton Suivant #}
+            {% if currentPage < totalPages %}
+                <li class="page-item">
+                    <a class="page-link text-danger border-0" href="{{ path('app_agent_reviews', {'id': agent.id, 'page': currentPage + 1}) }}" aria-label="Suivant">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}

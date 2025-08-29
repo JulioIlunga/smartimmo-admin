@@ -1,0 +1,11 @@
+<form id="entry-form-{{ user.id }}" class="form-horizontal" role="form" onsubmit="return saveSendRequest('{{ user.id }}')">
+    <div class="modal-body ps-5 pe-5">
+        <div id="flash-message-overlay">
+        </div>
+        {% include 'agent_work_space/agency/addAgency/add_agency_form.html.twig' %}
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-danger" data-bs-dismiss="modal">Fermer</button>
+        <input type="submit" value="Enregistrer" class="btn btn-sm btn-success"/>
+    </div>
+</form>

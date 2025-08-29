@@ -1,0 +1,395 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Smart-Immo | Listing
+{% endblock %}
+{% block description %}
+    Découvrez une variété d'hébergements adaptés à vos besoins et préférences.
+{% endblock %}
+{% block style %}
+    <link href="{{ asset('assets/admin/css/dasboard.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/listing.css') }}" rel="stylesheet">
+
+{% endblock %}
+
+{% block body %}
+
+    <div class="search-body container-fluid position-relative">
+        <div class="row">
+            <div class="col-12">
+                <!-- Mobile-only listing area -->
+                <section id="mobile-scroll-area"
+                         class="d-md-none mobile-listing-area vh-100 overflow-auto">
+
+                    <!-- Hero -->
+                    <div class="mobile-hero rounded-4 shadow-sm mx-2 mt-3 p-3 d-flex align-items-center gap-3">
+                        <div class="hero-logo d-flex align-items-center justify-content-center rounded-3">
+                            <img src="{{ asset('assets/img/add-list.svg') }}" width="100%" alt="" class="img-fluid">
+                        </div>
+                        <div class="text-white">
+                            <h1 class="h4 fw-bold mb-1">Location & Vente</h1>
+                            <p class="mb-0 small text-white-50">Trouvez votre futur logement en quelques clics</p>
+                        </div>
+                    </div>
+
+                    <!-- Sticky filter bar -->
+                    <div class="sticky-top">
+                        <div class="mobile-filter-bar bg-white rounded-4 shadow-sm mx-2 mt-3 p-2">
+                            <button type="button"
+                                    class="btn btn-danger w-100 rounded-pill d-flex align-items-center justify-content-center gap-2"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#filterModal">
+                                <i class="mdi mdi-filter-outline fs-5"></i>
+                                <span>Ajouter vos filtres</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Listings -->
+                    <div id="listing-table-mobile" class="mt-3 px-2 pb-4">
+                        {% include 'listing/_listing_list.html.twig' %}
+                    </div>
+                </section>
+            </div>
+        </div>
+
+
+
+        <div class="row">
+            <div class="col-12 p-3 p-lg-4">
+
+                {# ===== Desktop hero (hidden on mobile) ===== #}
+
+                <div class="desktop-hero d-none d-md-flex align-items-center rounded-4 p-3 p-lg-4 mb-3">
+                    <!-- Left: logo + copy -->
+                    <div class="d-flex align-items-start gap-3 flex-grow-1">
+                        <div class="hero-logo d-flex align-items-center justify-content-center rounded-3">
+                            <img src="{{ asset('assets/img/add-list.svg') }}" alt="Smart-Immo" class="img-fluid">
+                        </div>
+                        <div class="text-white">
+                            <h1 class="fw-bold mb-1" style="font-size: clamp(1.4rem, 1.2rem + 1vw, 2rem);">
+                                Location &amp; Vente
+                            </h1>
+                            <p class="mb-0 opacity-85">
+                                Louer un appartement ou acheter une maison en RDC n’a jamais été aussi simple.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right: stat pills + CTA -->
+                    <div class="d-none d-lg-flex align-items-center gap-2">
+                        <div class="stat-pill">
+                            <i class="mdi mdi-account-group-outline me-1"></i>
+                            <span class="stat-value">+100</span>
+                            <small class="stat-label">Agents</small>
+                        </div>
+                        <div class="stat-pill">
+                            <i class="mdi mdi-home-city-outline me-1"></i>
+                            <span class="stat-value">+500</span>
+                            <small class="stat-label">Biens</small>
+                        </div>
+                        <a href="#listing-table-desktop" class="btn btn-light btn-sm rounded-pill text-danger fw-semibold">
+                            <i class="mdi mdi-compass-outline me-1"></i> Explorer
+                        </a>
+                    </div>
+                </div>
+
+
+                <div class="row position-relative g-3 g-lg-4">
+                    <div class="col-md-1 d-none d-md-block"></div>
+
+                    {# ===== Sticky sidebar filters (desktop only) ===== #}
+                    <aside class="col-md-3 d-none d-md-block ">
+                        <div class="filter-sticky">
+                            <form id="desktop-search-form" onsubmit="return false;">
+                                <div class="card border border-danger p-2 shadow-sm rounded-4 overflow-hidden">
+                                    <div class="card-header bg-white border-0">
+                                        <p class="text-uppercase fw-bold small mb-0 text-danger">Ajoutez vos filtres</p>
+                                    </div>
+
+                                    <div class="card-body pt-0">
+                                        <div id="listing-count" class="mb-3">
+                                            {% include 'listing/_count_listing.html.twig' %}
+                                        </div>
+
+                                        {# Type de propriété #}
+                                        <div class="mb-3">
+                                            <h6 class="fw-semibold mb-2">Type de propriété</h6>
+                                            {% set selectedType = type ?? '' %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" id="AllTypes" name="type" value="" {% if selectedType == '' %}checked{% endif %}>
+                                                <label class="form-check-label" for="AllTypes">Tous</label>
+                                            </div>
+                                            {% set types = ['Appartement', 'Maison', 'Villa', 'Studio', 'Local commercial', 'Terrain', 'Ferme'] %}
+                                            {% for t in types %}
+                                                {% set id = t|replace({' ': ''}) %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" id="{{ id }}" name="type" value="{{ t }}" {% if selectedType == t %}checked{% endif %}>
+                                                    <label class="form-check-label" for="{{ id }}">{{ t }}</label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        {# Localisation #}
+                                        <div class="mb-3">
+                                            <h6 class="fw-semibold mb-2">Localisation</h6>
+                                            <div class="form-floating border rounded-3 px-2 mb-2">
+                                                <select class="form-select border-0 fw-semibold mt-2 city-select"
+                                                        name="city" onchange="findCommune(this)" required>
+                                                    <option disabled selected value="">— Choisissez une ville —</option>
+                                                    {% for city_list in cities %}
+                                                        <option value="{{ city_list.name }}" {% if city == city_list.name %} selected {% endif %}>{{ city_list.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <label class="small text-muted px-2">Ville</label>
+                                            </div>
+
+                                            <div class="form-floating border rounded-3 px-2">
+                                                <select class="form-select border-0 fw-semibold mt-2 commune-select" name="commune">
+                                                    <option value="All">— Tous —</option>
+                                                    {% for commune_ in communes %}
+                                                        <option value="{{ commune_.name }}" {% if commune_.name == commune %} selected {% endif %}>{{ commune_.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <label class="small text-muted px-2">Commune</label>
+                                            </div>
+                                        </div>
+
+                                        {# Budget #}
+                                        <div class="mb-3">
+                                            <h6 class="fw-semibold mb-2">Budget</h6>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <div class="form-floating d-flex align-items-end px-3 border rounded-3">
+                                                        <input type="number" class="form-control border-0 px-0"
+                                                               id="minBudget" name="minBudget" min="0" placeholder="Min" value="{{ min }}">
+                                                        <span class="my-auto mdi mdi-cash-usd fs-6"></span>
+                                                        <label for="minBudget" class="text-muted px-3 mt-1 small">Minimum</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-floating d-flex align-items-end px-3 border rounded-3">
+                                                        <input type="number" class="form-control border-0 px-0"
+                                                               id="maxBudget" name="maxBudget" min="0" placeholder="Max" value="{{ max }}">
+                                                        <span class="my-auto mdi mdi-cash-usd fs-6"></span>
+                                                        <label for="maxBudget" class="text-muted px-3 mt-1 small">Maximum</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {# Équipements #}
+                                        <div class="mb-2">
+                                            <h6 class="fw-semibold mb-2">Équipements</h6>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="furniture" name="furniture">
+                                                        <label class="form-check-label small text-muted" for="furniture">Meublés</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="guard" name="guard">
+                                                        <label class="form-check-label small text-muted" for="guard">Agents de sécurité</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="garden" name="garden">
+                                                        <label class="form-check-label small text-muted" for="garden">Jardin</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="wifi" name="wifi">
+                                                        <label class="form-check-label small text-muted" for="wifi">Wi-Fi</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="climatisation" name="climatisation">
+                                                        <label class="form-check-label small text-muted" for="climatisation">Climatisation</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="roofspace" name="roofspace">
+                                                        <label class="form-check-label small text-muted" for="roofspace">Toiture/terrasse</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="exteriortoilet" name="exteriortoilet">
+                                                        <label class="form-check-label small text-muted" for="exteriortoilet">Toilette extérieure</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="parking" name="parking">
+                                                        <label class="form-check-label small text-muted" for="parking">Parking</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {# Actions #}
+                                        <div class="d-flex justify-content-between align-items-center gap-2 mt-3">
+                                            <a href="{{ path('app_listing') }}" class="btn btn-outline-danger btn-sm rounded-pill">
+                                                Réinitialiser
+                                            </a>
+                                            <button type="button"
+                                                    onclick="doSearchListing('desktop-search-form')"
+                                                    class="btn btn-danger btn-sm rounded-pill">
+                                                Appliquer les filtres
+                                            </button>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <a href="{{ path('app_customer_recommandation') }}"
+                                               class="btn btn-light border btn-sm w-100 rounded-pill">
+                                                <i class="mdi mdi-tune-variant me-1"></i> Filtres personnalisés (WhatsApp)
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </aside>
+
+                    {# ===== Listing (desktop) ===== #}
+                    <main class="col-md-7">
+                        <div class="d-none d-md-block" id="listing-table-desktop">
+                            {% include 'listing/_listing_list.html.twig' %}
+                        </div>
+                    </main>
+
+                    <div class="col-md-1 d-none d-md-block"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Modal for Mobile Screen #}
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Filtres de recherche</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="mobile-search-form" onsubmit="return doSearchListing('mobile-search-form');">
+                        <!-- Your filter fields here -->
+                        <div class="filter-form-group container-fluid p-1">
+                            <p class="bg-light text-dark fw-normal rounded-3 filter-box mb-2 fw-bold text-uppercase">Ajoutez vos filtres</p>
+                            <!-- Property types -->
+                            <h6 class="fw-bold mb-3">Type de propriété</h6>
+                            <div class="mb-2">
+                                {% set selectedType = type ?? '' %}
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="AllTypes" name="type" value="" {% if selectedType == '' %}checked{% endif %}>
+                                    <label class="form-check-label" for="AllTypes">Tous</label>
+                                </div>
+
+                                {% set types = ['Appartement', 'Maison', 'Villa', 'Studio', 'Local commercial', 'Terrain', 'Ferme'] %}
+                                {% for t in types %}
+                                    {% set id = t|replace({' ': ''}) %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="{{ id }}" name="type" value="{{ t }}" {% if selectedType == t %}checked{% endif %}>
+                                        <label class="form-check-label" for="{{ id }}">{{ t }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <!-- City -->
+                            <div class="form-floating mb-2 border border-1 p-1 rounded-9">
+                                <select class="form-select border-0 fw-bold mt-2 city-select" name="city" onchange="findCommune(this)" required>
+                                    <option disabled selected value="">-- Choisissez une ville --</option>
+                                    {% for city_list in cities %}
+                                        <option value="{{ city_list.name }}" {% if city == city_list.name %} selected {% endif %}>{{ city_list.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label class="px-2">Choisissez la ville</label>
+                            </div>
+
+                            <!-- Commune -->
+                            <div class="form-floating mb-3 border border-1 p-1 rounded-9">
+                                <select class="form-select border-0 fw-bold mt-2 commune-select" name="commune">
+                                    <option value="All">-- Tous --</option>
+                                    {% if communes %}
+                                        {% for commune_ in communes %}
+                                            <option value="{{ commune_.name }}" {% if commune_.name == commune %} selected {% endif %}>{{ commune_.name }}</option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                                <label class="px-2">Choisissez la commune</label>
+                            </div>
+                            <!-- Budget -->
+                            <div class="row mb-3">
+                                <div class="col-md mb-1">
+                                    <div class="form-floating d-flex align-items-end px-3 border rounded-3">
+                                        <input type="number" class="form-control border-0 px-0" id="minBudget" name="minBudget" min="0" value="{{ min }}">
+                                        <span class="my-auto mdi mdi-cash-usd fs-6"></span>
+                                        <label for="minBudget" class="text-muted px-3 mt-1 small">Budget Minimum</label>
+                                    </div>
+                                </div>
+                                <div class="col-md mb-1">
+                                    <div class="form-floating d-flex align-items-end px-3 border rounded-3">
+                                        <input type="number" class="form-control border-0 px-0" id="maxBudget" name="maxBudget" min="0" value="{{ max }}">
+                                        <span class="my-auto mdi mdi-cash-usd fs-6"></span>
+                                        <label for="maxBudget" class="text-muted px-3 mt-1 small">Budget Maximum</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Equipments -->
+                            <h6 class="fw-bold mb-3">Équipements</h6>
+                            <div class="row">
+                                {% set equipements = {
+                                    'furniture': 'Meublés',
+                                    'guard': 'Agents de sécurité',
+                                    'garden': 'Jardin',
+                                    'wifi': 'Wi-fi',
+                                    'climatisation': 'Climatisation',
+                                    'roofspace': 'Terrasse toiture',
+                                    'exteriortoilet': 'Toilette exterieur',
+                                    'parking': 'Parking'
+                                } %}
+                                {% for id, label in equipements|slice(0, 4) %}
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="{{ id }}" name="{{ id }}">
+                                            <label class="form-check-label text-muted fw-light d-flex" for="{{ id }}">{{ label }}</label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                {% for id, label in equipements|slice(4, 4) %}
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="{{ id }}" name="{{ id }}">
+                                            <label class="form-check-label text-muted fw-light d-flex" for="{{ id }}">{{ label }}</label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <div class="d-flex">
+                        <div class="float-start">
+                            <button type="button" class="btn btn-sm btn-danger me-3" onclick="resetFilters('mobile-search-form')">Réinitialiser les filtres</button>
+                        </div>
+                        <div class="float-end">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="doSearchListing('mobile-search-form')">Appliquer les filtres</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-block d-md-none sticky-footer-mobile bg-white border-top shadow-sm p-2">
+        <div class="d-flex justify-content-between gap-2">
+            <a href="{{ path('app_customer_recommandation') }}" class="btn btn-danger w-100"><span class="mdi mdi-bell-ring"></span> Recevez des alertes personnalisées</a>
+        </div>
+    </div>
+
+    <script>
+        const listingPaths = {
+            searchUrl: "{{ path('app_listing_search') }}",
+            countUrl: "{{ path('app_listing_get_listing_count') }}",
+            communeUrl: "{{ path('app_listing_filter_communes') }}"
+        };
+    </script>
+    <script src="{{ asset('assets/js/listing.js') }}"></script>
+{% endblock %}

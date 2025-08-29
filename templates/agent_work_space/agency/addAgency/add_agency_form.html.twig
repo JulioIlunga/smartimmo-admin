@@ -1,0 +1,10 @@
+<fieldset id="form-fieldset-{{ user.id }}" {% if user.id != "new" %} {% endif %}>
+    <div class="d-flex align-content-center">
+        <label for="code" class="col-sm-4 col-form-label text-start">Entrer code agence *</label>
+        <strong class="mt-2">AGC -</strong>
+        <div class="">
+            <input type="text" class="form-control" id="code" name="code-{{ user.id }}" required>
+        </div>
+    </div>
+</fieldset>
+<input name="_csrf_token" value="{{ token }}" type="hidden">

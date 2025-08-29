@@ -1,0 +1,331 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Leads à réclamer{% endblock %}
+{% block style %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .membership-card .mc-icon-wrap{
+            width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+            background:#f8f9fa
+        }
+        .membership-card .mc-chip{
+            display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .6rem;border-radius:999px;background:#f8f9fa
+        }
+        .membership-card .mc-chip.mc-on{ background:#e8f5e9 }
+        .membership-card .mc-chip.mc-off{ background:#fff3cd }
+        .pricing-card .pc-icon{
+            width:52px;height:52px;border-radius:14px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;margin:0 auto .5rem;
+        }
+        .card-popular .pc-tag{
+            position:absolute;top:12px;right:12px;background:#fee2e2;color:#b91c1c;padding:.25rem .5rem;border-radius:999px;font-size:.725rem;font-weight:600
+        }
+    </style>
+{% endblock %}
+
+{% block bodyContent %}
+
+    <div class="container py-1">
+        <div class="row g-4">
+            <!-- Wallet -->
+            <div class="col-12 col-lg-6">
+                <article class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h5 class="mb-0 fw-semibold">Mon portefeuille</h5>
+                            <span class="badge bg-secondary-subtle text-dark">Crédits</span>
+                        </div>
+                        <div class="display-6 fw-bold text-success">
+                            {{ wallet.balanceCredits|default(0) }}
+                        </div>
+                        <div class="text-muted small">Utilisez vos crédits pour réclamer de nouveaux leads.</div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Buy Credits Banner -->
+            <div class="col-12 col-lg-6">
+                <div class="alert alert-info d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between p-4 rounded-4 shadow-sm h-100">
+                    <div>
+                        <h6 class="mb-1 fw-bold text-primary">🚀 Boostez vos opportunités !</h6>
+                        <p class="mb-2 mb-sm-0 small text-dark">
+                            Achetez des crédits et réclamez plus de demandes clients.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-4 py-md-5">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Mon abonnement</h2>
+                <div class="text-muted">Gérez votre formule, vos crédits et vos factures.</div>
+            </div>
+        </div>
+
+        {% set subs = subs ?? null %}
+        {% set status = subs ? subs.status|default('active') : null %}
+        {% set badgeClass =
+            status == 'active'    ? 'bg-success'  :
+            (status == 'past_due' ? 'bg-warning'  :
+            (status == 'incomplete' ? 'bg-primary'  :
+            (status == 'canceled' ? 'bg-secondary': 'bg-info'))) %}
+        {% set hasSubs = subs is not null %}
+        {% set walletBalance = wallet ? wallet.balanceCredits|default(0) : 0 %}
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                <article class="membership-card card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                    <div class="card-body p-4">
+                        {% if hasSubs %}
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="mc-icon-wrap"><i class="mdi mdi-crown-outline fs-4 text-danger"></i></div>
+                                    <div>
+                                        <h5 class="mb-0 fw-semibold">
+                                            {{ subs.plan.name|default('Abonnement') }}
+                                        </h5>
+                                        <div class="text-muted small">
+                                            Depuis {{ (subs.currentPeriodStart ?? subs.createdAt)|default('now')|date('d M Y') }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="badge {{ badgeClass }} px-3 py-2 text-uppercase">{{ status|replace({'_':' '}) }}</span>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="h3 fw-bold mb-0">
+                                    {{ subs.plan.monthlyPrice|default(0)|number_format(0, '.', ' ') }}
+                                    <span class="text-muted fs-6">USD / mois</span>
+                                </div>
+                                <div class="text-muted small">
+                                    Crédits : {{ subs.plan.monthlyCredit|default(subs.plan.name|default('—')) }}
+                                </div>
+                                {% if status ? status != 'active' %}
+                                    <span class="small bg-danger rounded-pill px-2 py-1 text-white">
+                                          Credits no-active, prière de réactiver l'abonnement
+                                        </span>
+                                {% endif %}
+                            </div>
+
+                            <hr class="my-2">
+
+                            {# Usage #}
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Demandes réclamées</span>
+                                <span class="fw-semibold">{{ subs.claimsUsed|default(0) }}/{{ subs.claimLimit|default(0) }}</span>
+                            </div>
+                            <div class="progress rounded-pill" style="height:8px;">
+                                <div class="progress-bar
+                                    {% if pct < 70 %}bg-success{% elseif pct < 100 %}bg-warning{% else %}bg-danger{% endif %}"
+                                     role="progressbar" style="width: {{ pct }}%;"
+                                     aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+{#                            <div class="d-flex flex-wrap gap-2 mt-4">#}
+
+{#                                <a href="{{ path('membership.invoices') }}" class="btn btn-outline-secondary btn-sm rounded-pill">#}
+{#                                <a href="#" class="btn btn-outline-secondary btn-sm rounded-pill">#}
+{#                                    <i class="mdi mdi-receipt-text-outline me-1"></i> Factures#}
+{#                                </a>#}
+{#                                <a href="{{ path('membership.invoices') }}" class="btn btn-outline-secondary btn-sm rounded-pill">#}
+{#                                <a href="#" class="btn btn-outline-secondary btn-sm rounded-pill">#}
+{#                                    <i class="mdi mdi-receipt-text-outline me-1"></i> Annuler abonnement#}
+{#                                </a>#}
+
+{#                                {% set reactivatable = ['incomplete','past_due','canceled','paused'] %}#}
+{#                                {% if status in reactivatable %}#}
+{#                                    <button#}
+{#                                            class="btn btn-outline-success btn-sm rounded-pill"#}
+{#                                            onclick="PaymentHelper.pay({#}
+{#                                                    createUrl: '{{ path('app_payment_for_membership') }}',#}
+{#                                                    payload: { membership_id: {{ subs.plan.id }} },   // or your membership entity id#}
+{#                                                    button: this,#}
+{#                                                    timerSeconds: 300, // 5 minutes#}
+{#                                                    manualCheckUrl: (code) => `/transaction/check/manually/status/${code}`, // optional#}
+{#                                                    autoStatusUrl:   (code) => `/transaction/payment/status/${code}`,       // must return {status:'true'|'false'}#}
+{#                                                    successRedirect: '/agent/work/space',#}
+{#                                                    idleHtml: 'Choisir ce plan',#}
+{#                                                    loadingHtml: '<span class=&quot;spinner-border spinner-border-sm&quot; role=&quot;status&quot; aria-hidden=&quot;true&quot;></span>'#}
+{#                                                    })">#}
+{#                                        <i class="mdi mdi-reload me-1"></i>Réactiver abonnement#}
+{#                                    </button>#}
+{#                                {% endif %}#}
+{#                            </div>#}
+
+                            <div class="d-flex flex-wrap gap-2 mt-4">
+
+                                {# Renew button: show if active but nearing expiry (or credits expired) #}
+                                {% if status == 'active' and subs.currentPeriodEnd is defined and subs.currentPeriodEnd %}
+                                    {% set daysLeft = ((subs.currentPeriodEnd|date('U') - 'now'|date('U')) / 86400)|round(0, 'floor') %}
+                                    {% set quotaReached = (subs.claimsUsed is defined and subs.claimLimit is defined and subs.claimsUsed >= subs.claimLimit) %}
+
+                                    {% if (daysLeft <= 5 or subs.currentPeriodEnd < "now"|date) or quotaReached %}
+                                        <button
+                                                class="btn btn-outline-primary btn-sm rounded-pill"
+                                                onclick="PaymentHelper.pay({
+                                                        createUrl: '{{ path('app_payment_for_membership') }}',
+                                                        payload: { membership_id: {{ subs.plan.id }}, renew: true },
+                                                        button: this,
+                                                        timerSeconds: 300,
+                                                        manualCheckUrl: (code) => `/transaction/check/manually/status/${code}`,
+                                                        autoStatusUrl:   (code) => `/transaction/payment/status/${code}`,
+                                                        successRedirect: '/agent/work/space',
+                                                        idleHtml: 'Renouveler',
+                                                        loadingHtml: '<span class=&quot;spinner-border spinner-border-sm&quot; role=&quot;status&quot; aria-hidden=&quot;true&quot;></span>'
+                                                        })">
+                                            <i class="mdi mdi-refresh me-1"></i> Renouveler
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+
+
+                                {# Reactivate button for inactive subscriptions #}
+                                {% set reactivatable = ['incomplete','past_due','canceled','paused'] %}
+                                {% if status in reactivatable %}
+                                    <button
+                                            class="btn btn-outline-success btn-sm rounded-pill"
+                                            onclick="PaymentHelper.pay({
+                                                    createUrl: '{{ path('app_payment_for_membership') }}',
+                                                    payload: { membership_id: {{ subs.plan.id }} },
+                                                    button: this,
+                                                    timerSeconds: 300,
+                                                    manualCheckUrl: (code) => `/transaction/check/manually/status/${code}`,
+                                                    autoStatusUrl:   (code) => `/transaction/payment/status/${code}`,
+                                                    successRedirect: '/agent/work/space',
+                                                    idleHtml: 'Choisir ce plan',
+                                                    loadingHtml: '<span class=&quot;spinner-border spinner-border-sm&quot; role=&quot;status&quot; aria-hidden=&quot;true&quot;></span>'
+                                                    })">
+                                        <i class="mdi mdi-reload me-1"></i> Réactiver abonnement
+                                    </button>
+                                {% endif %}
+                            </div>
+
+                        {% else %}
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <div class="mc-icon-wrap"><i class="mdi mdi-crown-outline fs-4 text-muted"></i></div>
+                                <div>
+                                    <h5 class="mb-0 fw-semibold">Aucun abonnement actif</h5>
+                                    <div class="text-muted small">Choisissez un plan pour commencer à réclamer des demandes clients.</div>
+                                </div>
+                            </div>
+
+                            <ul class="list-unstyled small mb-4 mt-3">
+                                <li class="mc-chip"><i class="mdi mdi-check-circle-outline me-1"></i> Réclamez des demandes selon votre plan</li>
+                                <li class="mc-chip"><i class="mdi mdi-check-circle-outline me-1"></i> Notifications e-mail / SMS</li>
+                                <li class="mc-chip"><i class="mdi mdi-check-circle-outline me-1"></i> Mise en avant de votre profil agent</li>
+                            </ul>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="#" class="btn btn-danger rounded-pill">
+                                    <i class="mdi mdi-star-outline me-1"></i> Voir les formules
+                                </a>
+                                <a href="#" class="btn btn-outline-secondary rounded-pill">
+                                    <i class="mdi mdi-receipt-text-outline me-1"></i> Factures
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </article>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <article class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3">Crédits & informations</h6>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted">Crédits disponibles</span>
+                            <span class="h5 mb-0">{{ walletBalance }}</span>
+                        </div>
+
+                        {% if hasSubs %}
+                            <div class="d-flex align-items-center justify-content-between small">
+                                <span class="text-muted">Leads/mois</span>
+                                <span class="fw-semibold">{{ subs.claimLimit|default(0) }}</span>
+                            </div>
+                        {% endif %}
+
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold mb-3">Formules disponibles</h6>
+                        {% if plans is not empty %}
+                            {# current plan id (nullable) #}
+                            {% set currentPlanId = membership is defined and membership.plan ? membership.plan.id : null %}
+
+                            {# Flags that persist inside the loop scope #}
+                            {# If no current plan -> we want the very first plan to be clickable #}
+                            {% set foundCurrent = currentPlanId is null ? true : false %}
+                            {% set nextGiven   = false %}
+                            <div class="row row-cols-1 g-1">
+                                {% for plan in plans %}
+                                    {% set isCurrent = (currentPlanId is not null and plan.id == currentPlanId) %}
+                                    {# The first plan that comes AFTER current (or the first plan if none) #}
+                                    {% set isNext    = (not nextGiven) and foundCurrent and (not isCurrent) %}
+                                    {% set locked    = (not isCurrent) and (not isNext) %}
+
+                                    <div class="col">
+                                        <div class="border rounded-4 p-3 d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <div class="fw-semibold">
+                                                    {{ plan.name }}
+                                                    {% if isCurrent %}
+                                                        <span class="badge bg-success ms-2">Actuel</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="text-muted small">
+                                                    {{ plan.monthlyPrice|number_format(0, '.', ' ') }} USD / mois
+                                                </div>
+                                                <div class="text-muted small">
+                                                    Crédits : {{ plan.monthlyCredit|default(plan.name|default('—')) }}
+                                                </div>
+                                            </div>
+
+                                            {% if isCurrent %}
+                                                <button class="btn btn-outline-secondary btn-sm rounded-pill" disabled>Déjà sur ce plan</button>
+                                            {% elseif isNext %}
+                                                <a href="{{ path('membership.membership.upgrade_confirm', {'planId': plan.id}) }}" class="btn btn-danger btn-sm rounded-pill">
+                                                    Mettre à niveau
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-outline-secondary btn-sm rounded-pill" disabled
+                                                        data-bs-toggle="tooltip"
+                                                        title="Disponible après l’étape suivante">
+                                                    <i class="mdi mdi-lock-outline me-1"></i> Verrouillé
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    {# Update flags for subsequent iterations (works inside loop scope) #}
+                                    {% if isCurrent %}{% set foundCurrent = true %}{% endif %}
+                                    {% if isNext %}{% set nextGiven = true %}{% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-muted small">Aucune formule disponible pour le moment.</div>
+                        {% endif %}
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
+
+    {# Your helper (use {{ asset() }} if you move the file) #}
+    <script src="{{ asset('assets/js/payment-helper.js') }}"></script>
+
+    <script>
+        document.querySelectorAll('.js-quick').forEach(btn => {
+            btn.addEventListener('click', e => {
+                const v = parseInt(e.currentTarget.dataset.value, 10);
+                const input = document.getElementById('amount');
+                const current = parseInt(input.value || '0', 10);
+                input.value = Math.max(0, current + v);
+                input.focus();
+            });
+        });
+    </script>
+
+{% endblock %}

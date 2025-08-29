@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Smart-Immo | Réinitialiser le mot de passe
+{% endblock %}
+
+{% block body %}
+
+    <div class="section-display">
+        <!-- container Start -->
+        <div class="container">
+            <div class="section-display">
+                <!-- container Start -->
+                <div class="container">
+                    <div class="d-flex justify-content-center align-items-center vh-85">
+                        <div class="header-body text-center">
+                            <img src="{{ asset('assets/img/phone-token.png') }}" class="img-fluid mb-3 thanku-img" alt="">
+                            <h3 class="fw-bold">Nous avons envoyé un code dans votre numéro</h3>
+                            <p class="small text-muted mb-4">Veuillez entrer ce code pour continuer</p>
+                            <div id="token-confirmation-form">
+                                {% include 'reset_password/tokenConfirmation/_form.html.twig' %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function ResendToken(id) {
+
+            var url = "{{ path('app_reset_password_resend_token', {'id': 'placeholder'}) }}";
+            url = url.replace("placeholder", id);
+            const msg = '<span class="mdi mdi-check me-1"></span>Un nouveau code vous a été envoyé';
+            const content = '<div class="text-center"> <div class="spinner-border text-danger m-1" style="width: 3rem; height: 3rem;" role="status"> <span class="visually-hidden">Loading...</span> </div>';
+
+            $.ajax({
+                url: url,
+                type: "post",
+                beforeSend: function () {
+                    $("#token-confirmation-form").html(content);
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                },
+                success: function (data) {
+                    $("#token-confirmation-form").html(data);
+                    $("#informationSuccessMsg").html(msg);
+                    setInterval(function() {
+                        $("#informationSuccessMsg").html('');
+                    }, 7000);
+                }
+            });
+            return false;
+        }
+    </script>
+
+{% endblock %}

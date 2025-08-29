@@ -1,0 +1,254 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Site Title -->
+    <title>
+        {% block title %}
+        SmartImmo - Offre immobilier de vos rêves
+        {% endblock %}
+    </title>
+
+    <meta name="description" content="{% block description %}Découvrez une variété des logements adaptés à vos besoins et préférences.{% endblock %}">
+
+    <!-- Favicon -->
+    {% block favicon %}
+        <link rel="icon" href="{{ asset('assets/img/smart-immo-h.png') }}" type="image/x-icon">
+    {% endblock %}
+    <!-- CSS LINKS -->
+    <!-- Bootstrap CSS -->
+    <link href="{{ asset('assets/vendor/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Icon CSS -->
+    <link href="{{ asset('assets/vendor/icons/css/materialdesignicons.min.css') }}" rel="stylesheet">
+    <!-- Slick Slider -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/slick/slick.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/slick/slick-theme.min.css') }}">
+    <!-- Date Picker -->
+    <link rel="stylesheet" href="{{ asset('assets/vendor/date-picker/date-picker.css') }}">
+    <!-- Style CSS -->
+    <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/calendar.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+    <!-- Meta Pixel Code -->
+    <!-- Recaptcha -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '556749480414884');
+        fbq('track', 'PageView');
+    </script>
+    <noscript>
+        <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=556749480414884&ev=PageView&noscript=1"/>
+    </noscript>
+    <!-- End Meta Pixel Code -->
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-WMQMB662');</script>
+    <!-- End Google Tag Manager -->
+    {% block style %} {% endblock %}
+</head>
+<body {% block bodyClass %}  {% endblock %}>
+<!-- Google Tag Manager (noscript) -->
+<noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WMQMB662" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+</noscript>
+<!-- End Google Tag Manager (noscript) -->
+<style>
+    /* One-time polish for red theme */
+    .pagination .page-link {
+        border-radius: .5rem;
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+    .pagination .page-link:hover {
+        background: #fee2e2;
+        color: #b91c1c;
+        border-color: #dc3545;
+    }
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(90deg,#ef4444,#dc2626);
+        border-color: #dc2626;
+        color: #fff;
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #9ca3af;
+        border-color: #e5e7eb;
+        background: #f9fafb;
+    }
+    /* ===== Footer (light gray background) ===== */
+    .site-footer,
+    .site-footer .footer-bottom{
+        background:#f8f9fa; /* light gray */
+    }
+
+    /* Titles */
+    .footer-title{
+        font-weight:700;
+        font-size:1rem;
+        text-transform:uppercase;
+        letter-spacing:.02em;
+        margin-bottom:.75rem;
+    }
+
+    /* Logo */
+    .footer-logo img{
+        max-width:140px;
+        height:auto;
+    }
+
+    /* Links */
+    .footer-link{
+        color:#6c757d;
+        padding:0;
+        text-decoration:none;
+    }
+    .footer-link:hover{
+        color:#dc3545; /* brand red accent */
+    }
+
+    /* Social buttons */
+    .social-btn{
+        width:40px; height:40px;
+        display:inline-flex; align-items:center; justify-content:center;
+        border-radius:50%;
+        background:#ffffff;
+        border:1px solid rgba(0,0,0,.06);
+        color:#6c757d;
+        transition:.2s ease;
+    }
+    .social-btn:hover{ transform:translateY(-2px); color:#fff; }
+
+    /* Brand hovers */
+    .social-btn.wa:hover{ background:#25D366; border-color:#25D366; }
+    .social-btn.fb:hover{ background:#1877F2; border-color:#1877F2; }
+    .social-btn.ig:hover{
+        background:#E1306C; border-color:#E1306C;
+    }
+    .social-btn.li:hover{ background:#0A66C2; border-color:#0A66C2; }
+
+    /* Small tweak for bottom border color */
+    .site-footer .footer-bottom{ border-color:rgba(0,0,0,.1)!important; }
+
+</style>
+<!-- Header Start -->
+<header class="header-bg header-top-br">
+{% include 'partials/_nav.html.twig' %}
+<!-- container Start -->
+{% block header %} {% endblock %}
+</header>
+    <!-- container End -->
+<!-- Header End -->
+<!-- Country Cards -->
+{% block body %}{% endblock %}
+
+{% include 'partials/_footer.html.twig' %}
+
+<!-- Video Modal -->
+<div class="modal fade" id="video" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+     aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-body p-0">
+{#                <iframe style="width:100%;border:0;height:100%;" src="https://www.youtube.com/embed/gY8xka_aJ6w?controls=0&amp;start=2"#}
+                <iframe style="width:100%;border:0;height:100%;" src="https://www.youtube.com/watch?v=YcsogIYqqPw"
+                        title="YouTube video player"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade " id="modalCenter" tabindex="-1" role="dialog" aria-labelledby="modalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="modal-content-ajax">
+                <div class="modal-body text-center">
+                    <img src="{{ asset('assets/img/ajax-loader.gif') }}"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        // Old domains → redirect to new
+        var OLD_HOSTS = ['smartimmo-rdc.com', 'www.smartimmo-rdc.com'];
+        var NEW_HOST  = 'www.smartimmo-app.com';
+
+        // Only run if we’re actually on the old host
+        if (OLD_HOSTS.indexOf(location.hostname) !== -1) {
+            // Always use HTTPS on the new site
+            var target = 'https://' + NEW_HOST + location.pathname + location.search + location.hash;
+
+            // Avoid loops
+            if (location.href !== target) {
+                // replace() avoids keeping the old URL in browser history
+                window.location.replace(target);
+            }
+        }
+    })();
+</script>
+
+<!-- Optional: fallback for users with JS disabled -->
+<noscript>
+    <meta http-equiv="refresh" content="0; url=https://www.smartimmo-app.com/">
+</noscript>
+{% block javascript %} {% endblock %}
+<script>
+    class Config {
+        constructor() {
+            this.basePath = '{{ app.request.basepath }}';
+
+            Object.seal(this);
+        }
+    }
+    var config = new Config();
+    var loader = '<img src="'+config.basePath+'/assets/img/ajax-loader.gif" />';
+    var loaderNode = document.createElement("img")
+    loaderNode.src = config.basePath+"/assets/img/ajax-loader.gif";
+    var modalLoader = '<div class="modal-body">' + loader + '</div>';
+</script>
+
+<!-- Footer bottom -->
+<script src="{{ asset('assets/js/ajax_1.0.1.js') }}"></script>
+<script src="{{ asset('assets/js/settings.js') }}"></script>
+<script src="{{ asset('assets/js/scripts.js') }}"></script>
+<!-- Jquery js -->
+<script src="{{ asset('assets/vendor/jquery/jquery.min.js') }}"></script>
+<!-- Bootstrap Bundle -->
+<script src="{{ asset('assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+<!-- slick Slider JS-->
+<script src="{{ asset('assets/vendor/slick/slick.min.js') }}"></script>
+<!-- Date Picker -->
+<script src="{{ asset('assets/vendor/date-picker/date-picker.js') }}"></script>
+<!-- Light Box js -->
+<!-- As A Vanilla JavaScript Plugin -->
+<script src="{{ asset('assets/vendor/lightbox/dist/simple-lightbox.min.js') }}"></script>
+<!-- For legacy browsers -->
+<script src="{{ asset('assets/vendor/lightbox/dist/simple-lightbox.legacy.min.js') }}"></script>
+<!-- Custom scripts for all pages-->
+<script src="{{ asset('assets/js/osahan.js') }}"></script>
+</body>
+</html>

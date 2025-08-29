@@ -1,0 +1,41 @@
+<a class="sidebar-brand text-decoration-none" href="{{ path('app_listing') }}">
+    <div class="sidebar-brand-icon p-4 img-center">
+        <img src="{{ asset('assets/img/smart-immo-h.png') }}" class="img-fluid logo">
+    </div>
+</a>
+<p class="px-3 fw-bold mt-3">Menu</p>
+<!-- Nav Item - Dashboard -->
+<li class="nav-item">
+    <a class="nav-link text-muted {% if app.request.pathinfo == "/agent/work/space" %} rounded-9 me-2 bg-danger {% endif %} p-3" href="{{ path('app_agent_work_space') }}">
+        <span class="mdi mdi-view-dashboard pe-1"></span>
+        <span class="">Tableau de bord</span>
+    </a>
+
+    {% if is_granted('ROLE_ADMIN') %}
+        <div class="accordion accordion-flush" id="accordionFlushExample">
+            <div class="accordion-item border-0">
+                <h2 class="accordion-header" id="flush-headingOne">
+                    <button class="accordion-button collapsed ps-3 text-muted active" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                        <span class="mdi mdi-police-badge pe-1"></span>Smart-Immo Admin
+                    </button>
+                </h2>
+                <div id="flush-collapseOne" class="accordion-collapse collapse ps-3" aria-labelledby="flush-headingOne"
+                     data-bs-parent="#accordionFlushExample">
+                    <div class="accordion-body py-2">
+                        <p class="mb-3"><a href="{{ path('app_smart_immo_admin') }}" class="{% if app.request.pathinfo == "/admin/smart/immo/" %} rounded-9 me-2 bg-white text-white {% else %} text-muted {% endif %}">Annonce en ligne</a></p>
+                        <p class="mb-3"><a href="{{ path('app_location') }}" class="{% if app.request.pathinfo == "/admin/smart/immo/location" %} rounded-9 me-2 bg-white text-white {% else %} text-muted {% endif %}">Ville</a></p>
+                        <p class="mb-3"><a href="{{ path('app_smart_immo_admin_real_estate_agent') }}" class="{% if app.request.pathinfo == "/admin/smart/immo/real/estate/agent" %} rounded-9 me-2 bg-white text-white {% else %} text-muted {% endif %}">Agents Immobiliers</a></p>
+                        <p class="mb-3"><a href="{{ path('app_smart_immo_admin_real_estate_customer') }}" class="{% if app.request.pathinfo == "/admin/smart/immo/real/estate/customer" %} rounded-9 me-2 bg-white text-white {% else %} text-muted {% endif %}">Agents Immobiliers</a></p>
+                        <p class="mb-3"><a href="{{ path('app_admin_config') }}" class="{% if app.request.pathinfo == "/admin/smart/immo/config" %} rounded-9 me-2 bg-white text-white {% else %} text-muted {% endif %}">Agents Immobiliers</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+<li class="nav-item">
+    <a class="nav-link text-muted rounded-9 p-3" href="{{ path('app_account', {show: 'profil'}) }}">
+        <span class="mdi mdi-account"></span>
+        <span class="">Mon profil</span>
+    </a>
+</li>

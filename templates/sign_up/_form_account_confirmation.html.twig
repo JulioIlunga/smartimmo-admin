@@ -1,0 +1,41 @@
+{% if user.accountConfirmed == true %}
+    <!-- Sign Up Form -->
+    <div class="d-flex justify-content-center align-items-center vh-85">
+        <div class="header-body text-center">
+            <img src="{{ asset('assets/img/thanku.svg') }}" class="img-fluid mb-3 thanku-img">
+            <h2 class="fw-bold">BRAVO!</h2>
+            <p class="small text-muted mb-0">Vous pouvez désormais utiliser l'application</p>
+            <p class="small text-muted">Cliquez sur le button ci-dessous pour vous connecter à votre comptet</p>
+            <a href="{{ path('app_login') }}" class="btn btn-danger w-100 text-uppercase fw-bold btn-sm py-3 rounded-9 my-4">Se connecter</a>
+        </div>
+    </div>
+{% else %}
+    <!-- Section Email Start -->
+    <div class="section-display">
+        <!-- container Start -->
+        <div class="container">
+            <div class="d-flex justify-content-center align-items-center vh-85">
+                <div class="header-body text-center">
+                    <img src="{{ asset('assets/img/recover-img.svg') }}" class="img-fluid mb-3 thanku-img">
+                    <h3 class="fw-bold mb-0">Entrez le code envoyé au <span class="fw-bold"> {{ user.phonecode }} {{ user.phone }}</span></h3>
+                    <h3 class="fw-bold">Pour confirmer votre compte</h3>
+                    <p class="small text-muted mb-4">Entrez le code pour continuer</p>
+                    <form id="token-confirmation-form"  onsubmit="return false;" onchange="tokenConfirmation()">
+                        <div class="form-floating  d-flex align-items-end px-3 py-1 border rounded-3 {% if error == true %} border-danger {% endif %}">
+                            <input type="text" name="token-number" class="form-control border-0 px-0" id="floatingInput" placeholder="name@example.com" >
+                            <span class="my-auto mdi mdi-key"></span>
+                            <label for="floatingInput" class="text-muted px-3 mt-1">Entrer Code</label>
+                        </div>
+                        {% if error == true %}
+                        <p class="text-danger mb-3">Le code est invalide.</p>
+                        {% endif %}
+                        <input type="hidden" name="user" value="{{ user.phone }}">
+                        <button id="confirmed-button" class="btn btn-danger text-uppercase fw-bold w-100 py-3 rounded-9 mt-3">Confirmer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- container End -->
+    </div>
+
+{% endif %}

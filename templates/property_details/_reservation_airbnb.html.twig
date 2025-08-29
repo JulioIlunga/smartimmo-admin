@@ -1,0 +1,196 @@
+<div class="border p-4 rounded-9 mb-3">
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+    
+    <div class="d-flex align-items-end justify-content-between mb-4">
+    <div class=""><span class="price h4 mb-0 fw-bold">{{ property.price|format_currency('USD', {fraction_digit: 0}) }}  </span><span class="text-muted fw-light">/
+        Jour</span>
+    </div>
+    </div>
+    <form id="reservation-form" method="post" action="{{ path('app_reservation', {propertyUuid: property.uuidProperty}) }}">
+        <div class="row  mb-2">
+            <div class="col-md-6">
+                <div class="form-date border rounded-9 p-3">
+                    <p class="mb-1 text-muted small">Date d'arrivée</p>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <input type="text" class="border-0 p-0 form-control rounded-9 bg-white fw-bold fs-14"
+                               id="checkIn" name="checkIn" placeholder="jj/mm/aaaa" data-input onchange="return checkAvailableDate({{ property.id }})" required>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-date border rounded-9 p-3">
+                    <p class="mb-1 text-muted small">Date de départ</p>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <input type="text" class="border-0 p-0 form-control rounded-9 bg-white fw-bold fs-14"
+                               id="checkOut" name="checkOut" placeholder="jj/mm/aaaa" onchange="return checkAvailableDate({{ property.id }})" data-input required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guest-number border rounded-9 p-3 mb-4">
+        <p class="mb-1 text-muted small">Nombre d'invités</p>
+        <div class="d-flex align-items-center justify-content-between">
+            <p class="fw-bold mb-0">Invités</p>
+            <div class="d-flex align-items-center quantity" id="field1">
+            <button type="button" id="sub" class="sub bg-white rounded-circle p-0">-</button>
+            <input type="number" class="border-0 form-control form-control-sm text-center p-0"
+                id="guest" value="1" name="guest" min="1" max="10"  />
+            <button type="button" id="add" class="add bg-white rounded-circle p-0">+</button>
+            </div>
+        </div>
+    </div>
+        <div class="d-flex align-items-center justify-content-between">
+            <p><span class="fw-bold">Durée du séjour</span><span class="text-muted fw-light"></span></p>
+            <p class="fw-light"><span id="duration">{{ duration|default(0) }}</span> jour(s)</p>
+        </div>
+        <div class="d-flex align-items-center justify-content-between">
+            <p><span class="fw-bold">Max. invités</span><span class="text-muted fw-light"></span></p>
+            <p class="fw-light"><span>{{ property.guests }}</span> </p>
+        </div>
+        <div class="d-flex align-items-center justify-content-between">
+            <p><span class="fw-bold">Total </span><span class="text-muted fw-light"></span></p>
+            <p class="fw-light">$ <span id="totalPrice">0</span></p>
+        </div>
+        {% if is_granted('IS_AUTHENTICATED') %}
+            <div id="availabilityCheck">
+                {% include 'property_details/_reservation_airbnb_date_check.html.twig' %}
+            </div>
+        {% else %}
+            <div>
+                <a href="#" onclick="loginToContinuer()" class="btn btn-secondary btn-sm fw-bold w-100 rounded-9 py-3">Se connecter pour commencer</a>
+            </div>
+        {% endif %}
+        <input type="hidden" name="property_id" value="{{ property.id }}">
+    </form>
+</div>
+<script>
+    function checkAvailableDate(id) {
+
+        const checkIn = document.getElementById('checkIn').value;
+        const checkOut = document.getElementById('checkOut').value;
+        $("#errorMsg").html("")
+
+        const content = "<div class='text-center'> <div class='spinner-border text-primary'> <span class='visually-hidden'>Chargement...</span></div></div>";
+
+        if (checkIn !== '' && checkOut !== ''){
+            const data = "propertyId="+ id + "&checkIn=" + checkIn + "&checkOut=" +checkOut;
+
+            $.ajax({
+                url: '{{ path('app_reservation_check_available_date_ajax') }}',
+                type: 'POST',
+                data: data,
+                beforeSend: function () {
+                    $("#availabilityCheck").html(content);
+                },
+                success: function(response) {
+                    $('#availabilityCheck').html(response);
+                },
+                error: function(response) {
+                    console.log(response);
+                }
+            });
+        }else{
+            $("#errorMsg").html("Veuillez sélectionner le check-in et check-out")
+        }
+        return false;
+    }
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const durationDisplay = document.getElementById("duration");
+        const totalPriceDisplay = document.getElementById("totalPrice");
+        const guestInput = document.getElementById("guest");
+        const addButton = document.getElementById("add");
+        const subButton = document.getElementById("sub");
+        const priceProperty = {{ property.price|default(0) }};
+        const reservedDates = {{ reservedDates|json_encode|raw }};
+
+        // Configuration de Flatpickr pour la date d'arrivée
+        const checkInDate = flatpickr("#checkIn", {
+            // dateFormat: "d/m/Y",
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            disable: reservedDates,
+            locale: "fr",
+            onChange: function(selectedDates, dateStr) {
+                if (selectedDates.length > 0) {
+                    // Calculer la date minimale pour le check-out (check-in + 1 jour)
+                    const minCheckOutDate = new Date(selectedDates[0]);
+                    minCheckOutDate.setDate(minCheckOutDate.getDate() + 1);
+
+                    // Définir la date minimale pour le check-out
+                    checkOutDate.set("minDate", minCheckOutDate);
+
+                    // Vérifier si le check-out était vide avant cette sélection
+                    if (!checkOutDate.selectedDates.length) {
+                        // Définir automatiquement la date de départ au lendemain
+                        checkOutDate.setDate(minCheckOutDate);
+                    } else {
+                        // Vérifier si la date de départ actuelle est valide
+                        const currentCheckOut = checkOutDate.selectedDates[0];
+                        if (currentCheckOut <= selectedDates[0]) {
+                            // Si la date de départ est invalide, la définir au lendemain
+                            checkOutDate.setDate(minCheckOutDate);
+                        }
+                    }
+                    calculateDuration();
+                }
+            }
+        });
+
+        // Configuration de Flatpickr pour la date de départ
+        const checkOutDate = flatpickr("#checkOut", {
+            dateFormat: "Y-m-d",
+            disable: reservedDates,
+            minDate: "today",
+            locale: "fr",
+            onChange: function(selectedDates, dateStr) {
+                calculateDuration();
+            }
+        });
+
+        function calculateDuration() {
+            const checkIn = checkInDate.selectedDates[0];
+            const checkOut = checkOutDate.selectedDates[0];
+
+            if (checkIn && checkOut && checkOut > checkIn) {
+                const timeDiff = checkOut - checkIn;
+                const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+                durationDisplay.textContent = daysDiff;
+                totalPriceDisplay.textContent = (daysDiff * priceProperty).toFixed(2);
+            } else {
+                durationDisplay.textContent = '0';
+                totalPriceDisplay.textContent = '0';
+            }
+        }
+
+        // Gestion des boutons + et - pour le nombre d'invités
+        addButton.addEventListener("click", function() {
+            let currentValue = parseInt(guestInput.value);
+            if (currentValue < 10) {
+                guestInput.value = currentValue + 1;
+            }
+        });
+
+        subButton.addEventListener("click", function() {
+            let currentValue = parseInt(guestInput.value);
+            if (currentValue > 1) {
+                guestInput.value = currentValue - 1;
+            }
+        });
+
+        // Empêcher la saisie manuelle de valeurs hors limites
+        guestInput.addEventListener("change", function() {
+            let value = parseInt(this.value);
+            if (value < 1) this.value = 1;
+            if (value > 10) this.value = 10;
+        });
+    });
+</script>

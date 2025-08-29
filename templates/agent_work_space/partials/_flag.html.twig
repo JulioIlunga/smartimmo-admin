@@ -1,0 +1,24 @@
+{% for message in app.session.flashBag.get('info') %}
+    <div class="alert alert-info">
+        {{ message }}
+        <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endfor %}
+{% for message in app.session.flashBag.get('success') %}
+    <div class="alert alert-success">
+        {{ message }}
+        <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endfor %}
+{% for message in app.session.flashBag.get('warning') %}
+    <div class="alert alert-warning">
+        {{ message }}
+        <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endfor %}
+{% for message in app.session.flashBag.get('error') %}
+    <div class="alert alert-danger">
+        {{ message }}
+        <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endfor %}

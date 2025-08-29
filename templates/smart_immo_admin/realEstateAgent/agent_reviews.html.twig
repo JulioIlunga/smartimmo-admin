@@ -1,0 +1,166 @@
+{% extends 'agent_work_space/index.html.twig' %}
+
+{% block title %}Avis sur {{ agent.firstname }} {{ agent.name }}{% endblock %}
+{% block style %}
+    {# ——— Styles scoped to this page ——— #}
+    <style>
+        .agent-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 60%, #f6f8fb 100%);
+            border: 1px solid #eef1f4;
+            box-shadow: 0 10px 24px rgba(16,18,22,.06);
+            border-radius: 1rem;
+        }
+        .agent-avatar {
+            width: 96px; height: 96px; object-fit: cover; border-radius: 999px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.08);
+        }
+        .star-lg .mdi { font-size: 1.15rem; line-height: 1; }
+        .chip {
+            display:inline-flex; align-items:center; gap:.35rem;
+            padding:.35rem .6rem; border-radius: 999px; font-size:.8rem; font-weight:600;
+            background:#f1f3f5; color:#495057; border:1px solid #e9ecef;
+        }
+        .chip .mdi { font-size:1rem; }
+        .reviews-card { border: 1px solid #eef1f4; border-radius:1rem; }
+        .review-row + .review-row { border-top: 1px dashed #edf0f4; }
+        .review-meta { color:#6c757d; font-size:.9rem; }
+        .review-stars .mdi { color:#f4c150; font-size:1rem; }
+        .empty-wrap { padding:3.5rem 1rem; }
+        .empty-icon { font-size: 64px; opacity:.25; }
+    </style>
+{% endblock %}
+
+{% block bodyHeader %}
+    <div class="py-3 border-bottom">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ path('app_smart_immo_admin_real_estate_agent') }}"
+                   class="btn btn-outline-danger rounded-pill px-3">
+                    <i class="mdi mdi-arrow-left"></i> Retour
+                </a>
+                <h4 class="mb-0 fw-bold">Commentaires</h4>
+            </div>
+
+            <span class="badge bg-danger rounded-pill px-3 py-2 d-flex align-items-center">
+        <i class="mdi mdi-comment-multiple-outline me-1"></i>
+        {{ totalReviews }}
+      </span>
+        </div>
+    </div>
+{% endblock %}
+
+{% block bodyContent %}
+
+
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <div class="col-12">
+
+                {# ——— Agent header ——— #}
+                <div class="agent-card p-3 p-md-4 mb-4">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="flex-shrink-0">
+                            {% if agent.picture %}
+                                <img src="{{ agent.picture }}" alt="Photo de profil" class="agent-avatar">
+                            {% else %}
+                                <img src="{{ asset('assets/img/imageIcon.png') }}" alt="Photo de profil" class="agent-avatar">
+                            {% endif %}
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <h2 class="mb-0 fw-bold">{{ agent.firstname }} {{ agent.name }}</h2>
+                                <span class="chip"><i class="mdi mdi-account-badge-outline"></i> Agent vérifié</span>
+                                <span class="chip"><i class="mdi mdi-comment-multiple-outline"></i> {{ totalReviews }} avis</span>
+                            </div>
+
+                            <div class="d-flex align-items-center mt-2">
+                                {% if averageRating %}
+                                    <div class="star-lg text-warning me-2" aria-label="Note moyenne">
+                                        {# full/half/empty visual: round to nearest .5 #}
+                                        {% set avg = averageRating %}
+                                        {% for i in 1..5 %}
+                                            {% if i <= avg|round(0, 'floor') %}
+                                                <i class="mdi mdi-star"></i>
+                                            {% elseif i - 0.5 <= avg %}
+                                                <i class="mdi mdi-star-half-full"></i>
+                                            {% else %}
+                                                <i class="mdi mdi-star-outline text-muted"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class="review-meta">
+                                        <strong>{{ averageRating|number_format(1) }}</strong> / 5
+                                        <span class="text-muted">·</span>
+                                        <span class="text-danger fw-semibold">{{ ratingCount }}</span> avis clients
+                                    </div>
+                                {% else %}
+                                    <div class="review-meta">
+                                        <i class="mdi mdi-comment-outline me-1"></i> Aucun avis pour le moment
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# ——— Reviews list ——— #}
+                <div class="card reviews-card">
+                    <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                            <i class="mdi mdi-message-text-outline text-danger"></i> Tous les commentaires
+                        </h5>
+                        <span class="chip"><i class="mdi mdi-counter"></i> {{ totalReviews }}</span>
+                    </div>
+
+                    <div class="card-body p-0">
+                        {% if reviews|length > 0 %}
+                            {% for review in reviews %}
+                                <div class="review-row p-3 p-md-4">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="review-stars">
+                                                {% for i in 1..5 %}
+                                                    {% if i <= review.score %}
+                                                        <i class="mdi mdi-star"></i>
+                                                    {% else %}
+                                                        <i class="mdi mdi-star-outline text-muted"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <span class="review-meta">
+                      {{ review.createdAt|date('d/m/Y') }}
+                    </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center review-meta mb-2">
+                                        <i class="mdi mdi-account-circle me-1"></i>
+                                        {{ review.user.firstname }} {{ review.user.name }}
+                                    </div>
+
+                                    <p class="mb-0">
+                                        <i class="mdi mdi-comment-quote-outline text-danger me-1"></i>
+                                        {{ review.comment }}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center empty-wrap">
+                                <i class="mdi mdi-comment-outline empty-icon"></i>
+                                <p class="mt-3 text-muted fs-6 mb-0">Aucun avis n'a encore été laissé pour cet agent.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {# Pagination #}
+                    <div class="card-footer bg-white">
+                        {% include 'smart_immo_admin/realEstateAgent/_pagination.html.twig' %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
