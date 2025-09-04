@@ -92,21 +92,39 @@ class SmartImmoAdminController extends AbstractController
     }
 
     #[Route('/real/estate/agent', name: 'app_smart_immo_admin_real_estate_agent')]
-    public function realEstateAgent(UserRepository $userRepository,PreferenceRepository $preferenceRepository, RatingRepository $ratingRepository): Response
-    {
-        $agents = $userRepository->findBy(['isAgent' => true], ['id' => 'DESC']);
+    public function realEstateAgent(
+        UserRepository $userRepository,
+        RatingRepository $ratingRepository,
+        Request $request
+    ): Response {
+        $q = $request->query->get('q'); // récupération du terme recherché
+
+        $qb = $userRepository->createQueryBuilder('u')
+            ->where('u.isAgent = :isAgent')
+            ->setParameter('isAgent', true);
+
+        // 🔎 Filtre recherche
+        if ($q) {
+            $qb->andWhere('u.firstname LIKE :q OR u.name LIKE :q OR u.phone LIKE :q')
+            ->setParameter('q', '%' . $q . '%');
+        }
+
+        $qb->orderBy('u.id', 'DESC');
+
+        $agents = $qb->getQuery()->getResult();
         $count = count($agents);
 
         $averageRating = $ratingRepository->getAverageRatingsForAgents($agents);
-        $ratingCount = $ratingRepository->getRatingCountsForAgents($agents);
+        $ratingCount   = $ratingRepository->getRatingCountsForAgents($agents);
 
         return $this->render('smart_immo_admin/realEstateAgent/index.html.twig', [
-            'agents' => $agents,
-            'count' => $count,
+            'agents'        => $agents,
+            'count'         => $count,
             'averageRating' => $averageRating,
-            'ratingCount' => $ratingCount
+            'ratingCount'   => $ratingCount,
         ]);
     }
+
     #[Route('/real/estate/customer', name: 'app_smart_immo_admin_real_estate_customer')]
     public function realEstateCustomer(UserRepository $userRepository, Request $request,PreferenceRepository $preferenceRepository, RatingRepository $ratingRepository): Response
     {
@@ -121,7 +139,7 @@ class SmartImmoAdminController extends AbstractController
         if ($q) {
             $customers = $userRepository->createQueryBuilder('u')
                 ->where('u.isAgent = :isAgent')
-                ->andWhere('u.firstname LIKE :q OR u.phone LIKE :q')
+                ->andWhere('u.firstname LIKE :q OR u.phone LIKE :q OR u.name LIKE :q')
                 ->setParameter('isAgent', false)
                 ->setParameter('q', '%'.$q.'%')
                 ->orderBy('u.id', 'DESC')
@@ -137,23 +155,79 @@ class SmartImmoAdminController extends AbstractController
             // 'ratingCount' => $ratingCount
         ]);
     }
-    #[Route('/real/estate/agent/action/{id}', name: 'app_smart_immo_admin_real_estate_agent_action')]
-    public function realEstateAgentAction(User $user, ManagerRegistry $doctrine, RoleRepository $roleRepository, Request $request): Response
-    {
-        $em = $doctrine->getManager();
-        $blockReason = $request->request->get('blockReason');
+    // #[Route('/real/estate/agent/action/{id}', name: 'app_smart_immo_admin_real_estate_agent_action')]
+    // public function realEstateAgentAction(User $user, ManagerRegistry $doctrine, RoleRepository $roleRepository, Request $request): Response
+    // {
+    //     $em = $doctrine->getManager();
+    //     $blockReason = $request->request->get('blockReason');
+    //     $banFromPlatform = $request->request->get('banFromPlatform'); // null si décoché
 
-        $user->setBlock(true);
-        // $user->setAgent(false);
+    //     if ($banFromPlatform) {
+    //         $user->setActive(false);
+    //     } else {
+    //         $user->setActive(true);
+    //     }
+    //     $user->setBlock(true);
+    //     // $user->setAgent(false);
+    //     $role = $roleRepository->findOneBy(['name' => 'CUSTOMER']);
+    //     $user->setRole($role);
+    //     $user->setTopAgent(false);
+    //     $user->setBlockReason($blockReason);
+    //     $em->flush();
+
+    //     $this->addFlash('success',  "L'agent {$user->getFirstname()} {$user->getName()} a été bloqué avec succès.");
+
+    //     return $this->redirectToRoute('app_smart_immo_admin_real_estate_agent');
+    // }
+
+    #[Route('/real/estate/agent/block/reasons/{id}', name: 'app_agent_block_reasons_modal', methods: ['POST'])]
+    public function showModal(
+        int $id,
+        RoleRepository $roleRepository,
+        Request $request,
+        UserRepository $userRepository,
+        EntityManagerInterface $em
+    ): Response {
+        $agent = $userRepository->find($id);
+
+        if (!$agent) {
+            throw $this->createNotFoundException('Agent non trouvé');
+        }
+
+        // Récupérer données envoyées
+        $reason = $request->request->get('reason');
+        $permanent = $request->request->get('permanent') !== null; // true si coché
+
+        // Mettre à jour l'agent
         $role = $roleRepository->findOneBy(['name' => 'CUSTOMER']);
-        $user->setRole($role);
-        $user->setTopAgent(false);
-        $user->setBlockReason($blockReason);
+        $agent->setRole($role);
+        $agent->setTopAgent(false);
+        $agent->setBlock(true);
+        $agent->setBlockReason($reason);
+        if ($permanent) {
+        $agent->setActive(false);
+
+    } 
         $em->flush();
 
-        $this->addFlash('success',  "L'agent {$user->getFirstname()} {$user->getName()} a été bloqué avec succès.");
+        $this->addFlash('success', 'Agent bloqué avec succès.');
 
+        // Rediriger vers la liste
         return $this->redirectToRoute('app_smart_immo_admin_real_estate_agent');
+    }
+
+    #[Route('/real/estate/agent/block/reasons/{id}', name: 'app_agent_block_reasons_modal_get', methods: ['GET'])]
+    public function showModalGet($id, UserRepository $userRepository): Response
+    {
+        $agent = $userRepository->find($id);
+
+        if (!$agent) {
+            throw $this->createNotFoundException('Agent non trouvé');
+        }
+
+        return $this->render('smart_immo_admin/realEstateAgent/_block_modal.html.twig', [
+            'agent' => $agent,
+        ]);
     }
 
     #[Route('/real/estate/block/customer/{id}', name:'app_smart_immo_real_estate_block_customer')]
@@ -172,17 +246,19 @@ class SmartImmoAdminController extends AbstractController
         $em = $doctrine->getManager();
 
         $user->setActive(true);
+        $user->setBlock(false);
         $em->flush();
         $this->addFlash('success', "L'utilisateur {$user->getFirstname()} {$user->getName()} a bien été débloqué");
         return $this->redirectToRoute('app_smart_immo_admin_real_estate_customer');
     }
 
-    #[Route('/real/estate/agent/action/unblock/{id}', name: 'app_smart_immo_admin_real_estate_agent_action_unblock_user')]
-    public function unblockUser(User $user, ManagerRegistry $doctrine, RoleRepository $roleRepository): Response
+    #[Route('/real/estate/agent/action/unblock/{id}', name: 'app_smart_immo_real_estate_unblock_agent')]
+    public function unblockAgent(User $user, ManagerRegistry $doctrine, RoleRepository $roleRepository): Response
     {
 
 
         $em = $doctrine->getManager();
+        $user->setActive(true);
         $user->setBlock(false);
         // $user->setAgent(true);
         $role = $roleRepository->findOneBy(['name' => 'AGENT']);

@@ -52,7 +52,7 @@
                     </a>
 
                     {% if is_granted('ROLE_ADMIN') %}
-                        <a href="{{ path('app_smart_immo_admin') }}"
+                    <a href="{{ path('app_smart_immo_admin') }}"
                        class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/' %} is-active{% endif %}">
                         <i class="mdi mdi-home-modern me-1"></i> Annonces en ligne
                     </a>
@@ -70,6 +70,14 @@
                     <a href="{{ path('app_smart_immo_admin_real_estate_customer') }}"
                        class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/real/estate/customer' %} is-active{% endif %}">
                         <i class="mdi mdi-account-group me-1"></i> Liste des Clients
+                    </a>
+                    <a class="nav-link{% if app.request.pathinfo == '/job-opportunity/dashboard' %} is-active{% endif %}"
+                       href="{{ path('app_job_opportunity') }}">
+                        <span class="mdi mdi-briefcase-outline"></span> Opportunité de travail
+                    </a>
+                    <a class="nav-link{% if app.request.pathinfo == '/job-opportunity/agents-leads' %} is-active{% endif %}"
+                       href="{{ path('agents_leads_relationships') }}">
+                        <span class="mdi mdi-briefcase-outline"></span> Leads-Traités
                     </a>
                     <a href="{{ path('app_admin_config') }}"
                        class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/config' %} is-active{% endif %}">
@@ -126,6 +134,14 @@
                     <a href="{{ path('app_smart_immo_admin_real_estate_customer') }}"
                        class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/real/estate/customer' %} is-active{% endif %}">
                         <i class="mdi mdi-account-group me-1"></i> Liste des Clients
+                    </a>
+                    <a class="nav-link{% if app.request.pathinfo == '/job-opportunity/dashboard' %} is-active{% endif %}"
+                       href="{{ path('app_job_opportunity') }}">
+                        <span class="mdi mdi-briefcase-outline"></span> Opportunité de travail
+                    </a>
+                    <a class="nav-link{% if app.request.pathinfo == '/job-opportunity/agents-leads' %} is-active{% endif %}"
+                       href="{{ path('agents_leads_relationships') }}">
+                        <span class="mdi mdi-briefcase-outline"></span> Leads-Traités
                     </a>
                     <a href="{{ path('app_admin_config') }}"
                        class="nav-link{% if app.request.pathinfo == '/admin/smart/immo/config' %} is-active{% endif %}">
@@ -224,6 +240,7 @@
     loaderNode.src = config.basePath+"/assets/img/ajax-loader.gif";
     var modalLoader = '<div class="modal-body">' + loader + '</div>';
 </script>
+
 
 <!-- Footer bottom -->
 <script type="text/javascript" src="{{ asset('assets/js/bodyevents.js') }}"></script>

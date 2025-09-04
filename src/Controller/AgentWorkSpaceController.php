@@ -3,10 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\Property;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Entity\Province;
 use App\Repository\UserRepository;
+use App\Repository\LeadClaimsRepository;
+use function Doctrine\ORM\findAll;
 use App\Repository\PropertyRepository;
 use App\Repository\MessengerRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\OpportunityRepository;
 use App\Repository\ReservationRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,10 +17,11 @@ use App\Repository\PropertyStatusRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpKernel\Attribute\Cache;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use function Doctrine\ORM\findAll;
 #[IsGranted('ROLE_ADMIN')]
 class AgentWorkSpaceController extends AbstractController
 {
@@ -96,5 +100,63 @@ class AgentWorkSpaceController extends AbstractController
         ]);
     }
 
+    #[Route('/agent/covered-cities', name: 'agent_covered_cities_update', methods: ['POST'])]
+    public function update(Request $request, EntityManagerInterface $em, UserRepository $userRepository): Response
+    {
+        // CSRF
+        if (!$this->isCsrfTokenValid('update-covered-cities', (string) $request->request->get('_token'))) {
+            if ($request->isXmlHttpRequest()) {
+                return $this->json(['ok' => false, 'error' => 'CSRF invalide.'], 403);
+            }
+            $this->addFlash('danger', 'Jeton CSRF invalide.');
+            return $this->redirectToRoute('app_agent_work_space', ['show' => 'profil']);
+        }
 
-}
+        $user = $userRepository->find($this->getUser());
+        if (!$user) {
+            return $request->isXmlHttpRequest()
+                ? $this->json(['ok' => false, 'error' => 'Non authentifié.'], 401)
+                : $this->redirectToRoute('app_login');
+        }
+
+        // Read IDs from the form
+        $ids = $request->request->all('cityIds'); // array of strings/ints
+        $ids = array_values(array_filter(array_map('intval', (array) $ids)));
+
+        // Fetch cities
+        $cityRepo = $em->getRepository(Province::class);
+        $selectedCities = $ids ? $cityRepo->findBy(['id' => $ids]) : [];
+
+        // Replace coverage (ManyToMany)
+        $current = new ArrayCollection($user->getCoveredCities()->toArray());
+        // Remove those not selected
+        foreach ($current as $c) {
+            if (!in_array($c->getId(), $ids, true)) {
+                $user->removeCoveredCity($c);
+            }
+        }
+        // Add new ones
+        foreach ($selectedCities as $c) {
+            if (!$current->contains($c)) {
+                $user->addCoveredCity($c);
+            }
+        }
+
+        $em->flush();
+
+        if ($request->isXmlHttpRequest()) {
+            return $this->json([
+                'ok' => true,
+                'count' => count($selectedCities),
+                'cities' => array_map(fn($c) => ['id' => $c->getId(), 'name' => $c->getName()], $selectedCities),
+            ]);
+        }
+
+        $this->addFlash('success', 'Villes couvertes mises à jour.');
+        return $this->redirectToRoute('app_job_opportunity');
+    }
+
+    
+    }
+
+

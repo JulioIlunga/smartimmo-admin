@@ -23,7 +23,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/job-opportunity')]
 class JobOpportunityController extends AbstractController
 {
-    #[Route('/dashboard', name: 'app_job_opportunity')]
+     #[Route('/dashboard', name: 'app_job_opportunity')]
     public function index(Request $request,
                           PreferenceRepository $requestsRepo,
                           LeadClaimsRepository $claimRepo, ProvinceRepository $provinceRepository, UserRepository $userRepository): Response
@@ -81,6 +81,8 @@ class JobOpportunityController extends AbstractController
             'claimed_by_me' => $claimedByMeIds // as before
         ]);
     }
+
+    
 
     #[Route('/leads/{id}/claim', name: 'leads.claim', methods: ['POST'])]
     public function claim(
@@ -234,9 +236,41 @@ class JobOpportunityController extends AbstractController
 
         return $this->render('agent_work_space/job_opportunity/show_details.html.twig', [
             'lead' => $lead,
-             'isClaimedByMe' => $isClaimedByMe,
+            'isClaimedByMe' => $isClaimedByMe,
             'membership' => $validSub,
         ]);
     }
 
+    #[Route('/agents/leads-relationships', name: 'agents_leads_relationships')]
+    public function leadsRelationships(LeadClaimsRepository $leadsclaimsRepository): Response
+    {
+
+        $claims = $leadsclaimsRepository->findBy([
+            'status' => 'claimed'
+        ]);
+        // dd($claims);
+        return $this->render('agent_work_space/job_opportunity/agents-leads.html.twig', [
+            'claims' => $claims
+        ]);
+        
+        
+    }
+
+    // #[Route('/leads/claimed/{id}/details', name: 'app_leads_claimed_details', methods: ['GET'])]
+    // public function showDetailsLead($id, LeadClaimsRepository $leadsclaimsRepository ,PreferenceRepository $preferenceRepository, UserRepository $userRepository, LeadService $leadService): Response
+    // {
+    //     $claims = $leadsclaimsRepository->findBy([
+    //         'status' => 'claimed'
+    //     ]);
+
+    //     dd($claims);
+    //     // $lead = $claims->getLead();
+        
+
+    //     return $this->render('agent_work_space/job_opportunity/show_lead_claimed_details.html.twig', [
+    //         'lead' => $lead,
+    //         'isClaimedByMe' => $isClaimedByMe,
+    //         'membership' => $validSub,
+    //     ]);
+    // }
 }

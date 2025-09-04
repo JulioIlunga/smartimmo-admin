@@ -85,6 +85,7 @@
         {# Leads header + CTAs #}
         <div class="d-flex align-items-center gap-2 mb-2">
             <h4 class="mb-0 fw-bold">Leads disponibles</h4>
+            {# {{ dump(leads) }} #}
 
             {# Resolve membership from explicit var OR user.subscriptions #}
             {% set m = membership ?? app.user.subscriptions ?? null %}

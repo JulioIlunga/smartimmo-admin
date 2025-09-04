@@ -112,6 +112,27 @@
             </div>
         </div>
     </div>
+   
+    <form method="get" class="row g-2 mb-4 align-items-end">
+    <div class="col-md-5">
+        <input type="text" id="search" name="q" value="{{ app.request.get('q') }}"
+               class="form-control form-control-lg border-danger"
+               placeholder="Rechercher par nom, prénom ou numéro...">
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-danger w-100 btn-lg">
+            <i class="mdi mdi-magnify me-1"></i> Rechercher
+        </button>
+    </div>
+    {% if app.request.get('q') %}
+                <a href="{{ path('app_smart_immo_admin_real_estate_agent') }}"
+                   class="btn btn-outline-dark">
+                    <i class="mdi mdi-close-circle me-1"></i> Réinitialiser
+                </a>
+            {% endif %}
+    </form>
+    
 {% endblock %}
 
 
@@ -119,6 +140,15 @@
     {% include 'agent_work_space/partials/_flag.html.twig' %}
 
     <div class="row g-3 g-md-4" id="listing-admin-table">
+        {% if agents is empty %}
+        <div class="col-12">
+            <div class="alert alert-warning d-flex align-items-center justify-content-center gap-2 py-3">
+                <i class="mdi mdi-account-alert mdi-24px"></i>
+                <span class="fw-semibold">Aucun agent trouvé</span>
+            </div>
+        </div>
+        
+    {% else %}
         {% for agent in agents %}
             {% set blocked = agent.block == true %}
             {% set rating   = averageRating[agent.id] is defined ? averageRating[agent.id]|number_format(1, '.') : '0.0' %}
@@ -173,15 +203,25 @@
                     </div>
 
                     <div class="agent-actions">
+
                         {% if not blocked %}
-                            <a href="{{ path('app_smart_immo_admin_real_estate_agent_action', {id: agent.id}) }}"
+                            {# <a href="{{ path('app_smart_immo_admin_real_estate_agent_action', {id: agent.id}) }}"
                                class="btn btn-outline-danger btn-sm rounded-pill">
                                 <i class="mdi mdi-account-remove me-1"></i> Bloquer
-                            </a>
+                            </a> #}
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-sm rounded-pill js-open-block-modal"
+                                    data-url="{{ path('app_agent_block_reasons_modal', {'id': agent.id}) }}">
+                                <i class="mdi mdi-account-remove me-1"></i> Bloquer
+                            </button>
+
+                            {# {{ dump(agent) }} #}
                         {% else %}
-                            <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle">
-                                <i class="mdi mdi-account-minus"></i> Agent bloqué
-                              </span>
+                            <a href="{{ path('app_smart_immo_real_estate_unblock_agent', {id: agent.id}) }}"
+
+                               class="btn btn-outline-danger btn-sm rounded-pill">
+                                <i class="mdi mdi-account-remove me-1"></i> Débloquer l'agent
+                            </a>
                         {% endif %}
 
                         <div class="d-flex gap-2">
@@ -198,6 +238,7 @@
                 </article>
             </div>
         {% endfor %}
+        {% endif %}
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -227,5 +268,35 @@
                 });
             });
         });
+
+
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".js-open-block-modal").forEach(button => {
+                button.addEventListener("click", function () {
+                    let url = this.getAttribute("data-url");
+
+                    fetch(url)
+                        .then(response => response.text())
+                        .then(html => {
+                            // Ajouter le modal au DOM
+                            document.body.insertAdjacentHTML("beforeend", html);
+
+                            // Initialiser Bootstrap modal
+                            let modalEl = document.getElementById("blockAgentModal");
+                            let modal = new bootstrap.Modal(modalEl);
+                            modal.show();
+
+                            // Supprimer le modal après fermeture
+                            modalEl.addEventListener("hidden.bs.modal", () => {
+                                modalEl.remove();
+                            });
+                        })
+                        .catch(err => console.error("Erreur chargement modal :", err));
+                });
+            });
+        });
+        </script>
+
 {% endblock %}
